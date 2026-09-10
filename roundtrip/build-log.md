@@ -81,3 +81,7 @@ Budget: measured account-wide weekly usage 36%; user authorized extension to a 4
 ### Local live execution started
 
 36 unit tests and JavaScript syntax checks passed. Committed the local multi-photo workflow before execution. Restarted the server without remote pairing, registered the three private RAW identities, and submitted the user's exact washed-out/hands-only request through the studio portrait’s visible form. The app admitted a real Astra runtime job and disabled concurrent submissions. Outcome verification pending; no success claimed yet.
+
+### Recovery and second live attempt
+
+The first runtime attempt safely blocked before editing because Lightroom moved to another photograph during verification. Inspected and restored the requested portrait by filename search plus visual identity. Created and visually verified `Roundtrip base gallery-three` in Lightroom, recorded that exact base in private local state, and restarted the server with the media-route fix. Retried through the local gallery’s existing-feedback action. This recovery involved assistant preparation; it is not evidence of fully unattended recovery.

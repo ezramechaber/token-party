@@ -105,3 +105,8 @@ User approved 5 additional percentage points beyond 42%, setting a **47% account
 ## 2026-09-10 13:52 EDT
 
 b2b session: weekly account usage measured50% (shared account, including concurrent work). No project-specific token or aggregate tool telemetry available; no estimates invented. User removed numeric cap. No reset used.
+
+
+### Roundtrip — 2026-09-10 13:55 EDT requested navigation follow-up
+
+Measured **50% account-wide weekly usage** during the user-requested navigation unification. Prior numeric ceiling47%; user explicitly requested this follow-up but did not specify a new numeric allocation. No broader work allocation inferred. Shared concurrent consumption prevents project attribution. No Lightroom runtime jobs or reset; task token totals unavailable.

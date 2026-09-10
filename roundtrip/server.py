@@ -19,7 +19,7 @@ import threading
 import time
 import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 from edit_policy import supported_edit, POLICY
 
@@ -340,6 +340,7 @@ class AppServer(ThreadingHTTPServer):
         self.runner=runner
         self.csrf=secrets.token_urlsafe(32)
         self.remote=None
+        self.story_media=ROOT.parent/'.local-demo/fuji-portrait'
 
 class Handler(BaseHTTPRequestHandler):
     protocol_version='HTTP/1.1'
@@ -369,20 +370,26 @@ class Handler(BaseHTTPRequestHandler):
             revision=self.server.store.revision(match[1]) if match else None
             if not revision: return self.json(404,{'error':'Image not found.'})
             return self.file(Path(revision['path']))
-        files={'/':'index.html','/app.js':'app.js','/style.css':'style.css'}
+        if path in {'/story-media/session-16x.mp4','/story-media/session.mp4'}:
+            return self.file(self.server.story_media/path.rsplit('/',1)[-1])
+        # Retain old shared photo URLs while making the story the front door.
+        home='index.html' if 'photo' in parse_qs(urlparse(self.path).query) else 'story.html'
+        files={'/':home,'/gallery':'index.html','/gallery/':'index.html','/app.js':'app.js','/style.css':'style.css',
+               '/story.css':'story.css','/story.js':'story.js','/nav.css':'nav.css','/nav.js':'nav.js'}
         if path not in files: return self.json(404,{'error':'Not found.'})
         return self.file(ROOT/'static'/files[path])
     def file(self,path):
         if not path.is_file(): return self.json(404,{'error':'Not found.'})
-        data=path.read_bytes()
+        size=path.stat().st_size
         self.send_response(200)
         self.send_header('Content-Type',mimetypes.guess_type(path.name)[0] or 'application/octet-stream')
-        self.send_header('Content-Length',str(len(data)))
+        self.send_header('Content-Length',str(size))
         self.send_header('Cache-Control','no-cache')
         self.send_header('X-Content-Type-Options','nosniff')
         self.send_header('Content-Security-Policy',"default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' https://images.squarespace-cdn.com; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'")
         self.end_headers()
-        self.wfile.write(data)
+        with path.open('rb') as stream:
+            shutil.copyfileobj(stream,self.wfile)
     def do_POST(self):
         if not self.safe_host(): return self.json(403,{'error':'Local requests only.'})
         origin=self.headers.get('Origin')
@@ -437,6 +444,7 @@ def main():
     if args.catalog: store.import_catalog(args.catalog)
     runner=Runner(store,args.codex,max_jobs=args.max_jobs,timeout=args.timeout)
     server=AppServer(('127.0.0.1',args.port),store,runner)
+    server.story_media=args.media_dir.resolve()
     if args.remote_config:
         from remote import RemoteInbox
         server.remote=RemoteInbox(store,runner,args.remote_config)

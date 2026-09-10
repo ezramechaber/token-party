@@ -1,13 +1,13 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#17191b"><meta name="description" content="Review your photographs and request recoverable Lightroom edits."><title>Roundtrip — Photo review</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#17191b"><meta name="description" content="Review your photographs and request recoverable Lightroom edits."><title>Roundtrip — Photo review</title><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/nav.css"><script src="/nav.js" defer></script><script src="/app.js" defer></script></head>
 <body>
 <a class="skip-link" href="#workspace">Skip to photo</a>
-<header><a class="brand" href="/" translate="no">roundtrip<span aria-hidden="true">↗</span></a><span class="header-label">Photo review</span><div class="connection" id="connection"><span class="dot"></span>Connecting to Lightroom…</div></header>
+<header class="site-header"><a class="brand" href="/" translate="no">roundtrip<span aria-hidden="true">↗</span></a><nav class="site-nav" aria-label="Main navigation"><a href="/" >Story</a><a href="/gallery" aria-current="page">Gallery</a></nav><div class="connection" id="connection"><span class="dot"></span>Connecting to Lightroom…</div></header>
 <main>
 <div id="loadError" class="error" role="alert" hidden></div>
 <div class="desk">
-<aside class="collection"><h2>Photographs</h2><nav id="photoNav" class="photo-nav" aria-label="Choose a photo"></nav><details class="about"><summary>About Roundtrip</summary><h2>What if client feedback went straight into Lightroom?</h2><p>Imagine a client asks for brighter eyes or less grain. Astra edits the original in Lightroom and returns a new version for review.</p><a href="http://127.0.0.1:8765/" target="_blank" rel="noreferrer">See the first editing session</a></details></aside>
+<aside class="collection"><h2>Photographs</h2><nav id="photoNav" class="photo-nav" aria-label="Choose a photo"></nav><details class="about"><summary>About Roundtrip</summary><h2>What if client feedback went straight into Lightroom?</h2><p>Imagine a client asks for brighter eyes or less grain. Astra edits the original in Lightroom and returns a new version for review.</p><a href="/">See the first editing session</a></details></aside>
 <div class="workspace" id="workspace" hidden>
 <div class="image-column">
 <div class="photo-heading"><h1 id="photoTitle"></h1><a id="download" href="#" download>Download JPEG</a></div>

@@ -105,3 +105,9 @@ Verified rendered desktop at 1440px and mobile at 390px; measured no horizontal 
 ## 2026-09-10 — Homepage clarification
 
 User's design feedback concerned the story homepage, not the gallery workspace. The existing file tab retained the earlier “one photograph, two passes” title; the current saved page served at localhost:8765 has the revised story, recipe reference, and directly available on-photo comparison slider. Opened the current served version. Reverted mistaken uncommitted gallery changes. No photo edits or hosted changes. Future homepage work must preserve the story and hero image, avoid eyebrow labels and padded copy, and retain the on-photo slider.
+
+## 2026-09-10 13:55 EDT — Unified story and gallery navigation
+
+User requested a single navigation flow. Moved the existing story HTML/CSS/JS into tracked static assets, preserving its narrative, reference, native comparison slider, and recording. Main server now serves the homepage at / and the app at /gallery; legacy /?photo=… URLs still show the app. Shared logo/navigation highlights the current page and remembers the selected photo across story/gallery navigation. Personal photos remain in ignored state; only the two named recording files can be served from the configured media directory. File responses stream to avoid buffering the full original recording.
+
+39 unit tests passed, including route compatibility and rejected unlisted story-media paths. JavaScript syntax passed. Browser verified both navigation directions, retained studio selection, loaded hero exports, working keyboard slider, 47.07-second recording metadata, and mobile rendering without horizontal page overflow at390px. Server restarted with --max-jobs0 to preserve the paused edit allowance. No Lightroom job or hosted deployment. Measured shared weekly usage50%; no per-project attribution or reset.

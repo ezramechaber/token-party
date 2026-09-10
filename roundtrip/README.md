@@ -28,9 +28,9 @@ python3 roundtrip/server.py \
   --max-jobs 3
 ```
 
-Open `http://127.0.0.1:8766`. Enter feedback and select **Revise in Lightroom**. The server operates the source photo on this Mac, using your existing Codex account. Leave Lightroom available while the job runs.
+Open `http://127.0.0.1:8766` for the story, then select **Gallery** (or go directly to `/gallery`). Enter feedback and select **Revise in Lightroom**. The server operates the source photo on this Mac, using your existing Codex account. Leave Lightroom available while the job runs.
 
-The current local demo already has its images in `.local-demo/fuji-portrait`, so `python3 roundtrip/server.py` uses that folder by default. The optional link to the earlier editing study expects its separate local server on port 8765.
+The current local demo already has its images in `.local-demo/fuji-portrait`, so `python3 roundtrip/server.py` uses that folder by default. The story and gallery share this server and navigation; no second server is needed. Optional `session-16x.mp4` and `session.mp4` recordings are served from the same media directory. Old `/?photo=…` links still open the gallery.
 
 `--state-dir` chooses a private state folder; its default is `.local-demo/roundtrip-runtime`. Reusing that folder restores gallery history. To prepare a different photo, use a new state directory. `--max-jobs` caps newly launched jobs in a server session; `--timeout` limits each job to 900 seconds by default. These are execution limits, not a precise weekly-credit accounting mechanism.
 

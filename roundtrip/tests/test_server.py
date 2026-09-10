@@ -178,3 +178,21 @@ class HttpTests(unittest.TestCase):
     def test_runtime_trace_not_publicly_served(self):
         code,_=self.request('GET','/jobs/anything/events.jsonl')
         self.assertEqual(code,404)
+
+    def test_story_and_gallery_routes_preserve_old_photo_links(self):
+        code,body=self.request('GET','/')
+        self.assertEqual(code,200)
+        self.assertIn(b'What if client feedback went straight into Lightroom?',body)
+        self.assertIn(b'src="/story.js"',body)
+        self.assertNotIn(b'<script>',body)
+        for route in ['/gallery','/gallery/','/?photo=gallery-three']:
+            code,body=self.request('GET',route)
+            self.assertEqual(code,200)
+            self.assertIn(b'id="feedbackForm"',body)
+            self.assertIn(b'href="/"',body)
+        self.assertFalse(self.started)
+
+    def test_story_media_rejects_unlisted_files(self):
+        for route in ['/story-media/catalog.json','/story-media/../roundtrip.sqlite3','/story-media/index.html']:
+            code,_=self.request('GET',route)
+            self.assertEqual(code,404)

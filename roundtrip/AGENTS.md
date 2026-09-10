@@ -13,3 +13,5 @@ The hosted gallery now uses private Lightroom JPEG exports only. Keep the three 
 2026-09-10 13:43 EDT: user approved another 5 percentage points for layout work, raising the ceiling to 47% account-wide weekly usage. Closing measurement47%; further model work pauses. Local review layout redesigned, hosted gallery unchanged. No reset authorized.
 
 Homepage design constraints from user: no eyebrow labels or padded explanatory copy. Keep the story and hero photograph. Keep comparison directly on the photo and available by default; do not introduce a comparison toggle during homepage layout work. Preserve the logo mark. The story homepage is .local-demo/fuji-portrait/index.html, served at localhost:8765; the separate gallery workspace runs at localhost:8766.
+
+2026-09-10 13:55 EDT: Story homepage is now tracked in static/story.html and served at / on the main localhost:8766 server; app lives at /gallery. Both share nav.css and nav.js. Old /?photo=… gallery links remain valid. Original ignored study files remain as historical artifacts.

@@ -334,3 +334,8 @@ Created a poster using built-in image generation: struck-through Rent, oversized
 ## 2026-09-10 13:52 EDT
 
 b2b: committed requested checkpoint 0a80fb3, then verified deck artwork, manual delay/flanger, literal playback labels and waveform-based marker review. Fixed timestamp precision blocking browser saves and made phrase-map rebuild failures preserve the previous grid. Browser and focused regression checks pass. Weekly account usage measured50%; project-specific tokens/daily tool counts unavailable. Numeric cap removed by user; no reset used.
+
+
+## 2026-09-10 13:55 EDT — Roundtrip unified navigation
+
+Story homepage and gallery now share localhost:8766, a common logo/header, active navigation, and remembered photo selection. Existing photo URLs still work. Preserved story comparison and media; no private images committed.39 tests passed; browser checked navigation, media, and mobile overflow. No new Lightroom jobs.

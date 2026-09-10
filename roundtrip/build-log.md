@@ -127,3 +127,11 @@ Prepared conditional homepage promotion: only an actual completed job against th
 ## 2026-09-10 — Seated RAW retry preparation
 
 After the user restored the foreground window, native coordinate actions worked. The retry safely blocked because the long saved version label was truncated. Created an additional short named copy, RT seated RAW, from the unchanged verified RAW rendering and visually confirmed the complete name; preserved every existing version. Updated only the private base-version mapping and documented the reliable Photo-menu Create Version command for the worker. Retrying the same feedback, with no previous runtime photo changes.
+
+## 2026-09-10 15:37 EDT — Seated RAW hero verified
+
+The saved color-and-crop request completed against RT seated RAW through the real local queue. Independently inspected the exported JPEG:1638×2048,4:5 crop, white balance5500K/tint+13, native background mask−0.30EV, original identity and texture retained. Successful execution239.93seconds; two earlier attempts remained safely blocked before editing. User foreground recovery and assistant creation of a short visible base name were needed, so this is not unattended recovery.
+
+Browser verified New version ready, exact result/base media in the homepage comparison, actual submitted feedback, loaded images, keyboard slider endpoints, and no page overflow at the current712px viewport. Earlier Fujifilm study remains below the hero. JavaScript syntax passed;40 unit tests passed during preparation. Lightroom left in a standard window; preserved all base/result versions and history. No more jobs launched after completion; recording task notified of the completed result and preserved base.
+
+Account-wide weekly usage67% at resumption and70% at close; concurrent usage prevents project attribution. Successful runtime trace reports input_tokens1,259,407, cached_input_tokens1,197,696, output_tokens2,902, reasoning_output_tokens687 (runtime telemetry only; not total task consumption). No reset redeemed.

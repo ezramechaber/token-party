@@ -388,3 +388,8 @@ Preserved the existing native edit, reset the seated RAW, saved a named original
 - Verified: 13 Astra/sequence regression tests and diff whitespace checks; generated two live set plans and refined the voice after reading the output. Final example: “I’d let Deluxe Bar raise the pressure without making a ceremony of it.” Backend restarted; the refreshed plan is visible.
 - Measured runtime usage this pass: 2 calls, 23,576 input and 1,013 output tokens; 15 calls total. Development token telemetry unavailable.
 - Next: listen through the set and tune the balance between musical specificity and dry commentary.
+
+
+## 2026-09-10 15:37 EDT — Roundtrip hero completed
+
+Verified the seated RAW color-and-crop edit and promoted its real before/after and feedback to the homepage.4:5 export, native white balance and background mask; successful runtime239.93seconds. Browser verified result media and slider. Preserved base/result versions and prior blocked history; recording task handed the verified result. User foreground recovery and short-name base preparation were required.

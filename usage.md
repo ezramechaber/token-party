@@ -117,6 +117,11 @@ Measured **50% account-wide weekly usage** during the user-requested navigation 
 User explicitly requested preparing the unedited seated RAW and executing reviewer feedback. Shared weekly usage measured61% on resumption and66% at the native-window blocker, with concurrent account activity and no project attribution. One runtime attempt safely blocked before editing. No numeric extension or broader work allocation inferred; no reset redeemed. Exact project token totals unavailable.
 
 
+### Roundtrip — 2026-09-10 15:34 EDT recording-plan session
+
+User requested a demo plan and stronger problem narrative. Starting observation: **68% used, 32% remaining** in the shared account-wide 10080-minute weekly window. Planning and read-only gallery inspection only; no new photo runtime jobs or numeric budget change. Concurrent usage prevents project attribution. No reset redeemed; project token totals unavailable.
+
+
 ### Roundtrip — 2026-09-10 15:37 EDT hero retry completion
 
 Account-wide weekly usage measured67% on resumption and70% at close. Shared meter includes concurrent tasks. User approved retry after restoring Lightroom; one label-verification attempt blocked, then the short-name base succeeded. Successful runtime telemetry:1,259,407 input tokens,1,197,696 cached input tokens,2,902 output tokens,687 reasoning output tokens; these are reported runtime values, not entire project usage. No reset redeemed or new broader numeric budget inferred.

@@ -355,9 +355,24 @@ Saved the user's selected model-coaching screenshot under B2B presentation asset
 Connected the dedicated local b2b API key and verified a real gpt-6-astra Responses call. Added separate structured request-fit and DJ-set decisions, validated transition choices, musical explanations, private token-usage logging, and lock-free network assessment with stale-result protection. Local key is ignored by Git and mode0600; no audio or credentials enter model prompts. Tests:129 Python tests and4 handoff regressions passed; additional existing-handoff preservation test passed. Five-song mixed-fit/YouTube exercise is in progress. Exact development token totals unavailable; API usage is measured separately in the private runtime log.
 
 
+## 2026-09-10 14:57 EDT — Separate submission storytelling
+
+User is considering separate image-editor and DJ entries. Saved the submission form and two comparison posts for later without fetching, as requested. Added [shared strategy](submission-storytelling.md), a [Roundtrip minute](../roundtrip/presentation.md), and a separate B2B minute to its existing presentation notes. Proposed distinct stories: photographer authorship through revisions, and musical judgment proven by an audible transition. Token Party remains the shared event identity. Reconciled the newly logged live B2B Astra call with earlier presentation caveats; full integrated capture remains to verify. Four Markdown files changed; no submissions, new runtime jobs, or media captures. Multiple-entry eligibility remains open; aggregate telemetry unavailable.
+
+
 ## 2026-09-10 — Live Astra requests and browser DJ execution
 
 Added five authorized recordings, including two successful artist-uploaded YouTube downloads. Live Astra outcomes: Don Juan accepted and added as the sixth set track; Summertime needs listening review; Sunset at Paula’s passed musical judgment but needs grid review; both deliberate YouTube outliers rejected. Source metadata and measured drum-map summaries now inform both Astra roles. Browser confirmed actual deck-A playback, prepared deck B and an armed 8-bar handoff. Added local DJ test submissions and reuse of already imported YouTube URLs. Verified 133 Python tests, 4 handoff regressions and JavaScript syntax. Runtime API telemetry: 10 calls, 33,593 input and 1,917 output tokens; development/account-wide totals unavailable. Details and music provenance: [live trial](../b2b/docs/astra-live-trial.md).
+
+
+## 2026-09-10 15:02 EDT — Clarify Astra's contribution to both submissions
+
+Inspected B2B upload analysis, runtime evidence/request prompts and transition selection, plus Roundtrip's native-edit worker restrictions. Strengthened both presentation scripts to show development and runtime roles. Recorded human song selection as B2B's taste direction and real-camera connection/no image generation as Roundtrip's positioning. Four Markdown files updated; no application edits, new runtime calls, competitor/form fetches or media captures. Comparative novelty and photographer audience preferences are unvalidated. Daily telemetry unavailable.
+
+
+## 2026-09-10 15:01:51 EDT — Form-specific submission drafts
+
+Used the supplied form screenshot to draft project description, OpenAI development/runtime use and suggested experience feedback separately for B2B and Roundtrip. Saved drafts in their project folders and linked them from submission strategy. Four Markdown files updated. No external page fetch, form mutation, submission or demo recording. Multiple-entry eligibility and final repository/video links remain open; daily telemetry unavailable.
 
 
 ## 2026-09-10 — Set-list controls and concise request notes
@@ -390,9 +405,19 @@ Preserved the existing native edit, reset the seated RAW, saved a named original
 - Next: listen through the set and tune the balance between musical specificity and dry commentary.
 
 
+## 2026-09-10 15:34 EDT — Roundtrip shot-by-shot recording plan
+
+Reviewed the participant-guide requirements, Roundtrip instructions/build history, and the current local gallery. Inspected verified portrait-study V2/V3 comparison and the seated portrait's exact pending request/failure. Created a [59-second plan](../roundtrip/demo-recording-plan.md) with problem narrative, timed shots, narration, capture/edit instructions, alternate verified case and rubric coverage. Current preferred hero has no completed export; no new Lightroom jobs, screenshots saved, recordings or submissions performed. Four Markdown files changed including usage observation. Starting measurement68% account-wide weekly used (10080-minute window), not project-specific consumption. No reset; daily token/tool totals unavailable.
+
+
 ## 2026-09-10 15:37 EDT — Roundtrip hero completed
 
 Verified the seated RAW color-and-crop edit and promoted its real before/after and feedback to the homepage.4:5 export, native white balance and background mask; successful runtime239.93seconds. Browser verified result media and slider. Preserved base/result versions and prior blocked history; recording task handed the verified result. User foreground recovery and short-name base preparation were required.
+
+
+## 2026-09-10 15:45 EDT — DJ recording plan and photographer origin
+
+Kept video capture paused for concurrent Blender work. Added B2B's origin-led 59-second shot plan: personal history, credited inspiration posts, crate/maps/model notes, one audible handoff, one actual request-fit decision and takeover. Reviewed existing live-trial evidence and public soundtrack limitations. Recorded the user's own photography and Figmates editing need in Roundtrip's story and shot plan. Five Markdown files changed; no new media capture, playback, runtime calls or external reference fetches. Personal photos remain local; aggregate daily telemetry unavailable.
 
 
 ## 2026-09-10 16:30 EDT — Roundtrip recorded edit completed
@@ -413,3 +438,8 @@ Added and tested an optional manual foreground gate, submitted feedback through 
 - Independently verified saved metadata and master WAV existence:23.28s,124BPM,15.483871s overlap,−10.28dBFS peak, uninterrupted, original Astra reason retained. No independent listening-quality claim.
 - Screen video and system-audio inclusion remain unverified; direct master WAV is the same-take backup. Private media excluded. Next: inspect and synchronize the supplied video.
 - Measured82% shared account-wide weekly usage (10,080 minutes); no reset. Project development token totals unavailable.
+
+
+## 2026-09-10 16:49 EDT — Repository sync excluding demo video
+
+Reviewed 15 unpushed implementation commits and accumulated presentation/submission notes. Updated root README to reflect verified live Astra planning, recorded handoff evidence, and the assisted local Lightroom revision loop. Verification:134 B2B Python tests,42 Roundtrip unit tests,and14 JavaScript tests passed. Scanned172 new historical blobs for common credential patterns, oversized files,and audio/video/RAW paths; no matches. Included the previously user-selected coaching screenshot. Both video-production directories, recordings, private media/runtime state,and the downloaded third-party system-card PDF remain local. No new runtime jobs, video export or deployment; project token counts unavailable.

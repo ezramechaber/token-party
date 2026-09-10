@@ -8,8 +8,8 @@ Token Party brings together experiments in DJ mixing and native photo editing, b
 
 | Project | What it does | Status |
 | --- | --- | --- |
-| [Back 2 Back](b2b/README.md) | A browser DJ mixer with audio analysis, manual controls, and phrase-aligned transitions. | Local playback and rule-based mixing verified; live Astra planning still needs runtime verification. |
-| [Roundtrip](roundtrip/README.md) | A Lightroom workflow connecting photo feedback, native edits, exports, and gallery revisions. | Local editing demonstrated; see the build log for current remote-access and workflow limits. |
+| [Back 2 Back](b2b/README.md) | A browser DJ mixer with audio analysis, manual controls, and phrase-aligned transitions. | Live Astra set planning and request decisions verified; an Astra-selected handoff was recorded. See the [live trial](b2b/docs/astra-live-trial.md) and [build log](b2b/docs/build-log.md). |
+| [Roundtrip](roundtrip/README.md) | A Lightroom workflow connecting photo feedback, native edits, exports, and gallery revisions. | Local Astra-driven Lightroom edits and returned gallery revisions verified; foreground handoffs required operator assistance. Hosted end-to-end delivery remains unverified. See the [build log](roundtrip/build-log.md). |
 
 Start with each project's README for setup. Personal tracks, RAW photos, exports, credentials, and local caches are excluded from Git; provide your own media and local configuration.
 

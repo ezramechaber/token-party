@@ -68,3 +68,73 @@ Proposed polished invitation:
 > We're throwing a **~~Rent~~ Token Party**. Show up. Listen to music. Get your photo taken. Let Astra curate the sounds and edit your images.
 
 [Historical reference](https://en.wikipedia.org/wiki/Rent_party). This is event copy for the intended experience, not a new verification of the runtime. Full naming decision and the user's original wording are preserved in [decisions](../../research/decisions.md).
+
+
+## 2026-09-10 14:48 EDT — Selected model-coaching screenshot
+
+User selected [model-coaching.png](presentation-assets/model-coaching.png) for the presentation. Original copied without alteration and verified byte-for-byte. This is presentation evidence, not an instruction to resume Blender work or adopt the screenshot's deadline.
+
+**Story role:** Human creative direction during the build: insist on the approved visual reference, encourage another iteration, and set a deadline. Suggested caption: **“Art direction, with a pep talk.”** Suggested narration: “Part of building with Astra was learning how to coach it: hold the reference, keep pushing, and give it a deadline.” The screenshot documents the coaching; pair it with a subsequent result to demonstrate any actual improvement. Its references to other model accomplishments are quoted context, not independently verified claims in this presentation.
+
+**Placement:** A brief behind-the-scenes beat after the audience sees the DJ. In a three-minute demo, pair approved reference → this exchange → resulting render. For the one-minute cut, a short insert should preserve time for the audible handoff.
+
+**Remaining screenshot shortlist (not yet captured):**
+
+- Finished DJ/café view, showing the result of the visual work.
+- Musical direction and a verified Astra planning response, showing runtime curation.
+- Photo before/after with the actual edit request, showing the party's photography experience.
+- Both experiences together, establishing the Token Party setting.
+
+Keep the selected screenshot's wording intact. Choose additional frames from verified runs; the shortlist is not a claim that those captures or results already exist.
+
+
+## 2026-09-10 14:57 EDT — Proposed separate DJ submission
+
+User is considering submitting photography and DJ projects separately. [Shared strategy and deferred reference links](../../research/submission-storytelling.md). Multiple-entry eligibility is unverified; the form and comparison posts are saved for later at the user's request.
+
+**Working premise:** A former DJ pushes Astra from building a music tool to making decisions that can be judged by listening. The one-minute edit prioritizes a multi-track handoff; the Rickroll, spectrogram and rent-party history remain supporting origin material for longer formats.
+
+| Time | Picture | Spoken draft / purpose |
+| --- | --- | --- |
+| 0–7 s | Two real records loaded; outgoing record audible | “I used to DJ. I wanted to see how far Astra could go with two records and a real transition.” |
+| 7–16 s | Legible musical direction and actual model decision | “Back 2 Back gives Astra a crate and a direction. It helps choose what comes next.” Use a captured, verified decision. |
+| 16–24 s | Musical explanation and actual phrase/cue evidence | “We measure the beats and phrases, then the audio engine executes the handoff.” |
+| 24–43 s | Trigger prepared audition; two-bar lead-in and eight-bar overlap around 128 BPM | “Listen.” Keep the full transition audible at actual speed; no further narration during the blend. Rehearse timing for the actual chosen tempo. |
+| 43–53 s | User's coaching screenshot paired with the resulting DJ visual; brief build evidence | “Astra helped build the mixer and the visual world. My job was to keep listening—and keep pushing.” Show actual contributions, not an unsupported claim that coaching alone caused improvement. |
+| 53–60 s | Real manual takeover while B continues; name and verified repository link | “Back 2 Back. A DJ experiment you can hear—and take over.” |
+
+**Runtime update:** The latest repository activity entry records a successful real Astra Responses call and separate request-fit/set decisions. This supersedes the earlier blanket statement that no runtime call has been verified. The integrated multi-request exercise was still in progress; capture and verify a complete musical-direction → model plan → played handoff sequence before using the corresponding footage. Do not attribute deterministic beat timing or fades to the model, or say Astra hears raw audio when it receives feature summaries.
+
+**Breadth of Astra's role:** Let the soundtrack and visible evidence carry four roles: development of the mixer/analysis, construction of the visual scene, runtime set/request judgment, and iterative work under human direction. The 60-second cut can show these briefly; detailed tooling and diagnostics belong in supporting documentation. The model-coaching screenshot is already saved. Other shots are still a capture plan.
+
+
+## 2026-09-10 15:02 EDT — Stronger development and runtime story
+
+Supersedes the understated “helps choose what comes next” draft. User wants to emphasize upload analysis, transition judgment, and human taste through song selection. Both Astra's development role and its product role must be explicit.
+
+**Verified division of work:** `audio.analyze` invokes local numerical beat/key analysis and mix-map generation during import. These estimate musical timing and supported transition windows. `planner.make_plan` sends song evidence and valid transition options to Astra; its structured decision chooses track order and an option for each handoff, including available eight/sixteen-bar lengths, with musical reasons. `astra.request_fit` judges style, energy and continuity from measured evidence, metadata and known-recording knowledge. The audio engine executes timing. Astra does not directly analyze every uploaded audio file; it helped build the analysis software and reasons over its output at runtime.
+
+**Proposed spoken copy:**
+
+> I used to DJ. I wanted to see how far Astra could go with musical judgment.
+>
+> We built Back 2 Back together: the audio analysis, mixer, and visual world.
+>
+> Every upload gets a map: estimated beats, key, and places to mix in and out.
+>
+> Astra uses that evidence to choose the order, the transition, and its length—and explain why the records belong together.
+>
+> I choose the music. Astra helps shape the set. Listen.
+>
+> [Uninterrupted audible handoff.]
+>
+> Back 2 Back. My taste, with Astra on the other deck.
+
+Target about 40 seconds of speech and 15–20 seconds of actual music, with the lead-in timed during narration if needed. Show the map while naming analysis; show a real model-selected transition and reason during the runtime line. Brief build/coaching evidence establishes development credit. Human selection and manual takeover should be visible. This is a recording plan; do not imply that the full integrated sequence has already been captured.
+
+**Positioning:** “Discern what's good” should be made inspectable through a coherent pairing, a rejected mismatch, or a transition reason followed by audible proof. Treat taste as directed by the user and evaluated by listening. The broad claim “way beyond what has classically been available” is not established by the current evidence; no competitor research was done in this revision. Use the concrete musical decisions to make the case.
+
+
+## 2026-09-10 15:45 EDT — DJ origin, performance and requests
+
+While capture is paused for Blender, the current proposed cut is the [59-second DJ recording plan](demo-recording-plan.md). It retains the user's former-DJ origin and the two inspiration posts, then shows the crate, measured map and actual taste note, one uninterrupted eight-bar handoff, one request-fit result, and manual takeover. Watch-the-set visuals run during the musical proof. The live trial supports model order/transition/request decisions; the exact selected pair still needs a completed human-approved audition before capture. No new playback, request, scene edits or recording in this session.

@@ -84,6 +84,7 @@ function render() {
     select.replaceChildren(...photo.revisions.filter(r=>r.id !== current.id||photo.revisions.length===1).map(r=>{
       const option = document.createElement('option'); option.value = r.id; option.textContent = r.label; return option;
     }));
+    $('#photo').style.aspectRatio = `${current.width} / ${current.height}`;
     $('#afterImage').src = current.url;
     $('#afterImage').alt = `${current.label}: ${current.summary}`;
     $('#download').href = current.url;

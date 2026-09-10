@@ -72,3 +72,8 @@ Measured **33% account-wide weekly usage** at13:03:41EDT, 67% remaining. Newtran
 ## 2026-09-10 13:13 EDT — Back 2 Back working stop
 
 Measured35% weekly account usage (10080-minute window), reaching the agreed working stop; new tranche baseline26%, ceiling36%. Closed out the Mix Next paused-cue regression: four JS tests pass and browser confirmed B moved from paused00:13 to its planned00:32 cue/ARMED. Notified the separate model task to wrap up. Broader transition audit and full revision-2 UI remain outstanding; no new numeric allocation or reset assumed. Exact task tokens unavailable.
+
+
+### Roundtrip — 2026-09-10 13:18 EDT local workflow continuation
+
+Resumed account-wide weekly usage **36%**, against previous 37% ceiling. User explicitly approved **up to 42% total** to connect the local gallery and run the requested Lightroom edit. This increases the ceiling by 5 percentage points. Shared account meter, not per-project attribution. No reset authorized or redeemed.

@@ -50,12 +50,11 @@ def test_disconnected_edges_are_rejected():
 
 
 def test_astra_cannot_accept_a_pairwise_valid_but_infeasible_order(monkeypatch):
-    monkeypatch.setenv('OPENAI_API_KEY','test-key-not-a-secret')
-    class Response:
-        def __enter__(self):return self
-        def __exit__(self,*args):pass
-        def read(self):
-            return json.dumps({'output':[{'content':[{'type':'output_text','text':json.dumps({'order':['a','b','c'],'reason':'Test order'})}]}]}).encode()
-    monkeypatch.setattr('b2b.planner.urllib.request.urlopen',lambda *args,**kwargs:Response())
+    def answer(role,prompt,schema):
+        options=prompt['transitionOptions']
+        return {'order':['a','b','c'],'reason':'Test order','handoffs':[
+            {'option':next(e['option'] for e in options if (e['from'],e['to'],e['bars'])==(a,b,16)), 'reason':'Test'}
+            for a,b in [('a','b'),('b','c')]]}
+    monkeypatch.setattr('b2b.planner.decide',answer)
     with pytest.raises(ValueError,match='at least 8 seconds'):
         make_plan(trio(),120,16,use_ai=True)

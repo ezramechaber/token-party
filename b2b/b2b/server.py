@@ -10,8 +10,9 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException, Request, UploadFile, Form
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, SecretStr
 
+from . import astra
 from .audio import analyze, content_id, prepare, decode, SR
 from .beatgrid import local_attack_offset
 from .mixmap import analyze_mix_map
@@ -95,7 +96,16 @@ def youtube(req:YoutubeRequest):
 
 @app.get('/api/crate')
 def crate():
-    with lock:return {'tracks':[public(t) for t in tracks.values()],'jobs':dict(jobs),'astra':bool(os.getenv('OPENAI_API_KEY'))}
+    with lock:return {'tracks':[public(t) for t in tracks.values()],'jobs':dict(jobs),'astra':bool(astra.api_key())}
+
+class AstraKey(BaseModel):
+    key: SecretStr
+
+@app.post('/api/astra/configure')
+def configure_astra(req: AstraKey):
+    try: astra.configure(req.key.get_secret_value().strip())
+    except ValueError as error: raise HTTPException(400, str(error)) from None
+    return {'configured': True, 'model': astra.MODEL}
 
 @app.post('/api/scan')
 def scan():
@@ -162,6 +172,7 @@ class PlanRequest(BaseModel):
     direction:str=Field(default='',max_length=1000)
     astra:bool=False
     fixed:bool=False
+    previous:list[dict]=Field(default_factory=list,max_length=29)
 
 @app.post('/api/plan')
 def plan(req:PlanRequest):
@@ -174,6 +185,12 @@ def plan(req:PlanRequest):
             if not selection:raise ValueError('No tracks in this order are ready at the selected tempo.')
             transitions=[edge(a,b,req.tempo,req.bars) for a,b in zip(selection,selection[1:])]
             if any(e is None for e in transitions):raise ValueError('This order has an incompatible pair. Review cues or use Suggest order.')
+            if len(req.previous)>len(transitions):raise ValueError('Previous handoffs do not fit this order.')
+            for i,previous in enumerate(req.previous):
+                candidate=edge(selection[i],selection[i+1],req.tempo,previous.get('bars')) if previous.get('bars') in (8,16) else None
+                if not candidate or any(previous.get(k)!=candidate[k] for k in ('from','to','bars','exit','entry','duration')):
+                    raise ValueError('An existing handoff no longer matches the song map. Review before extending the set.')
+                transitions[i]={**candidate,**({'astraReason':str(previous['astraReason'])[:1000]} if previous.get('astraReason') else {})}
             validate_sequence(transitions,selection,req.tempo)
             return {'order':[t['id'] for t in selection],'transitions':transitions,'tempo':req.tempo,'mode':'Manual','reason':'Your order, with validated phrase windows.','excluded':excluded}
         return make_plan(selection,req.tempo,req.bars,req.direction,req.astra)
@@ -283,7 +300,7 @@ def listener_import(url,update):
     except Exception:
         path.unlink(missing_ok=True);raise
 
-request_manager=RequestManager(DATA,listener_tracks,listener_import)
+request_manager=RequestManager(DATA,listener_tracks,listener_import,assessor=astra.request_fit)
 
 class ListenerDeck(BaseModel):
     id:str=Field(default='',max_length=100)
@@ -308,6 +325,7 @@ class SessionProjection(BaseModel):
     bars:int=Field(default=16,ge=8,le=16)
     tailId:str=Field(default='',max_length=100)
     crateIds:list[str]=Field(default_factory=list,max_length=30)
+    direction:str=Field(default='',max_length=1000)
     broadcasting:bool=False
 
 @app.post('/api/session/state')
@@ -323,7 +341,7 @@ def publish_session(body:SessionProjection):
         session_state.update(decks=decks,crate=[t for t in crate if t],
                              transition=body.transition.model_dump(by_alias=True) if body.transition else None,
                              tempo=body.tempo,bars=body.bars,tailId=body.tailId if body.tailId in tracks else '',
-                             crateIds=[t for t in body.crateIds if t in tracks],broadcasting=body.broadcasting,updatedAt=time.time())
+                             crateIds=[t for t in body.crateIds if t in tracks],direction=body.direction,broadcasting=body.broadcasting,updatedAt=time.time())
     return {'ok':True}
 
 @app.get('/api/session/state')
@@ -341,7 +359,7 @@ class ListenerSubmission(BaseModel):
 
 @app.post('/api/requests')
 def listener_submit(body:ListenerSubmission):
-    with lock:context={k:copy.deepcopy(session_state[k]) for k in ('tempo','bars','tailId','crateIds')}
+    with lock:context={k:copy.deepcopy(session_state.get(k,'')) for k in ('tempo','bars','tailId','crateIds','direction')}
     try:return request_manager.submit(body.url,body.name,context)
     except ValueError as error:raise HTTPException(400,str(error)) from error
 
@@ -363,7 +381,7 @@ class ResolveRequest(BaseModel):
     approve:bool=False
 
 def request_context():
-    with lock:return {k:copy.deepcopy(session_state[k]) for k in ('tempo','bars','tailId','crateIds')}
+    with lock:return {k:copy.deepcopy(session_state.get(k,'')) for k in ('tempo','bars','tailId','crateIds','direction')}
 
 @app.post('/api/requests/{ident}/resolve')
 def resolve_request(ident:str,body:ResolveRequest):

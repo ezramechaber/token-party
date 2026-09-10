@@ -124,14 +124,15 @@ def _context(context):
     ids = context.get('crateIds', [])
     if not isinstance(ids, list) or len(ids) > 30 or any(not isinstance(i, str) or len(i) > 100 for i in ids):
         raise ValueError('The planned set must contain at most 30 track IDs.')
-    return {'tempo': tempo, 'bars': bars, 'tailId': str(context.get('tailId') or '')[:100], 'crateIds': ids[:]}
+    return {'tempo': tempo, 'bars': bars, 'tailId': str(context.get('tailId') or '')[:100], 'crateIds': ids[:], 'direction': str(context.get('direction') or '')[:1000]}
 
 
 class RequestManager:
-    def __init__(self, data_dir, get_tracks, import_youtube, metadata_resolver=None, auto_process=True):
+    def __init__(self, data_dir, get_tracks, import_youtube, metadata_resolver=None, auto_process=True, assessor=None):
         self.path = Path(data_dir) / 'requests.json'
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.get_tracks, self.import_youtube = get_tracks, import_youtube
+        self.assessor = assessor
         self.resolve_metadata = metadata_resolver or spotify_metadata
         self.lock = threading.RLock()
         self.worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix='listener-request') if auto_process else None
@@ -265,7 +266,7 @@ class RequestManager:
                              reason='An earlier request was removed. Recheck this handoff against the current set.')
             return result
 
-    def _assessed(self, record, track, tracks, context, approve=False):
+    def _assessed(self, record, track, tracks, context, approve=False, judgment=None, queue_snapshot=None):
         queued = self.queue_ids()
         if track['id'] in queued:
             fit = {'status': 'rejected', 'reason': 'This recording is already in the request queue.'}
@@ -273,6 +274,20 @@ class RequestManager:
             fit = assess_fit(track, tracks, context, tail_id=queued[-1] if queued else None)
         if approve and fit['status'] == 'review' and fit.get('reviewKind') in ('energy', 'key') and fit.get('transition'):
             fit.update(status='accepted', reason='The DJ approved the musical fit; tempo, grid and phrase handoff pass.', approvedByDJ=True)
+        if judgment is not None:
+            fit['decisionMode'] = 'Astra'
+            fit['astraReason'] = judgment['reason']
+            fit['technicalReason'] = fit['reason']
+            if queue_snapshot != queued:
+                fit.update(status='review', reviewKind='queue-changed', reason='The queue changed while Astra was checking. Retry against the new handoff.')
+            elif judgment['status'] != 'accepted':
+                fit.update(status=judgment['status'], reviewKind='astra', reason='Astra: '+judgment['reason'])
+            elif fit['status'] == 'accepted' or (fit.get('reviewKind') in ('energy','key') and fit.get('transition')):
+                fit.update(status='accepted', reason='Astra: '+judgment['reason'])
+            else:
+                fit['reason'] += ' Astra likes the musical fit, but this technical check still needs attention.'
+        else:
+            fit.update(decisionMode='Rules', astraReason=None, technicalReason=fit['reason'])
         accepted = fit['status'] == 'accepted'
         # Clear evidence from an earlier failed attempt before storing fresh findings.
         fields = {'transition': None, 'reviewKind': None, 'approvedByDJ': False, **fit,
@@ -281,8 +296,16 @@ class RequestManager:
                   'queuedAt': time.time() if accepted else None}
         return self._update(record['id'], attempt=record.get('attempt', 0), **fields)
 
+    def _judge(self, track, tracks, context, queued):
+        if self.assessor is None:
+            return None
+        try:
+            return self.assessor(track, tracks, {**context, 'tailId': queued[-1] if queued else context.get('tailId')})
+        except Exception:
+            return {'status':'review', 'reason':'Astra is unavailable. Retry its assessment before adding this request.'}
+
     def resolve(self, ident, track_id, context, approve=False):
-        """DJ confirms the recording; only energy/key taste judgments are overridable."""
+        """Network judgment runs outside the lock; stale decisions never reserve a slot."""
         context = _context(context)
         tracks = self.get_tracks()
         track = next((t for t in tracks if t['id'] == track_id), None)
@@ -293,8 +316,15 @@ class RequestManager:
             if record['status'] in PENDING or record['status'] in ('accepted', 'added'):
                 raise ValueError('This request is already processing, queued or added to the set.')
             self._history(record, 'approve' if approve else 'confirm-recording')
-            record['attempt'] = record.get('attempt', 0) + 1
-            return self._assessed(record, track, tracks, context, approve=approve)
+            record['attempt'] = attempt = record.get('attempt', 0) + 1
+            queued = self.queue_ids()
+            self._update(ident, status='analyzing', reason='Checking musical fit and the handoff.')
+        judgment = self._judge(track, tracks, context, queued)
+        with self.lock:
+            record = self._record(ident)
+            if record.get('attempt',0) != attempt:
+                return self._public(record)
+            return self._assessed(record, track, tracks, context, approve=approve, judgment=judgment, queue_snapshot=queued)
 
     def process(self, ident):
         with self.lock:
@@ -324,7 +354,13 @@ class RequestManager:
             with self.lock:
                 if self._record(ident).get('attempt', 0) != attempt:
                     return self._public(self._record(ident))
-                return self._assessed(record, track, tracks, record['context'])
+                queued = self.queue_ids()
+                self._update(ident, attempt=attempt, status='analyzing', reason='Astra is checking musical fit.' if self.assessor else 'Checking the handoff.')
+            judgment = self._judge(track, tracks, record['context'], queued)
+            with self.lock:
+                if self._record(ident).get('attempt',0) != attempt:
+                    return self._public(self._record(ident))
+                return self._assessed(record, track, tracks, record['context'], judgment=judgment, queue_snapshot=queued)
         except Exception:
             return self._update(ident, attempt=attempt, status='error', reason='The source could not be checked. The DJ can retry or select an existing audio file.')
 

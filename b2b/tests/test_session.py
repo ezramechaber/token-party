@@ -17,7 +17,7 @@ def test_request_context_comes_from_session(monkeypatch):
     class Manager:
         def submit(self,url,name,context):return context
     monkeypatch.setattr(server,'request_manager',Manager())
-    monkeypatch.setattr(server,'session_state',{'tempo':125,'bars':8,'tailId':'tail','crateIds':['a','tail']})
+    monkeypatch.setattr(server,'session_state',{'tempo':125,'bars':8,'tailId':'tail','crateIds':['a','tail'],'direction':'Warm house'})
     assert server.listener_submit(server.ListenerSubmission(url='https://example.com',name='Test'))==server.session_state
 
 
@@ -27,7 +27,7 @@ def test_request_review_uses_current_session_and_forwards_decision(monkeypatch):
             return {'id':ident,'track':track_id,'context':context,'approved':approve}
         def retry(self,ident,context):return context
         def dismiss(self,ident):raise ValueError('Unknown request')
-    context={'tempo':126,'bars':8,'tailId':'current-tail','crateIds':['current-tail']}
+    context={'tempo':126,'bars':8,'tailId':'current-tail','crateIds':['current-tail'],'direction':'Build slowly'}
     monkeypatch.setattr(server,'request_manager',Manager())
     monkeypatch.setattr(server,'session_state',context)
     result=server.resolve_request('request',server.ResolveRequest(trackId='candidate',approve=True))

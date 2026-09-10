@@ -19,10 +19,10 @@ def test_reject_duplicate_crate_ids(monkeypatch):
     assert error.value.status_code==400
 
 def test_missing_key_does_not_claim_astra(monkeypatch):
-    monkeypatch.delenv('OPENAI_API_KEY',raising=False)
+    monkeypatch.setattr(server.astra,'api_key',lambda:'')
     monkeypatch.setattr(server,'tracks',{'a':track('a'),'b':track('b')})
     with pytest.raises(HTTPException) as error:server.plan(server.PlanRequest(ids=['a','b'],astra=True))
-    assert 'OPENAI_API_KEY' in error.value.detail
+    assert 'Connect Astra' in error.value.detail
 
 
 def test_fixed_order_rejects_overlapping_middle_track_windows(monkeypatch):
@@ -63,3 +63,14 @@ def test_marker_save_rebuilds_then_publishes_updated_grid(monkeypatch):
     result=server.correct('a',server.Correction(bpm=125,gridOffset=.05,entry=.05,introBars=16,exitEnd=250,outroBars=16))
     assert observed==[result] and result['reviewed'] and result['ready']
     assert result['introEnd']==.05+16*240/125
+
+def test_extension_preserves_astra_short_handoff(monkeypatch):
+    from b2b.planner import edge
+    rows=[track('a'),track('b'),track('c')]
+    monkeypatch.setattr(server,'tracks',{t['id']:t for t in rows})
+    previous={**edge(rows[0],rows[1],128,8),'astraReason':'Quick handoff preserves momentum.'}
+    result=server.plan(server.PlanRequest(ids=['a','b','c'],tempo=128,bars=16,fixed=True,previous=[previous]))
+    assert result['transitions'][0]==previous
+    previous['entry']+=.1
+    with pytest.raises(HTTPException):
+        server.plan(server.PlanRequest(ids=['a','b','c'],tempo=128,bars=16,fixed=True,previous=[previous]))

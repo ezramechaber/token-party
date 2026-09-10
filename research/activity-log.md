@@ -344,3 +344,12 @@ Story homepage and gallery now share localhost:8766, a common logo/header, activ
 ## 2026-09-10 14:31 EDT
 
 b2b effects cleanup: removed redundant Off button and inactive summary label. One selector controls Off/Delay/Flanger; amount/repeat/help only appear when relevant, and active summary hides while expanded. Verified initialized browser drawer and JS syntax. No DSP changes. Exact session tokens/tool totals unavailable.
+
+
+## 2026-09-10 14:48 EDT — Presentation screenshot selection
+
+Saved the user's selected model-coaching screenshot under B2B presentation assets, unchanged and verified byte-for-byte. Added caption, narration, placement and a remaining screenshot shortlist to [presentation notes](../b2b/docs/presentation.md). No Blender assets modified; no additional screenshots captured or publication performed. One image added and two Markdown files updated; aggregate daily telemetry unavailable.
+
+## 2026-09-10 — Two-sided Astra runtime
+
+Connected the dedicated local b2b API key and verified a real gpt-6-astra Responses call. Added separate structured request-fit and DJ-set decisions, validated transition choices, musical explanations, private token-usage logging, and lock-free network assessment with stale-result protection. Local key is ignored by Git and mode0600; no audio or credentials enter model prompts. Tests:129 Python tests and4 handoff regressions passed; additional existing-handoff preservation test passed. Five-song mixed-fit/YouTube exercise is in progress. Exact development token totals unavailable; API usage is measured separately in the private runtime log.

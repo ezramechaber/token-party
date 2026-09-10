@@ -405,3 +405,11 @@ Added and tested an optional manual foreground gate, submitted feedback through 
 - Objective: preserve the exact model-selected transition during the recorded demo. Added matched-edge revalidation and reuse for preview/recording, preserving the full plan and explanation; fixed planning remains fallback.
 - Verified26 targeted tests and syntax/whitespace checks. Recording task notified; browser/audio untouched. Future demo check: compare saved transition metadata to the chosen Astra edge.
 - Measured shared account weekly usage81% (10,080 minutes); no reset or runtime model calls. Development token totals unavailable.
+
+
+### 2026-09-10 16:40 EDT — B2B demo capture verification
+
+- Logged the recording task’s completed native-Chrome Astra-selected8-bar handoff and scene/request-history demonstration after commit1481122.
+- Independently verified saved metadata and master WAV existence:23.28s,124BPM,15.483871s overlap,−10.28dBFS peak, uninterrupted, original Astra reason retained. No independent listening-quality claim.
+- Screen video and system-audio inclusion remain unverified; direct master WAV is the same-take backup. Private media excluded. Next: inspect and synchronize the supplied video.
+- Measured82% shared account-wide weekly usage (10,080 minutes); no reset. Project development token totals unavailable.

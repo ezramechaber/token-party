@@ -142,3 +142,12 @@ At the user’s request, added subtle breathing, weight shifts and head glances 
 Preview transition and Record audition now revalidate and reuse the matching Astra edge from the current plan, including the selected entry, exit, overlap and musical reason. The full set and taste context remain visible. Nonmatching pairs use explicit fixed planning; changed song-map cues fail instead of silently substituting another handoff. Capture metadata retains Astra’s original reason.
 
 Verified14 JavaScript tests and12 server/sequence tests, plus syntax/whitespace checks. No browser, audio, server restart or Blender interaction during the recording task’s capture. The recording task was notified to reload and regenerate its in-memory plan before recording. Account-wide weekly usage81% of the10,080-minute window; no reset or runtime model call in this fix.
+
+
+## 2026-09-10 16:40 EDT — Recorded Astra handoff verified
+
+After reloading the audition fix, the recording task generated a fresh Astra plan and captured its Dedication (Sound Factory Mix) → Just A Little (Sunday Service) handoff in native Chrome. It observed blend bars4,7,8, then “Transition complete,” continued incoming playback, and the rendered DJ scene/handoff status. Existing request history was shown separately. These UI observations are reported by the recording task; no independent sound-quality assessment is claimed.
+
+Independently checked the private capture metadata and WAV existence:23.28seconds total,124BPM,8-bar blend from3.959334s to19.443205s (15.483871s), peak−10.28dBFS, interrupted:false. Original-track exit337.9295s and entry61.4325s correspond to estimated outgoing bar177 and incoming bar33; the musical-rise candidate is bar41. Capture metadata preserves the actual Astra reason: “I bring in Just A Little (Sunday Service) to build tension without rushing the opening stretch. On paper, this eight-bar blend ends at its harmonic lift around bar 41; the shared minor-key reading is promising, not gospel.”
+
+Direct master WAV is available as the system-audio backup. Private capture files remain ignored and uncommitted. The user’s screen video has not yet been supplied; inclusion of system audio and final video synchronization are unverified. No public-upload or soundtrack-rights claim is made. Next: inspect the supplied screen recording, align this same-take master audio if necessary, and verify the final demo before publication. Account-wide weekly usage82% in the10,080-minute window; no reset.

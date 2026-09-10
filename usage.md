@@ -130,3 +130,8 @@ Measured80% account-wide weekly usage after the user-requested recorded edit; co
 ### Back 2 Back — 2026-09-10 16:37 EDT audition capture fix
 
 Measured **81% account-wide weekly usage** in the **10,080-minute window**. This includes concurrent projects and is not a b2b token count. Numeric cap remains removed for continued b2b work. No reset redeemed; no runtime Astra calls for this fix. Development token totals unavailable.
+
+
+### Back 2 Back — 2026-09-10 16:40 EDT completed demo capture
+
+Measured **82% account-wide weekly usage** in the **10,080-minute window** after the recorded Astra handoff. This shared allowance includes concurrent work; no per-project token attribution. Numeric cap remains removed. No reset redeemed. This verification performed no runtime model calls.

@@ -2,11 +2,11 @@
 
 ## Project
 
-This repository contains multiple open-source hackathon projects exploring what can be built with ChatGPT 6 and Astra. Back 2 Back, a DJ program, and Roundtrip, a Lightroom workflow experiment, are separate projects; preserve each project's work and decision history.
+This repository contains multiple open-source hackathon projects exploring what can be built with ChatGPT 6 and Astra. Back 2 Back, a DJ program, Roundtrip, a Lightroom workflow experiment, and Design Tutor, a website-to-Figma teaching concept, are separate projects; preserve each project's work and decision history.
 
 ## Repository organization, usage, and commits
 
-- Each project must live in its own subfolder (currently `b2b/` and `roundtrip/`). Keep project-specific code, dependencies, documentation, and demo assets together. Shared repository guidance and cross-project research may remain at the top level or in `research/`.
+- Each project must live in its own subfolder (currently `b2b/`, `roundtrip/`, and `design-tutor/`). Keep project-specific code, dependencies, documentation, and demo assets together. Shared repository guidance and cross-project research may remain at the top level or in `research/`.
 - Maintain the top-level `usage.md` as the register of active projects. At each project's start, record its name, folder, status, start timestamp, measured starting usage (including the metric and measurement window), and agreed project budget with units.
 - Usage limits are account-wide; do not present them as per-project token counts. If historical starting usage or a budget was not recorded, mark it unknown or not set rather than inventing it. Preserve baseline entries and append later measurements or budget changes with timestamps.
 - Commit after each completed demo. Verify the demo, update its activity and usage records, and commit the relevant project changes with a descriptive message. Exclude secrets, private media, and unrelated unfinished work.
@@ -16,13 +16,15 @@ This repository contains multiple open-source hackathon projects exploring what 
 - The user selected Back 2 Back as the next project: a small-crate DJ program for 4/4 house, with manual controls and automatic phrase-aligned transitions.
 - See `b2b/docs/plan.md` for scope and `b2b/docs/build-log.md` for actual implementation, verification and weekly-usage checkpoints.
 - Current implementation: local Python/FastAPI service, NumPy/SciPy feature analysis, FFmpeg tempo preparation and a browser Web Audio mixer. Personal tracks and caches belong in ignored `b2b/.b2b/`.
-- Latest user budget extension: another 10 percentage points account-wide, measured from 26% weekly used at 2026-09-10 12:43:03 EDT. New tranche ceiling: 36% total; conservative working stop: 35%. Preserve the original 9% baseline and +20-point allocation in the usage log. Inspect before substantial work; do not redeem resets.
+- Latest user instruction removes the prior numeric cap for continued b2b UI, audio and request work. Preserve earlier budget history in usage.md and keep logging measured account-wide usage. Do not redeem resets. Blender modeling continues in a separate task; do not edit its scene assets during that task.
 - Runtime API key will be configured later. Rule-based operation must remain explicit; do not label it as runtime Astra.
 - Future direction: Blender-built 3D deck driven by the same real audio controls, after playback is verified.
 - Preserve earlier Lightroom experiments as separate work. Prioritize a two-track audible transition before expanding the crate.
 - Initial mix rules: clean club intros/outros, matched 8- or 16-bar overlaps, linear channel fades and low-EQ swaps. Separate measured audio timing from Astra's runtime planning.
 
 ## Ideation conventions for future changes
+
+- Design Tutor is currently idea generation only: no code or implementation. See `design-tutor/README.md` for the user's concept, candidate experiences, and open questions. This exploration does not replace Back 2 Back or Roundtrip.
 
 - Do not assume a product, audience, or technical architecture before it is agreed.
 - Generate multiple concrete ideas before converging on one.

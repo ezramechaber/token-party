@@ -212,6 +212,20 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 
 **Activity statistics:** Three Markdown files changed by this session (measured). Project token counts and aggregate daily telemetry unavailable.
 
+## 2026-09-10 11:44 EDT — Explore Design Tutor
+
+**Current objective:** Capture the user's website-to-Figma design-tutor idea in a separate folder, with idea generation only and no code.
+
+**Completed:** Added [Design Tutor](../design-tutor/README.md) with three candidate experiences, a concrete lesson, a proposed narrow experiment, and a one-minute demo concept. Registered the project and its starting account-wide quota observation: 10% used in a seven-day window. Updated the project guide without changing the other projects' work.
+
+**Decisions and alternatives:** Website reconstruction through computer use followed by step-by-step design teaching is the confirmed concept. Narrated reconstruction plus one editable design experiment is a proposal; guided learner participation remains an alternative. No architecture, audience, or implementation budget selected. No competitors or runtime capabilities researched.
+
+**Open questions:** Event eligibility given the education-chatbot restriction; reliable native Figma editing; useful fidelity and latency; whether learners can apply the lesson independently.
+
+**Likely next step:** Discuss the candidate experiences and choose a reference before authorizing any implementation.
+
+**Activity statistics:** Four Markdown files changed by this session (measured). No code, Figma edits, or demo produced; no demo commit required. Project token counts and aggregate daily telemetry unavailable.
+
 ## 2026-09-10 12:16 EDT — Roundtrip runtime and remote inbox
 
 **Objective:** Turn gallery feedback into a real Lightroom revision and prepare remote reviewer requests.
@@ -240,6 +254,16 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 
 **Next:** Two further user-requested agents investigate the reported steady sync offset and drum support across intro windows. A per-song mix map is the proposed evidence layer for model planning. Usage latest21% account-wide versus9% originalbaseline; budget unchanged. Exact projecttokens and dailytool totals unavailable.
 
+## 2026-09-10 12:40 EDT — Back 2 Back presentation story
+
+**Objective:** Connect the Ableton Rickroll and dog-bark spectrogram examples with the user's DJ history.
+
+**Completed:** Located and browser-verified both original posts and the Rickroll acknowledgment; visually inspected the reproduced dog-bark response. Added [presentation notes](../b2b/docs/presentation.md) with three narrative options, a proposed opening, a one-minute sequence, and a three-minute expansion.
+
+**Decisions and open questions:** Proposed the personal origin story followed by an uninterrupted audible transition. DJ biography detail and exact demo pair remain open. Preserve the distinction between inspiration, measured audio analysis, rule-based mixing, and the still-unverified Astra runtime path. No deck, video, application changes, or completed demo in this session.
+
+**Usage:** Starting observation 24% account-wide weekly used in a 10,080-minute window; original baseline 9%, allocation +20 percentage points, conservative stop 26%. No reset redeemed. Project tokens and aggregate daily activity totals unavailable.
+
 ## 2026-09-10 12:40 EDT — Back 2 Back musical handoffs and clean reactive visuals
 
 **Completed:** Integrated two analysis agents' findings: prepared attacks had~42ms offset, and kick coverage alone did not preserve musical texture. Added local attack correction, private editable/exportable song maps, drum-supported overlap validation and spectral musical-arrival proposals. Proposed Nightcrawlers entry8.9666s and arrival24.7037s. Refreshed13maps;54tests passed in4.40seconds.
@@ -249,6 +273,11 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 **Limits and next steps:** Human audition still decides musical quality; spectral power does not recognize a hook. Full-crate Auto and live runtime Astra remain unverified. API key still pending. Usage25% account-wide versus9% baseline, allocation+20percentage points; totals include concurrent work. Exact projecttokens and dailychat/tool totals unavailable; noresetused.
 
 
+## 2026-09-10 12:55 EDT — Token Party concept
+
+Read the user's rent-party reference and recorded the proposed Token Party identity in [idea evolutions](idea-evolutions.md): photo editing plus a DJ set. Explored a party, live studio, and flyer treatment. Branding discussion only; no project rename or implementation. Open: whether this becomes the shared presentation frame. Two Markdown files updated; token and daily activity totals unavailable.
+
+
 ## 2026-09-10 12:55 EDT — Roundtrip RAW gallery
 
 Replaced stock samples with three real Lightroom RAW exports; preserved the original study’s four revisions. Private gallery now has four photos, navigation, per-revision comments, protected R2 media, and a photographer upload form. Browser checks at 320/390/768/1440 px and gallery API tests passed. RAWs remained unchanged; personal media stays outside Git. Remote editing still awaits resolution of Sites access. See `roundtrip/build-log.md` for evidence and limitations. Weekly account usage checkpoint 31%; Roundtrip authorized ceiling 37%, shared across concurrent work; project token counts unavailable.
@@ -256,3 +285,18 @@ Replaced stock samples with three real Lightroom RAW exports; preserved the orig
 ## 2026-09-10 13:04 EDT — Back 2 Back listening reference and café DJ
 
 Measured four actual master recordings and separated fade, mastering gain and arrangement effects. The approved final version uses equal-power/loudness matching and an incoming phrase with drums continuing after handoff. Added separate16barphrase anchor and saved comparisons.93tests passed5.36s; localHLSlistener verified inbrowser. Rebuilt Blenderrobot as humanDJ inwalnutcafé; all14coverscached, withtwo release-family sources identified. Source/model/verification details in [buildlog](../b2b/docs/build-log.md). Publiclistener deferredbyuser. Usage33% accountweekly, newbaseline26%, workingstop35%; exactprojecttokens unavailable. Next: continued humanmix feedback, runtimeAstra key, and optionalpublicsharing whenrequested.
+
+
+## 2026-09-10 13:05 EDT — Token Party name selected
+
+Recorded the user's chosen **~~Rent~~ Token Party** styling and shared invitation in [decisions](decisions.md) and [presentation notes](../b2b/docs/presentation.md). Retained the original wording and drafted a concise historical introduction. Earlier music/spectrogram inspirations remain supporting material. Three Markdown files updated; no code, deployment or completed demo. Runtime validation remains separate; token and daily activity totals unavailable.
+
+
+## 2026-09-10 13:20 EDT — Token Party repository
+
+Created the public GitHub repository `ezramechaber/token-party` and connected this checkout as `origin`. Kept the local `astra-hackathon` folder because Python virtual-environment scripts embed its absolute path. Existing uncommitted project work remains local. Checked 341 historical Git blobs for common credential patterns and oversized files; no matches found. No application changes or demo verification in this repository-management session.
+
+
+## 2026-09-10 13:27 EDT — Publish accumulated Token Party work
+
+Prepared the accumulated project research, naming decisions, Design Tutor concept, usage records, and a root README for publication. Included the three existing Roundtrip commits covering gallery verification, Lightroom retry evidence, and native crop proportions. Verified all 37 Roundtrip unit tests. Kept the downloaded third-party system-card PDF local; the research links to its original source. Personal media and credentials remain excluded. No new runtime or completed-demo claim; project token totals unavailable.

@@ -55,3 +55,16 @@ The README describes working manual/rule-based mixing and an optional Astra plan
 The current script truthfully says “built with Astra.” The event also requires runtime AI: a successful runtime planning demonstration is still needed before claiming that Astra chooses the set in the finished demo. Once verified, show one real user direction and resulting plan in the setup slot, then let the actual mixer execute it. Do not narrate deterministic fades as model decisions.
 
 Next: choose the personal DJ detail; rehearse and listen to the exact pair; cue the reference assets; verify runtime planning; record the minute. No public post, media redistribution, or demo commit was performed in this narrative session.
+
+
+## 2026-09-10 13:05 EDT — Chosen event framing
+
+The user selected **~~Rent~~ Token Party** as the shared event identity. Strike through only “Rent”; retain Token Party in plain-text contexts. This supersedes the earlier tentative naming and moves the rent-party invitation to the opening. The Ableton Rickroll, dog-bark spectrogram and DJ background remain supporting origin material.
+
+Proposed polished invitation:
+
+> New York has a tradition: throw a party, play some music, and pass the hat to help cover rent. Born in Harlem and later immortalized in *Party Girl*, the rent party brought people together to keep the lights on.
+>
+> We're throwing a **~~Rent~~ Token Party**. Show up. Listen to music. Get your photo taken. Let Astra curate the sounds and edit your images.
+
+[Historical reference](https://en.wikipedia.org/wiki/Rent_party). This is event copy for the intended experience, not a new verification of the runtime. Full naming decision and the user's original wording are preserved in [decisions](../../research/decisions.md).

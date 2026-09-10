@@ -8,6 +8,7 @@ Each project lives in its own subfolder. Record starting usage and an agreed bud
 | --- | --- | --- | --- | --- | --- |
 | Back 2 Back | `b2b/` | Local prototype verified; human mixing review underway | 2026-09-10; exact start time not recorded | 9% weekly account-wide quota used before implementation; reconciled below | Original +20 points; additional +10 from 26% reading on 2026-09-10 12:43 EDT; new ceiling 36%, working stop 35% |
 | Roundtrip | `roundtrip/` | Lightroom demo built; further workflow work open | 2026-09-10; exact start time not recorded | Unknown — no starting snapshot recorded | Not set; prior repository default treats token cost as unconstrained |
+| Design Tutor | `design-tutor/` | Idea generation only; no implementation | 2026-09-10 11:44:18 EDT (15:44:18 UTC) | Account-wide Codex quota: 10% used, 90% remaining in a 10,080-minute (7-day) window | Not set; no agreed token, quota, dollar, or elapsed-time allocation |
 
 Existing project planning and demo history remain linked from [the activity log](research/activity-log.md). Roundtrip's private demo assets currently live in ignored `.local-demo/fuji-portrait/`; they must remain excluded from commits. This register does not imply either project has a completed autonomous runtime.
 
@@ -16,6 +17,7 @@ Existing project planning and demo history remain linked from [the activity log]
 | Observed at | Scope and metric | Measured usage | Notes |
 | --- | --- | --- | --- |
 | 2026-09-10 11:43 EDT (15:43 UTC) | Account-wide Codex quota, 10,080-minute (7-day) window | 9% used; 91% remaining | Read from Codex usage limits while establishing this register. Both projects already existed, so this is not a starting baseline or project-specific consumption. Token counts unavailable. |
+| 2026-09-10 11:44:18 EDT (15:44:18 UTC) | Account-wide Codex quota, 10,080-minute (7-day) window | 10% used; 90% remaining | Starting observation for Design Tutor ideation. Shared account usage, not project-specific consumption. Project token counts unavailable; no reset consumed. |
 
 For new projects, capture usage before implementation and record the budget with explicit units (for example tokens, quota percentage points, dollars, or elapsed time). Record an explicitly agreed unlimited budget as such; an unset budget is not an agreed unlimited allocation. Account-wide quota changes can include other work and resets and must not be attributed entirely to one project.
 
@@ -37,6 +39,10 @@ Status: local two-deck prototype demonstrated with 13 privately held tracks, a c
 
 User requested subagents for image-led space-themed UI and YouTube import, then two more for beat alignment and intro/mix-map improvements. Starting continuation observation20% weekly used; 12:22:44 EDT20%; next checkpoint approximately12:24 EDT21% (10,080-minute account window). Original measured9% baseline and +20-percentage-point allocation remain unchanged; conservative totalstop26%. Observed account increase12points includes concurrent work. No reset. Image-generation billing and per-project token totals are not exposed by the quota tool.
 
+## 2026-09-10 12:40 EDT — Back 2 Back presentation planning
+
+At this session's start, the usage tool reported **24% used, 76% remaining** in the account-wide 10,080-minute weekly window. Original baseline 9%; agreed allocation +20 percentage points; conservative stopping point 26%, unchanged. The observed +15-point account change includes concurrent work and is not project-specific consumption. Located presentation references and drafted the origin story/demo sequence. No reset redeemed; project token counts unavailable.
+
 ## 2026-09-10 12:40 EDT — Back 2 Back map and visual verification
 
 Account-wide weekly Codex allowance: **25% used**, 75% remaining, in the10,080-minute window. Intermediate continuation checkpoints22%,23%,24% preceded this reading. Observed change from the recorded9% baseline is+16percentage points; concurrent projects share this meter, so this is not precise Back 2 Back consumption. The user's+20-point budget and conservative26% total stopping point remain unchanged. No reset redeemed. Exact per-project tokens and image-generation billing are unavailable.
@@ -48,7 +54,6 @@ Completed scope: attack-aligned playback, editable song maps and musical-arrival
 User explicitly authorized **another 10 percentage points account-wide** for the next phase. Fresh Codex reading: **26% used, 74% remaining** in the 10,080-minute weekly window. Use 26% as the new tranche baseline: **36% total ceiling**, with a **35% working stop** for reporting lag. This conservatively counts the new allocation from the current reading rather than adding unused earlier headroom. Original baseline and historical allocations remain recorded above. No reset used.
 
 Next authorized scope: implement the approved chrome-art UI, create a DJ/booth scene tied to actual mixer state, and enable listener Spotify/YouTube requests with fit assessment and queueing. User requested a Git checkpoint before further implementation.
-
 
 ### Roundtrip — 2026-09-10 12:52 EDT budget extension
 
@@ -73,7 +78,10 @@ Measured **33% account-wide weekly usage** at13:03:41EDT, 67% remaining. Newtran
 
 Measured35% weekly account usage (10080-minute window), reaching the agreed working stop; new tranche baseline26%, ceiling36%. Closed out the Mix Next paused-cue regression: four JS tests pass and browser confirmed B moved from paused00:13 to its planned00:32 cue/ARMED. Notified the separate model task to wrap up. Broader transition audit and full revision-2 UI remain outstanding; no new numeric allocation or reset assumed. Exact task tokens unavailable.
 
-
 ### Roundtrip — 2026-09-10 13:18 EDT local workflow continuation
 
 Resumed account-wide weekly usage **36%**, against previous 37% ceiling. User explicitly approved **up to 42% total** to connect the local gallery and run the requested Lightroom edit. This increases the ceiling by 5 percentage points. Shared account meter, not per-project attribution. No reset authorized or redeemed.
+
+## 2026-09-10 13:26 EDT — Back 2 Back resumed without numeric cap
+
+User clarified that continued UI, audio and request work should proceed without the earlier budget cap, then explicitly requested continued work and commits after substantial changes. This supersedes this task's earlier35% working stop/36% ceiling; historical allocations remain recorded above. Fresh measurement39% used in the account-wide10080-minute weekly window. No reset authorized or redeemed. Exact project tokens are unavailable; other tasks share the meter. Blender scene modeling stays in its separate task.

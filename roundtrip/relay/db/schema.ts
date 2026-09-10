@@ -12,3 +12,11 @@ export const requests = sqliteTable('requests', {
   status: text('status').notNull(), message: text('message').notNull(),
   resultLabel: text('result_label'), created: integer('created').notNull(), updated: integer('updated').notNull(),
 }, t => [uniqueIndex('one_active_request').on(sql`(1)`).where(sql`${t.status} IN ('requested','running','verifying')`)]);
+export const galleryRevisions = sqliteTable('gallery_revisions', {
+  id:text('id').primaryKey(),photoId:text('photo_id').notNull(),label:text('label').notNull(),
+  summary:text('summary').notNull(),objectKey:text('object_key').notNull(),created:integer('created').notNull(),
+});
+export const comments = sqliteTable('comments', {
+  id:text('id').primaryKey(),photoId:text('photo_id').notNull(),revisionId:text('revision_id').notNull(),
+  text:text('text').notNull(),created:integer('created').notNull(),
+});

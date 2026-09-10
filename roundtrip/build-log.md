@@ -46,3 +46,17 @@ The user explicitly authorized access for anyone with the secret review link. Ad
 One active request remains enforced by the D1 unique index and local job lock. Remote pairing disables local submissions, establishing one authoritative inbox. New requests are rejected when the Mac is offline, busy, or paused. Thirty-five Python tests, JavaScript syntax, TypeScript checking, production build, and HTTP scope/authentication/concurrency tests pass. The local worker retains a one-job allowance to respect the remaining weekly budget.
 
 Version 3 deployed successfully with the examples and admission limits. The access expansion was again rejected by automatic approval review, despite the user's secret-link authorization and a source audit confirming that every feedback API operation requires the link credential. No access workaround was used; Sites remains owner-only. The remaining request is explicit approval of Sites' `Public` audience setting while retaining application-level secret-link authorization.
+
+## 2026-09-10 12:37 EDT — Sample gallery work in progress; budget boundary
+
+The user requested a navigable gallery with several sample photos, comments beneath each photo, and revision history. Implemented an unshipped gallery component, sample-photo catalog, per-revision comments, and authenticated R2 media upload/read routes. Added an unapplied migration for comments and gallery revisions. The existing production inbox is unchanged; the new gallery still needs validation, native-export upload, and publication. Sample photos are comment-only and cannot target the Lightroom source.
+
+Account-wide weekly usage reached the previously agreed 24% ceiling. An asynchronous request for up to three additional percentage points is pending. Stop further development until budget authorization arrives. Do not deploy or present this partial gallery as complete.
+
+## 2026-09-10 12:49 EDT — Private gallery published; RAW selection pending
+
+User approved three additional weekly percentage points, from 24% to 27%. Version 4 deployed successfully with four navigable photos, protected cloud media, per-photo/per-revision comments, and an import form. Uploaded the actual Lightroom original and V1–V3 JPEG exports to private R2. Three stock samples remain comment-only. TypeScript, production build, and gallery HTTP integration tests passed. Production browser verified four photos, revision controls, loaded image pixels, and persisted comments. A demo comment landed on the selected stock photo during concurrent navigation; appended an explicit correction. New gallery responsive QA remains incomplete.
+
+User subsequently requested replacing stock samples with their own existing Lightroom RAWs. Opened Lightroom and filtered to four stars and above (364 photographs); found promising portraits against lavender backgrounds and plants. No RAW was changed or exported in this selection step. Replacement requires extending the importer/catalog beyond the initial single native-photo study, exporting selected RAWs, uploading privately, and republishing.
+
+Account-wide weekly usage now reads 27%, the agreed ceiling; stop pending additional budget authorization. This is measured account usage, not attributable project consumption. Sites remains owner-only; the remote Mac cannot connect through its login gate. No access workaround or reset credit used. Next: authorize budget, replace stock samples with native exports, finish responsive QA, and resolve the separate sharing/access blocker.

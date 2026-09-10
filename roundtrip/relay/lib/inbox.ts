@@ -1,3 +1,4 @@
+import { gallery } from './gallery';
 import { getDb, secret } from '@/db';
 export const finished = new Set(['completed','failed','cancelled','stale']);
 export function json(data: unknown, status = 200) {
@@ -23,5 +24,6 @@ export async function body(req: Request) {
 export async function snapshot() {
   const db=getDb();const studio=await db.prepare('SELECT * FROM studio WHERE id=1').first();
   const {results}=await db.prepare('SELECT * FROM requests ORDER BY created DESC LIMIT 12').all();
-  return {studio,requests:results,now:Date.now()};
+  const comments=await db.prepare('SELECT * FROM comments ORDER BY created DESC LIMIT 200').all();
+  return {studio,requests:results,photos:await gallery(),comments:comments.results,now:Date.now()};
 }

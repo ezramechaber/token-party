@@ -10,6 +10,7 @@ export async function POST(req:Request) {
   try {
     const data=await body(req), db=getDb();
     if(typeof data.id!=='string'||!/^[a-zA-Z0-9_-]{8,64}$/.test(data.id)||typeof data.base_revision!=='string'||typeof data.feedback!=='string')throw new Error('Invalid request.');
+    if(data.photo_id&&data.photo_id!=='portrait')return json({error:'This sample is available for comments only. It is not connected to Lightroom.'},422);
     const feedback=data.feedback.trim();if(feedback.length<3||feedback.length>2000)throw new Error('Describe the change in 3–2000 characters.');
     if(!supportedEdit(feedback))return json({error:scopeMessage},422);
     const existing=await db.prepare('SELECT * FROM requests WHERE id=?').bind(data.id).first();

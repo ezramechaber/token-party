@@ -233,12 +233,13 @@ class Store:
         return revision_id
 
 class Runner:
-    def __init__(self,store,codex='codex',max_jobs=3,timeout=900):
+    def __init__(self,store,codex='codex',max_jobs=3,timeout=900,ready_file=None):
         self.store=store
         self.codex=codex
         self.max_jobs=max_jobs
         self.started=0
         self.timeout=timeout
+        self.ready_file=Path(ready_file) if ready_file else None
         self.lock=threading.RLock()
         self.process=None
         self.active_job=None
@@ -250,7 +251,15 @@ class Runner:
                 self.store.set_status(job['id'],'failed','This demo’s run allowance has been used. Restart the server with a new allowance to run more edits.')
                 return
             self.started+=1
-        threading.Thread(target=self.run,args=(job,),daemon=True).start()
+        threading.Thread(target=self.wait_and_run,args=(job,),daemon=True).start()
+    def wait_and_run(self,job):
+        if self.ready_file:
+            self.store.event(job['id'],'queued','Waiting for the photographer to bring Lightroom to the foreground.')
+            while not self.ready_file.is_file():
+                if self.store.get_job(job['id'])['status'] in TERMINAL: return
+                time.sleep(0.2)
+        if self.store.get_job(job['id'])['status'] in TERMINAL: return
+        self.run(job)
     def cancel(self,job_id):
         with self.lock:
             job=self.store.get_job(job_id)
@@ -436,13 +445,14 @@ def main():
     parser.add_argument('--codex',default='codex')
     parser.add_argument('--max-jobs',type=int,default=3)
     parser.add_argument('--timeout',type=int,default=900)
+    parser.add_argument('--ready-file',type=Path,help='Recording mode: keep admitted jobs queued until this operator-controlled file exists.')
     parser.add_argument('--remote-config',type=Path,help='Private pairing JSON for the hosted inbox.')
     parser.add_argument('--catalog',type=Path,help='Trusted private JSON list of RAW identities and JPEG exports.')
     args=parser.parse_args()
     store=Store(args.state_dir)
     store.seed(args.media_dir,args.source_filename)
     if args.catalog: store.import_catalog(args.catalog)
-    runner=Runner(store,args.codex,max_jobs=args.max_jobs,timeout=args.timeout)
+    runner=Runner(store,args.codex,max_jobs=args.max_jobs,timeout=args.timeout,ready_file=args.ready_file)
     server=AppServer(('127.0.0.1',args.port),store,runner)
     server.story_media=args.media_dir.resolve()
     if args.remote_config:

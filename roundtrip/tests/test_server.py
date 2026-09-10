@@ -196,3 +196,28 @@ class HttpTests(unittest.TestCase):
         for route in ['/story-media/catalog.json','/story-media/../roundtrip.sqlite3','/story-media/index.html']:
             code,_=self.request('GET',route)
             self.assertEqual(code,404)
+
+
+class RecordingGateTests(unittest.TestCase):
+    setUp=StoreTests.setUp
+    tearDown=StoreTests.tearDown
+    def test_waits_for_operator_before_running(self):
+        import threading
+        from server import Runner
+        ready=self.root/'lightroom-ready'
+        runner=Runner(self.store,max_jobs=1,ready_file=ready)
+        job,_=self.store.create_job('portrait','v2','Brighten the face','recording-gate-01')
+        called=threading.Event();runner.run=lambda job:called.set()
+        runner.start(job)
+        self.assertFalse(called.wait(.05))
+        self.assertEqual(self.store.get_job(job['id'])['status'],'queued')
+        ready.touch();self.assertTrue(called.wait(1))
+    def test_cancelled_gate_never_runs(self):
+        import threading
+        from server import Runner
+        ready=self.root/'lightroom-ready'
+        runner=Runner(self.store,max_jobs=1,ready_file=ready)
+        job,_=self.store.create_job('portrait','v2','Brighten the face','recording-gate-02')
+        called=threading.Event();runner.run=lambda job:called.set()
+        runner.cancel(job['id']);ready.touch();runner.wait_and_run(job)
+        self.assertFalse(called.is_set())

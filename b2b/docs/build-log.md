@@ -135,3 +135,10 @@ Integration usage checkpoint:76% account-wide weekly allowance used in the10,080
 ## 2026-09-10 — Quick idle-motion pass
 
 At the user’s request, added subtle breathing, weight shifts and head glances while the DJ rests, plus a small tempo-following nod when a deck plays. The idle loop fades out during sleeve loading and crossfader gestures; existing arm IK keeps resting hands planted. Reduced-motion preferences disable idle movement. Updated main-app/listener module revisions. JavaScript syntax and live visual checks performed; scope deliberately kept small per the user’s speed request.
+
+
+## 2026-09-10 16:37 EDT — Record the actual Astra-selected handoff
+
+Preview transition and Record audition now revalidate and reuse the matching Astra edge from the current plan, including the selected entry, exit, overlap and musical reason. The full set and taste context remain visible. Nonmatching pairs use explicit fixed planning; changed song-map cues fail instead of silently substituting another handoff. Capture metadata retains Astra’s original reason.
+
+Verified14 JavaScript tests and12 server/sequence tests, plus syntax/whitespace checks. No browser, audio, server restart or Blender interaction during the recording task’s capture. The recording task was notified to reload and regenerate its in-memory plan before recording. Account-wide weekly usage81% of the10,080-minute window; no reset or runtime model call in this fix.

@@ -1,3 +1,4 @@
+import {planAudition} from './audition-plan.js';
 import {nextDecision,requestActions} from './dj-decisions.js';
 import {setCandidates,heldRequestIds,moveTrack} from './playlist.js';
 import {requestNote} from './request-notes.js';
@@ -176,7 +177,7 @@ async function startAuto(preview=false,fixed=false){await unlock();if(loading)th
  const first=plan.transitions[0];const position=preview?Math.max(track(first.from).entry,first.exit-8*60/track(first.from).bpm)/decks[0].ratio:track(first.from).entry/decks[0].ratio;
  decks[0].play(ctx.currentTime+.1,position);await arm(0,0,my,preview);
  }catch(e){takeover(false);throw e}finally{loading=false;$('#auto').disabled=false;$('#preview').disabled=false;renderCrate();}}
-async function arm(index,currentIndex,my,preview){if(!active||my!==generation)return;const a=decks[currentIndex],b=decks[1-currentIndex],e=plan.transitions[index];if(!e){setFinished=true;decisionEdge=null;$('#autoTitle').textContent='Last record';$('#autoDetail').textContent='Enjoy the rest of the track.';active=false;$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;renderCrate();return}
+async function arm(index,currentIndex,my,preview,previewEdge=null){if(!active||my!==generation)return;const a=decks[currentIndex],b=decks[1-currentIndex],e=previewEdge||plan.transitions[index];if(!e){setFinished=true;decisionEdge=null;$('#autoTitle').textContent='Last record';$('#autoDetail').textContent='Enjoy the rest of the track.';active=false;$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;renderCrate();return}
  decisionEdge=e;renderDecision();
  if(index>0){await b.load(track(e.to),masterTempo);if(my!==generation)return}
  const [alignA,alignB]=await Promise.all([api(`alignment/${a.track.id}?tempo=${masterTempo}&cue=${e.exit}&bars=${e.bars}`),api(`alignment/${b.track.id}?tempo=${masterTempo}&cue=${e.entry}&bars=${e.bars}`)]);
@@ -206,14 +207,15 @@ $('#auto').onclick=()=>safe(async()=>{if($('#astra').disabled)throw Error('Conne
 async function auditionLoaded(options={}){
  if(loading)throw Error('Wait for audio preparation to finish.');
  if(!decks.every(d=>d.buffer))throw Error('Load your outgoing track into A and your incoming track into B first.');
- const next=await api('plan',{ids:decks.map(d=>d.track.id),tempo:masterTempo,bars:+$('#bars').value,fixed:true});
- if(next.order.length!==2||next.transitions.length!==1)throw Error('This pair needs grid / cue review or a closer set tempo before a matched transition.');
- draftSet??=[...setListIds()];await unlock();stopAll();if(options.record)startRecording();plan=next;const my=++generation;active=true;
+ const originalPlan=plan,requestedGeneration=generation,ids=decks.map(d=>d.track.id);
+ const next=await planAudition(originalPlan,ids,masterTempo,+$('#bars').value,body=>api('plan',body));
+ if(generation!==requestedGeneration||plan!==originalPlan||decks.some((d,i)=>d.track?.id!==ids[i]))throw Error('The decks or set changed. Try the audition again.');
+ draftSet??=[...setListIds()];await unlock();stopAll();if(options.record)startRecording();plan=next.plan;const my=++generation;active=true;
  $('#tempo').disabled=true;$('#auto').disabled=true;$('#takeover').hidden=false;
- const a=decks[0],b=decks[1],e=next.transitions[0];a.fade.gain.value=1;b.fade.gain.value=0;a.low.gain.value=0;b.low.gain.value=-24;
+ const a=decks[0],b=decks[1],e=next.edge;a.fade.gain.value=1;b.fade.gain.value=0;a.low.gain.value=0;b.low.gain.value=-24;
  a.play(ctx.currentTime+.1,Math.max(a.track.entry,e.exit-8*60/a.track.bpm)/a.ratio);
  $('#inspectBars').value=e.bars;inspectAt(0,e.exit);
- try{await arm(0,0,my,true)}catch(e){if(capture)finishRecording(true);takeover(false);throw e}
+ try{await arm(0,0,my,true,e)}catch(e){if(capture)finishRecording(true);takeover(false);throw e}
 }
 function startRecording(){
  if($('.capture-library'))$('.capture-library').open=true;

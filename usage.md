@@ -125,3 +125,8 @@ Account-wide weekly usage measured67% on resumption and70% at close. Shared mete
 ### Roundtrip — 2026-09-10 16:30 EDT recorded runtime
 
 Measured80% account-wide weekly usage after the user-requested recorded edit; concurrent activity prevents project attribution. The completed runtime reports1,350,014 input tokens,1,255,168 cached input tokens,2,550 output tokens,and259 reasoning output tokens. Runtime-only values; task totals unavailable. No reset redeemed or broader numeric allocation inferred.
+
+
+### Back 2 Back — 2026-09-10 16:37 EDT audition capture fix
+
+Measured **81% account-wide weekly usage** in the **10,080-minute window**. This includes concurrent projects and is not a b2b token count. Numeric cap remains removed for continued b2b work. No reset redeemed; no runtime Astra calls for this fix. Development token totals unavailable.

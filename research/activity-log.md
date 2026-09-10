@@ -398,3 +398,10 @@ Verified the seated RAW color-and-crop edit and promoted its real before/after a
 ## 2026-09-10 16:30 EDT — Roundtrip recorded edit completed
 
 Added and tested an optional manual foreground gate, submitted feedback through foreground Chrome, and waited for the user to foreground Lightroom before releasing the job. The real edit completed in254.42seconds; independently inspected the new4:5 export, native white balance and darker background. Preserved all versions. Paused for the Chrome handoff before the recorded comparison. User owns screen capture; no completed video artifact claimed.42 preparation tests passed.
+
+
+### 2026-09-10 16:37 EDT — Honest Astra audition capture
+
+- Objective: preserve the exact model-selected transition during the recorded demo. Added matched-edge revalidation and reuse for preview/recording, preserving the full plan and explanation; fixed planning remains fallback.
+- Verified26 targeted tests and syntax/whitespace checks. Recording task notified; browser/audio untouched. Future demo check: compare saved transition metadata to the chosen Astra edge.
+- Measured shared account weekly usage81% (10,080 minutes); no reset or runtime model calls. Development token totals unavailable.

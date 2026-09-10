@@ -1,5 +1,6 @@
 import {createVisualizer} from './visualizer.js';
 import {blendCurves} from './mix-curves.js';
+import {createChannel,crossfadeGains,waveformOverview} from './channel.js';
 import {cueIncoming,handoffTime} from './handoff.js';
 import {createBoothScene} from './booth-scene.js';
 const $=s=>document.querySelector(s);
@@ -26,24 +27,30 @@ class Deck{
  this.el.querySelector('.outcue').onclick=()=>safe(async()=>{await unlock();takeover(false);this.seek(Math.max(0,this.track.outroStart/this.ratio));this.play()});
  this.el.querySelector('.review').onclick=()=>this.track&&edit(this.track.id);
  this.el.querySelector('.gain').oninput=e=>{takeover(false);this.level?.gain.setValueAtTime(+e.target.value,ctx.currentTime)};
- this.el.querySelector('.low').oninput=e=>{takeover(false);this.low?.gain.setValueAtTime(+e.target.value,ctx.currentTime)};
+ for(const band of ['low','mid','high']){const control=this.el.querySelector('.'+band);if(control)control.oninput=e=>{takeover(false);this[band]?.gain.setTargetAtTime(+e.target.value,ctx.currentTime,.015)};}
+ const inspect=this.el.querySelector('.inspect');if(inspect)inspect.onclick=()=>{if(this.track)inspectAt(this.letter==='A'?0:1,this.position()*this.ratio,true);};
+ this.el.querySelector('.wave').onkeydown=e=>{if(!this.buffer||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();takeover(false);const delta=(e.shiftKey?240:60)/masterTempo;this.seek(e.key==='Home'?0:e.key==='End'?this.buffer.duration-.01:this.position()+(e.key==='ArrowLeft'?-delta:delta));};
+ this.status('Choose a track');
  this.el.querySelector('.wave').onclick=e=>{if(!this.buffer)return;takeover(false);const r=e.target.getBoundingClientRect();this.seek(Math.max(0,Math.min(this.buffer.duration-.01,(e.clientX-r.left)/r.width*this.buffer.duration)))};
  }
- async load(t,tempo){if(!t)throw Error('Choose a track first.');const token=++this.token;this.stop();this.track=t;this.buffer=null;this.ratio=tempo/t.bpm;this.status('PREPARING AUDIO');this.render();audioContext();
+ async load(t,tempo){if(!t)throw Error('Choose a track first.');const token=++this.token;this.stop();this.track=t;this.buffer=null;this.overview=null;this.loudness=null;this.ratio=tempo/t.bpm;this.status('PREPARING AUDIO');this.render();audioContext();
+ try {
  const res=await fetch(`/api/audio/${t.id}?tempo=${tempo}`);if(!res.ok){const j=await res.json();throw Error(j.detail)}const buffer=await ctx.decodeAudioData(await res.arrayBuffer());if(token!==this.token)return;
- this.buffer=buffer;this.offset=t.entry/this.ratio;this.loudness=await api('level/'+t.id);if(token!==this.token)return;this.trim?.disconnect();this.low?.disconnect();this.level?.disconnect();this.fade?.disconnect();
- this.low=ctx.createBiquadFilter();this.low.type='lowshelf';this.low.frequency.value=200;
- this.level=ctx.createGain();this.fade=ctx.createGain();this.fade.gain.value=this.letter==='A'?1-+$('#crossfader').value:+$('#crossfader').value;this.trim=ctx.createGain();this.trim.gain.value=$('#autoGain').checked?10**(this.loudness.gainDb/20):1;this.low.connect(this.trim);this.trim.connect(this.level);this.level.connect(this.fade);this.fade.connect(master);
+ this.offset=t.entry/this.ratio;this.loudness=await api('level/'+t.id);if(token!==this.token)return;
+ for(const node of ['low','mid','high','trim','level','fade'])this[node]?.disconnect();
+ Object.assign(this,createChannel(ctx,master,{trimDb:$('#autoGain').checked?this.loudness.gainDb:0,fade:crossfadeGains(+$('#crossfader').value,$('#mixCurve').value==='balanced')[this.letter==='A'?0:1]}));
+ this.buffer=buffer;this.overview=waveformOverview(buffer);
  this.status('READY · KEY LOCK');this.render();boothScene?.onTrackLoaded(this.letter==='A'?0:1,{...t,artworkUrl:'/api/art/'+t.id});if(+$('#inspectDeck').value===(this.letter==='A'?0:1))inspectAt(+$('#inspectDeck').value,t.entry);
+ }catch(error){if(token===this.token)this.status('Load failed · choose track again');throw error;}
  }
- status(s){this.el.querySelector('.deck-state').textContent=s}
+ status(s){const el=this.el.querySelector('.deck-state');if(el.textContent!==s)el.textContent=s;this.el.setAttribute('aria-busy',s==='PREPARING AUDIO');for(const control of this.el.querySelectorAll('.play,.cue,.outcue,.low,.mid,.high,.gain'))control.disabled=!this.buffer;}
  position(){return this.running?Math.min(this.buffer.duration,this.offset+Math.max(0,ctx.currentTime-this.start)):this.offset}
  play(at=ctx.currentTime+.04,offset=this.offset){if(!this.buffer)throw Error('Wait for the deck to finish loading.');this.stop(false);this.offset=Math.max(0,Math.min(offset,this.buffer.duration-.01));this.start=at;this.running=true;
  const s=ctx.createBufferSource();s.buffer=this.buffer;s.connect(this.low);this.source=s;const token=this.token;s.onended=()=>{if(this.source===s&&token===this.token){this.running=false;this.source=null;this.offset=0;this.status('FINISHED')}};s.start(at,this.offset);this.status(at>ctx.currentTime+.1?'ARMED':'PLAYING');}
  stop(reset=true){if(this.source){this.source.onended=null;try{this.source.stop()}catch{}this.source.disconnect();this.source=null}this.running=false;if(reset)this.offset=0}
  pause(){const p=this.position();this.stop(false);this.offset=p;this.status('PAUSED')}
- seek(p){const was=this.running;this.stop(false);this.offset=p;if(was)this.play();}
- render(){if(!this.track)return;const t=this.track;this.el.querySelector('h2').textContent=t.title;this.el.querySelector('.track-heading p').textContent=t.artist+(this.loudness&&$('#autoGain').checked?` · trim ${this.loudness.gainDb} dB`:'');
+ seek(p){p=Math.max(0,Math.min(p,this.buffer.duration-.01));const was=this.running;this.stop(false);this.offset=p;if(was)this.play();}
+ render(){if(!this.track)return;const t=this.track;this.el.querySelector('h2').textContent=t.title;this.el.querySelector('h2').title=t.title;this.el.querySelector('.track-heading p').textContent=t.artist+(this.loudness&&$('#autoGain').checked?` · trim ${this.loudness.gainDb} dB`:'');
  this.el.querySelector('.deck-bpm').innerHTML=`${masterTempo.toFixed(1)}<small>BPM</small>`;this.el.querySelector('.deck-key').textContent=t.key.name+' · '+t.key.camelot;
  this.el.querySelector('.intro').textContent=t.introBars+' BARS';this.el.querySelector('.outro').textContent=t.outroBars+' BARS';this.el.querySelector('.key-status').textContent=t.reviewed?'CUES CONFIRMED':'CUES ESTIMATED';}
  draw(){const canvas=this.el.querySelector('.wave'),w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr}
@@ -51,11 +58,11 @@ class Deck{
  if(!this.track)return;const t=this.track,color=this.letter==='A'?'#e2a8c9':'#b8a0ff',duration=t.duration,p=this.position()*this.ratio;
  const sx=seconds=>seconds/duration*w;
  c.fillStyle=this.letter==='A'?'#e2a8c916':'#b8a0ff16';c.fillRect(sx(t.entry),0,sx(t.introEnd-t.entry),h);c.fillRect(sx(t.outroStart),0,sx(t.exitEnd-t.outroStart),h);
- for(let x=0;x<w;x+=2){const i=Math.floor(x/w*t.waveform.length),amp=t.waveform[i]||0;const barIndex=Math.floor((x/w*duration-t.gridOffset)/(240/t.bpm));const band=t.bands[Math.max(0,barIndex)];c.fillStyle=x<sx(p)?color:(band&&band[0]>band[2]?'#aa7897':'#9d83b4');const a=Math.max(1,amp*h*.43);c.fillRect(x,h/2-a,1.4,a*2)}
+ const peaks=this.overview?.peaks||t.waveform,rms=this.overview?.rms;for(let x=0;x<w;x+=2){const i=Math.floor(x/w*peaks.length),peak=Math.max(1,Math.min(1,peaks[i]||0)*h*.43),body=rms?Math.max(1,Math.min(1,rms[i]*1.8)*h*.43):peak;const fill=x<sx(p)?color:(this.letter==='A'?'#c198b6':'#ae9bca');c.fillStyle=fill+'50';c.fillRect(x,h/2-peak,1.4,peak*2);c.fillStyle=fill;c.fillRect(x,h/2-body,1.4,body*2);}
  c.strokeStyle='#d5e4ff6a';c.setLineDash([3,4]);for(const v of [t.entry,t.introEnd,t.outroStart,t.exitEnd]){c.beginPath();c.moveTo(sx(v),0);c.lineTo(sx(v),h);c.stroke()}c.setLineDash([]);c.strokeStyle=color;c.beginPath();c.moveTo(sx(p),0);c.lineTo(sx(p),h);c.stroke();
- this.el.querySelector('.deck-time').textContent=time(this.position());this.el.querySelector('.deck-bar').textContent='BAR '+Math.max(1,Math.floor((p-t.gridOffset)/(240/t.bpm))+1);this.el.querySelector('.play').textContent=this.running?'Ⅱ':'▶';
+ this.el.querySelector('.deck-time').textContent=time(this.position());this.el.querySelector('.deck-bar').textContent='BAR '+Math.max(1,Math.floor((p-t.gridOffset)/(240/t.bpm))+1);const play=this.el.querySelector('.play');const label=(this.running?'Pause':'Play')+' deck '+this.letter;if(play.getAttribute('aria-label')!==label){play.setAttribute('aria-label',label);play.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+(this.running?'<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>':'<path d="m7 4 13 8-13 8z"/>')+'</svg>';}
  if(this.running&&ctx.currentTime>=this.start)this.status('PLAYING');
- if(this.low){const value=this.low.gain.value,level=this.level.gain.value;this.el.querySelector('.low').value=value;this.el.querySelector('.low').nextElementSibling.value=Math.round(value)+' dB';this.el.querySelector('.gain').value=level;this.el.querySelector('.gain').nextElementSibling.value=Math.round(level*100)+'%'}
+ if(this.low){for(const band of ['low','mid','high']){const control=this.el.querySelector('.'+band);if(control){control.value=this[band].gain.value;control.nextElementSibling.value=Math.round(this[band].gain.value)+' dB';}}const level=this.level.gain.value;this.el.querySelector('.gain').value=level;this.el.querySelector('.gain').nextElementSibling.value=Math.round(level*100)+'%'}
  }
 }
 const decks=[new Deck('A'),new Deck('B')];
@@ -66,11 +73,12 @@ function takeover(notify=true){if(capture)capture.metadata.manualIntervention=tr
  $('#autoTitle').textContent='Manual control';$('#autoDetail').textContent='Manual control. Future handoffs are cancelled.';$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;
  if(notify)toast('You have the decks. Current levels are held.');}
 function stopAll(){if(capture)finishRecording(true);takeover(false);decks.forEach(d=>{d.stop();if(d.track)d.status(d.buffer?'READY · KEY LOCK':'RELOAD AUDIO')});if(ctx){decks.forEach(d=>{d.fade?.gain.setValueAtTime(d.letter==='A'?1:0,ctx.currentTime);d.low?.gain.setValueAtTime(0,ctx.currentTime)})}$('#crossfader').value=0}
-function setFade(v){if(!ctx)return;decks[0].fade?.gain.setValueAtTime(1-v,ctx.currentTime);decks[1].fade?.gain.setValueAtTime(v,ctx.currentTime)}
+function setFade(v){if(!ctx)return;const gains=crossfadeGains(v,$('#mixCurve').value==='balanced');decks.forEach((d,i)=>d.fade?.gain.setValueAtTime(gains[i],ctx.currentTime));}
 $('#crossfader').oninput=e=>{takeover(false);setFade(+e.target.value)};
 $('#master').oninput=e=>{if(master)master.gain.setTargetAtTime(+e.target.value,ctx.currentTime,.015)};
+$('#addTracks').onclick=()=>$('#upload').click();
 $('#stop').onclick=stopAll;$('#takeover').onclick=()=>takeover();
-$('#tempo').onchange=()=>{if(decks.some(d=>d.running)){toast('Stop playback before changing the set tempo.');$('#tempo').value=masterTempo;return}masterTempo=+$('#tempo').value;plan=null;decks.forEach(d=>{d.buffer=null;d.status('RELOAD AT NEW TEMPO')});toast('Tempo changed. Load the decks again or start Auto.');};
+$('#tempo').onchange=()=>{if(decks.some(d=>d.running)){toast('Stop playback before changing the set tempo.');$('#tempo').value=masterTempo;return}const value=+$('#tempo').value;if(!Number.isFinite(value)||value<108||value>142){$('#tempo').value=masterTempo;toast('Choose a tempo from 108 to 142 BPM.');return;}masterTempo=value;plan=null;decks.forEach(d=>{d.buffer=null;d.status('RELOAD AT NEW TEMPO')});toast('Tempo changed. Load the decks again or start Auto.');};
 $('#bars').onchange=()=>{if(active)takeover();plan=null};
 async function refresh(){const data=await api('crate');tracks=data.tracks;for(const t of tracks)if(!order.includes(t.id))order.push(t.id);
  $('#connection').textContent='● LOCAL AUDIO';$('#count').textContent=tracks.length;$('#astra').disabled=!data.astra;$('#direction').disabled=!data.astra;$('#direction').placeholder=data.astra?'Set direction, e.g. start mellow and build':'Astra set direction · not connected';$('#astraHint').textContent=data.astra?'':' · add API key later';
@@ -124,9 +132,10 @@ async function auditionLoaded(options={}){
  const a=decks[0],b=decks[1],e=next.transitions[0];a.fade.gain.value=1;b.fade.gain.value=0;a.low.gain.value=0;b.low.gain.value=-24;
  a.play(ctx.currentTime+.1,Math.max(a.track.entry,e.exit-8*60/a.track.bpm)/a.ratio);
  $('#inspectBars').value=e.bars;inspectAt(0,e.exit);
- try{await arm(0,0,my,true)}catch(e){takeover(false);throw e}
+ try{await arm(0,0,my,true)}catch(e){if(capture)finishRecording(true);takeover(false);throw e}
 }
 function startRecording(){
+ if($('.capture-library'))$('.capture-library').open=true;
  if(!window.MediaRecorder)throw Error('Audio recording is unavailable in this browser.');
  if(!recordDestination){recordDestination=ctx.createMediaStreamDestination();master.connect(recordDestination)}
  const mime=['audio/webm;codecs=opus','audio/mp4','audio/ogg;codecs=opus'].find(x=>MediaRecorder.isTypeSupported(x));
@@ -139,7 +148,7 @@ function startRecording(){
 function finishRecording(interrupted=false){const take=capture;if(!take)return;capture=null;take.metadata.interrupted=interrupted;if(take.recorder.state!=='inactive')take.recorder.stop();}
 $('#recordMix').onclick=()=>safe(()=>auditionLoaded({record:true}));
 $('#autoGain').onchange=()=>{takeover(false);decks.forEach(d=>{if(d.trim){d.trim.gain.setTargetAtTime($('#autoGain').checked?10**(d.loudness.gainDb/20):1,ctx.currentTime,.04);d.render()}})};
-$('#mixCurve').onchange=()=>{if(active)takeover();};
+$('#mixCurve').onchange=()=>{if(active)takeover();setFade(+$('#crossfader').value);};
 $('#mixNow').onclick=()=>safe(async()=>{
  if(active)throw Error('A phrase-aligned handoff is already armed.');
  if(!decks.every(d=>d.buffer))throw Error('Load both decks first.');
@@ -155,13 +164,13 @@ $('#mixNow').onclick=()=>safe(async()=>{
 function edit(id){if(active)takeover();editId=id;const t=track(id);$('#editTitle').textContent=t.title+' · '+t.artist;for(const k of ['bpm','gridOffset','entry','introBars','exitEnd','outroBars','drumsIn','musicIn','phraseAnchor'])$('#editForm').elements[k].value=t[k]??'';$('#editWarning').textContent=t.warnings.join(' · ');$('#editor').showModal()}
 $('#closeEditor').onclick=()=>$('#editor').close();$('#editForm').onsubmit=e=>{e.preventDefault();safe(async()=>{if(decks.some(d=>d.running))throw Error('Stop playback before changing the grid.');const values=Object.fromEntries(new FormData(e.target));for(const k in values)values[k]=values[k]===''?null:+values[k];await api('track/'+editId,{...values,reviewed:true},'PUT');plan=null;decks.filter(d=>d.track?.id===editId).forEach(d=>{d.buffer=null;d.status('RELOAD WITH NEW GRID')});$('#editor').close();await refresh()})};
 async function upload(files){for(const file of files){const form=new FormData();form.append('file',file);const res=await fetch('/api/upload',{method:'POST',body:form});if(!res.ok)throw Error((await res.json()).detail)}toast('Tracks added. Analysis is running locally.');await refresh()}
-$('#youtubeForm').onsubmit=e=>{e.preventDefault();safe(async()=>{const button=$('#youtubeSubmit');button.disabled=true;button.textContent='ADDING…';try{await api('youtube',{url:$('#youtubeUrl').value.trim()});$('#youtubeUrl').value='';toast('YouTube import queued. Download and analysis progress appear below the crate.');await refresh()}finally{button.disabled=false;button.textContent='↓ IMPORT AUDIO'}})};
+$('#youtubeForm').onsubmit=e=>{e.preventDefault();safe(async()=>{const button=$('#youtubeSubmit');button.disabled=true;button.textContent='Adding…';try{await api('youtube',{url:$('#youtubeUrl').value.trim()});$('#youtubeUrl').value='';toast('YouTube import queued. Download and analysis progress appear below the crate.');await refresh()}finally{button.disabled=false;button.textContent='Import'}})};
 $('#upload').onchange=e=>safe(()=>upload(e.target.files));$('#scan').onclick=()=>safe(async()=>{const r=await api('scan',{});toast(r.jobs.length?`Analyzing ${r.jobs.length} tracks.`:'Your local imports are already in the crate.');await refresh()});
 document.addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('dragging')});document.addEventListener('dragleave',()=>document.body.classList.remove('dragging'));document.addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('dragging');safe(()=>upload(e.dataTransfer.files))});
 document.addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('#editor').open)takeover();if(e.code==='Space'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement.tagName)){e.preventDefault();safe(async()=>{await unlock();takeover(false);const d=decks.find(d=>d.running)||decks[0];d.running?d.pause():d.play()})}});
 let inspectStart=0,inspectCache=null;
 function inspection(){const d=decks[+$('#inspectDeck').value];if(!d.track)return null;const t=d.track,span=+$('#inspectBars').value*240/t.bpm;inspectStart=Math.max(0,Math.min(inspectStart,Math.max(0,t.duration-span)));return {d,t,span};}
-function inspectAt(index,seconds){$('#inspectDeck').value=index;inspectStart=Math.max(0,seconds);inspectCache=null;}
+function inspectAt(index,seconds,open=false){$('#inspectDeck').value=index;inspectStart=Math.max(0,seconds);inspectCache=null;if(open&&$('#inspectorPanel')){$('#inspectorPanel').open=true;$('#inspectorPanel').scrollIntoView({block:'nearest'});}}
 $('#inspectDeck').onchange=()=>inspectAt(+$('#inspectDeck').value,decks[+$('#inspectDeck').value].track?.entry||0);
 $('#inspectBars').onchange=()=>{inspectCache=null};
 $('#inspectIntro').onclick=()=>{const v=inspection();if(v)inspectAt(+$('#inspectDeck').value,v.t.entry)};
@@ -172,7 +181,7 @@ $('#inspectPosition').oninput=e=>{const v=inspection();if(v)inspectStart=+e.targ
 $('#detailWave').onclick=e=>{const v=inspection();if(!v?.d.buffer)return;takeover(false);const r=e.target.getBoundingClientRect();v.d.seek((inspectStart+(e.clientX-r.left)/r.width*v.span)/v.d.ratio)};
 $('#inspectListen').onclick=()=>safe(async()=>{const v=inspection();if(!v?.d.buffer)throw Error('Load audio into the selected deck first.');await unlock();stopAll();$('#crossfader').value=v.d.letter==='A'?0:1;setFade(+$('#crossfader').value);v.d.play(ctx.currentTime+.04,inspectStart/v.d.ratio);toast('Soloing deck '+v.d.letter+' from the left edge of this view.');});
 function drawInspection(){
- const canvas=$('#detailWave'),w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;
+ const canvas=$('#detailWave'),w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;if(!w||!h)return;
  if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr;inspectCache=null}
  const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);const v=inspection();if(!v)return;const {d,t,span}=v;$('#exportMap').href='/api/map/'+t.id;$('#exportMap').hidden=false;
  const sx=s=>(s-inspectStart)/span*w,color=d.letter==='A'?'#e2a8c9':'#b8a0ff';

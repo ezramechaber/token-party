@@ -99,3 +99,8 @@ Daily chat/turn/token/tool totals are unavailable from the current usage tool. R
 - User correctly noted revision-2 UI is only partially implemented: chrome artwork/palette carried over, but the complete concept composition remains unfinished and the café is a separate view. Track this explicitly for the next design pass.
 - Weekly account usage reached35%, the agreed working stop (ceiling36%). Notified the separate photorealistic-model task to wrap up existing progress. No new allocation or reset assumed; further substantial audio/design work awaits renewed budget.
 - Browser regression confirmed: B was paused at00:13; Mix Next moved it to the planned00:32 cue and showedARMED while A continued toward its exit. Stopped test playback afterward.
+
+
+## 2026-09-10 13:36 EDT
+
+Completed revision-2 working chrome UI and bounded design-skill polish. Added real three-band EQ, equal-power manual crossfade, peak/RMS waveform overview, direct inspector access, visible preparation state, and keyboard-accessible import. Verified desktop/390px layouts, keyboard EQ/inspector, browser-rendered filter measurements, and handoff regressions. Queue lifecycle and sequence safeguards remain next; Blender stays in its separate task.

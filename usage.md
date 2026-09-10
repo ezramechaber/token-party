@@ -90,3 +90,8 @@ User clarified that continued UI, audio and request work should proceed without 
 ### Roundtrip — 2026-09-10 13:30 EDT execution checkpoint
 
 Measured **42% used** account-wide in the 10080-minute weekly window, reaching the user-authorized **42% ceiling**. Intermediate checkpoint 39%. Shared concurrent usage prevents project attribution. Completed and independently inspected one real local multi-photo Lightroom job after a safely blocked attempt and manual base restoration. Server remains available for review; new model jobs paused by exhausted run allowance. No reset redeemed; per-project token totals unavailable.
+
+
+## 2026-09-10 13:36 EDT
+
+b2b continued work: measured weekly account usage 45%. Shared account activity includes other tasks; project-attributable tokens/tool totals unavailable. User removed numeric cap; no reset used.

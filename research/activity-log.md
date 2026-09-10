@@ -305,3 +305,8 @@ Prepared the accumulated project research, naming decisions, Design Tutor concep
 ## 2026-09-10 13:30 EDT — Roundtrip local execution verified
 
 Connected the four-photo local gallery to the shared Lightroom queue. User’s washed-out/hands-only request produced a real 2048×2034 export and returned it to the studio portrait history. Successful retry: 289.7 seconds; first attempt blocked safely and required manual base restoration. 37 tests passed; actual export independently inspected. Committed throughout. Account usage reached authorized 42% ceiling; further edits paused. Hosted relay/Vercel integration remains open. See `roundtrip/build-log.md`.
+
+
+## 2026-09-10 13:36 EDT
+
+b2b: completed revision-2 interface and rendered design pass; working three-band EQ, readable loading states, waveform detail, responsive controls. Validation and design-skill provenance in b2b/docs/ui-notes.md. Remaining: integrate listener request review and sequence guards. Account-wide weekly usage measured 45%; project-specific tokens and daily tool counts unavailable. Numeric cap lifted by user; no reset used.

@@ -1,12 +1,14 @@
+import {createDeckEffects} from './effects.js';
 // Three real EQ bands. Auto schedules only the low band; mid/high remain manual.
-export function createChannel(ctx, destination, {trimDb=0, fade=1}={}) {
+export function createChannel(ctx, destination, {trimDb=0, fade=1, tempo=124}={}) {
  const low=ctx.createBiquadFilter();low.type='lowshelf';low.frequency.value=200;
  const mid=ctx.createBiquadFilter();mid.type='peaking';mid.frequency.value=1000;mid.Q.value=.7;
  const high=ctx.createBiquadFilter();high.type='highshelf';high.frequency.value=4000;
  const trim=ctx.createGain();trim.gain.value=10**(trimDb/20);
  const level=ctx.createGain(),fader=ctx.createGain();fader.gain.value=fade;
- low.connect(mid);mid.connect(high);high.connect(trim);trim.connect(level);level.connect(fader);fader.connect(destination);
- return {low,mid,high,trim,level,fade:fader};
+ const effects=createDeckEffects(ctx,{tempo});
+ low.connect(mid);mid.connect(high);high.connect(trim);trim.connect(effects.input);effects.output.connect(level);level.connect(fader);fader.connect(destination);
+ return {low,mid,high,trim,level,fade:fader,effects};
 }
 export function crossfadeGains(position, balanced=true) {
  const p=Math.min(1,Math.max(0,position));

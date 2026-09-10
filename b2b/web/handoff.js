@@ -11,6 +11,6 @@ export function cueIncoming(deck, cue, now) {
 export function handoffTime(deck, cue, now) {
  const starts=deck.running?deck.start:now+.1;
  const at=starts+cue-deck.offset;
- if(at<now+.06)throw Error('A has passed its planned exit. B is cued; use Audition A → B to replay the handoff, or seek A before its exit and press Mix Next again.');
+ if(at<now+.06)throw Error('A has passed its planned exit. B is cued; use Preview transition to hear the handoff now, or seek the outgoing deck before its outro and try mixing again.');
  return at;
 }

@@ -109,3 +109,8 @@ Completed revision-2 working chrome UI and bounded design-skill polish. Added re
 ## 2026-09-10 13:40 EDT
 
 Integrated listener request lifecycle: confirm local recording, recheck against current set, explicit energy/key approval, retry, dismiss, stale worker protection, and delivery acknowledgments. Audience sees added/dismissed states. Browser fixture verified confirmation and dismissal without production request writes; temporary fixture removed. Full sequence validation now protects rule/Astra/manual plans and queue additions while preserving armed cues. Runtime preparation failures release Auto while the current track continues. Five-track source audit retained; whole Auto set has not been auditioned end-to-end. Python suite: 119 passed; after two new API regression cases, all seven server/session tests passed. Four JS handoff tests and browser EQ checks passed earlier this session. UI milestone committed f85c5d5.
+
+
+## 2026-09-10 13:48 EDT — Requested checkpoint
+
+Added deck artwork, optional tempo-synced delay/flanger inserts, visible muted-deck feedback, literal transition actions separated from crate playback, and marker editing beside the detailed waveform. Syntax and four handoff regression checks pass. Checkpoint before moving forward as requested; effect DSP and integrated browser review/save verification remain pending. Private media and unrelated research remain excluded.

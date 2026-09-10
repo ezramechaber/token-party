@@ -1,0 +1,28 @@
+<!doctype html><meta charset="utf-8"><title>b2b effects checks</title><pre id="result">Rendering effect checks…</pre><script type="module">
+import {createChannel} from './channel.js';
+const SR=48000;
+async function render(kind,{fade=1,clearAt=null}={}){
+ const ctx=new OfflineAudioContext(1,SR*2,SR),channel=createChannel(ctx,ctx.destination,{fade,tempo:124});
+ channel.effects.set({kind,amount:1,beats:.5});
+ const source=ctx.createBufferSource(),buffer=ctx.createBuffer(1,SR,SR),data=buffer.getChannelData(0);
+ if(kind==='flanger'){for(let i=0;i<SR;i++)data[i]=.1*Math.sin(2*Math.PI*700*i/SR);}else data[Math.round(.3*SR)]=.5;
+ source.buffer=buffer;source.connect(channel.low);source.start();
+ if(clearAt!==null){const paused=ctx.suspend(clearAt).then(()=>{channel.effects.clear();return ctx.resume();});const output=await ctx.startRendering();await paused;return output.getChannelData(0);}
+ return (await ctx.startRendering()).getChannelData(0);
+}
+const max=(data,start=0,end=data.length)=>{let peak=0,at=0;for(let i=start;i<end;i++){if(!Number.isFinite(data[i]))throw Error('Non-finite output');if(Math.abs(data[i])>peak){peak=Math.abs(data[i]);at=i;}}return {peak,at};};
+try{
+ const lines=[],dry=await render('off'),delayed=await render('delay'),expected=.3+60/124*.5;
+ const echo=max(delayed,Math.floor((expected-.01)*SR),Math.ceil((expected+.01)*SR));
+ if(Math.abs(echo.at/SR-expected)>.002||echo.peak<.05)throw Error('Delay timing or output is incorrect');
+ lines.push(`Delay: first half-beat echo ${(echo.at/SR-.3).toFixed(4)}s (expected ${(60/124*.5).toFixed(4)}s)`);
+ if(max(dry,Math.floor(.31*SR)).peak>1e-5)throw Error('Off leaves a tail');
+ lines.push('Off: dry impulse, no echo');
+ const muted=await render('delay',{fade:0});if(max(muted).peak>1e-7)throw Error('Muted deck leaks echo');lines.push('Crossfader closed: silent including effect tails');
+ const cleared=await render('delay',{clearAt:.4});if(max(cleared,Math.floor(.45*SR)).peak>1e-5)throw Error('Clear leaves echo tail');lines.push('Stop/reset: stored delay tail cleared');
+ const flanged=await render('flanger');const peak=max(flanged).peak;if(peak<.02||peak>.3)throw Error('Flanger output is missing or unstable');
+ let early=0,late=0;for(let i=.3*SR;i<.35*SR;i++)early+=flanged[i]**2;for(let i=.7*SR;i<.75*SR;i++)late+=flanged[i]**2;if(Math.abs(early-late)<.001)throw Error('Flanger is not modulating');
+ lines.push(`Flanger: finite, modulating output; peak ${peak.toFixed(3)}`);
+ document.querySelector('#result').textContent='PASS\n'+lines.join('\n');
+}catch(error){document.querySelector('#result').textContent='FAIL '+error.stack;}
+</script>

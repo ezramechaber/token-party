@@ -21,6 +21,8 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
+from edit_policy import supported_edit, POLICY
+
 ROOT = Path(__file__).resolve().parent
 TERMINAL = {'completed', 'failed', 'cancelled'}
 
@@ -132,6 +134,8 @@ class Store:
             return self.job_from_db(db,job_id)
     def create_job(self,photo_id,base_revision,feedback,request_id):
         feedback=feedback.strip()
+        if not supported_edit(feedback):
+            raise ValueError(POLICY['message'])
         if not 3 <= len(feedback) <= 2000:
             raise ValueError('Describe the photo change in 3–2000 characters.')
         if not re.fullmatch(r'[a-zA-Z0-9_-]{8,80}',request_id):
@@ -373,6 +377,7 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body,dict): raise ValueError('Invalid request.')
             path=urlparse(self.path).path
             if path=='/api/revisions':
+                if getattr(self.server,'remote',None): return self.json(409,{'error':'Remote review is enabled. Submit through the hosted review link so there is only one inbox.'})
                 if not self.server.runner.available(): return self.json(503,{'error':'Codex CLI is not available. Start the app from a terminal with Codex on PATH.'})
                 if not all(isinstance(body.get(k),str) for k in ['photo_id','base_revision','feedback','request_id']):
                     raise ValueError('A photo, base revision, feedback, and request identifier are required.')

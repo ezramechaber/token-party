@@ -38,3 +38,11 @@ This is a product assessment, not a claim that the hackathon submission is ready
 ## Next test
 
 Resolve external access, pair the local worker, and submit a small grain adjustment through the production review form. Verify that it reaches the Mac, changes Lightroom through native controls, publishes a fresh local JPEG, and updates the hosted result. Then capture a concise demonstration of that exact flow.
+
+## 12:21–12:29 — Reviewer access and supported-edit limits
+
+The user explicitly authorized access for anyone with the secret review link. Added six clickable prompt examples. A shared fail-closed grammar now validates each clause at the hosted API and local job admission; mixed or unknown transformations are rejected before Lightroom launches. Native runtime instructions also reject identity/gender-presentation, anatomy, face, clothing, object, and scene transformations before tool use. The narrow demo grammar can reject reasonable paraphrases; the examples provide accepted wording.
+
+One active request remains enforced by the D1 unique index and local job lock. Remote pairing disables local submissions, establishing one authoritative inbox. New requests are rejected when the Mac is offline, busy, or paused. Thirty-five Python tests, JavaScript syntax, TypeScript checking, production build, and HTTP scope/authentication/concurrency tests pass. The local worker retains a one-job allowance to respect the remaining weekly budget.
+
+Version 3 deployed successfully with the examples and admission limits. The access expansion was again rejected by automatic approval review, despite the user's secret-link authorization and a source audit confirming that every feedback API operation requires the link credential. No access workaround was used; Sites remains owner-only. The remaining request is explicit approval of Sites' `Public` audience setting while retaining application-level secret-link authorization.

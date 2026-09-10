@@ -6,6 +6,7 @@ import time
 from urllib.request import Request, build_opener, HTTPRedirectHandler
 from urllib.error import HTTPError
 from urllib.parse import urlparse
+from edit_policy import supported_edit, POLICY
 
 class NoRedirect(HTTPRedirectHandler):
     def redirect_request(self, req, fp, code, msg, headers, newurl):
@@ -37,7 +38,9 @@ class RemoteInbox:
             photo=db.execute('SELECT * FROM photos WHERE id=?',(self.photo_id,)).fetchone()
             if not photo: raise ValueError('The paired photo is no longer in this gallery.')
             revision=self.store.revision(photo['current_revision'])
-        accepting=self.runner.available() and self.runner.started<self.runner.max_jobs
+        with self.store.connect() as db:
+            busy=db.execute("SELECT 1 FROM jobs WHERE status IN ('queued','running','verifying')").fetchone()
+        accepting=self.runner.available() and self.runner.started<self.runner.max_jobs and not busy
         payload={'photo':{'id':photo['id'],'title':photo['title'],'revision':revision['id'],'label':revision['label']},'accepting':accepting,'update':self.update}
         req=Request(self.url+'/api/worker/sync',data=json.dumps(payload).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
         with urlopen(req,timeout=12) as response:
@@ -56,6 +59,8 @@ class RemoteInbox:
             label=self.store.revision(job['revision_id'])['label'] if job['revision_id'] else None
             messages={'queued':'Received on the photographer’s Mac.','running':'Astra is making recoverable edits in Lightroom.','verifying':'The Mac is checking the new JPEG export.','completed':'The new JPEG was verified and added to the local gallery.','failed':'The edit needs the photographer’s attention. Earlier exports are preserved.','cancelled':'The photographer stopped this revision. Earlier exports are preserved.'}
             self.update={'id':remote['id'],'status':'running' if job['status']=='queued' else job['status'],'message':messages[job['status']],'result_label':label}
+        elif not supported_edit(remote.get('feedback','')):
+            self.update={'id':remote['id'],'status':'failed','message':POLICY['message']}
         elif remote['base_revision']!=revision['id']:
             self.update={'id':remote['id'],'status':'stale','message':'The photo has a newer version. Review the latest export before requesting another edit.'}
         elif remote['status']!='requested':
@@ -74,7 +79,7 @@ class RemoteInbox:
         while not self.stop.is_set():
             try:self.sync()
             except HTTPError as error:
-                self.error=('The inbox’s access settings currently block this Mac. External access approval is pending.' if error.code in (301,302,303,307,308,401,403) else 'The inbox could not process the connection. Retrying automatically.')
+                self.error=('The inbox’s access settings currently block this Mac. Check the inbox sharing settings and pairing credentials.' if error.code in (301,302,303,307,308,401,403) else 'The inbox could not process the connection. Retrying automatically.')
             except Exception:
                 self.error='The remote inbox is unreachable. Local editing is still available; reconnecting automatically.'
             self.stop.wait(3)

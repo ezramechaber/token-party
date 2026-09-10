@@ -89,8 +89,12 @@ Save a pairing file outside version control, for example `.local-demo/roundtrip-
 }
 ```
 
-Start the local app with `--remote-config .local-demo/roundtrip-runtime/remote.json`. Keep the server running and Lightroom available. The gallery shows connection status and a copyable review link. No inbound port or tunnel is required. The Mac checks every three seconds. A request stays in the hosted database when the Mac is offline, busy, or has exhausted its run allowance. Restarting with a new allowance enables queued requests to run.
+Start the local app with `--remote-config .local-demo/roundtrip-runtime/remote.json`. Keep the server running and Lightroom available. The gallery shows connection status and a copyable review link. No inbound port or tunnel is required. The Mac checks every three seconds. A received request stays in the hosted database if the connection drops. New submissions are refused while the Mac is offline, busy, or has exhausted its run allowance. The local form is disabled while paired, so all submissions share the hosted inbox. Restarting with a new allowance enables queued requests to run.
 
 The inbox is scoped to one photo and one local state directory in this prototype. Each request records its base revision, so feedback for an older export is refused rather than applied to the latest photo. Do not pair multiple Macs to the same inbox. Rotating `REVIEW_KEY` invalidates the old reviewer link; rotating `WORKER_KEY` requires updating the Mac's pairing file. Both environment changes require redeployment.
 
 The hosted inbox contains feedback, revision labels, heartbeat times, and generic result status. It receives no JPEGs, RAWs, filesystem paths, or raw tool traces. The photographer shares exports separately for now.
+
+## Supported reviewer prompts
+
+The hosted page offers six example prompts. A deliberately narrow, shared request grammar validates every clause on both the relay and the Mac. It accepts supported light, color, grain, texture, vignette, and crop commands; unknown or mixed transformation requests are rejected before they can launch Lightroom. This may reject some otherwise reasonable paraphrases; the example buttons provide accepted wording. The runtime also checks the whole request before using tools. No image generation, identity/gender-presentation changes, body/face reshaping, clothing swaps, or object/scene synthesis is permitted.

@@ -30,6 +30,8 @@ assert sync(version)[0]==200
 for item in request('/api/review',REVIEW)[1]['requests']:
  if item['status'] in ('requested','running','verifying'):sync(version,{'id':item['id'],'status':'cancelled','message':'Test cleanup'})
 payload={'id':uuid.uuid4().hex,'base_revision':version,'feedback':'Reduce grain a little'}
+for invalid in ['Make the man a woman','Reduce grain. Add a cat.','Change her face','Remove the chair']:
+ assert request('/api/review',REVIEW,{**payload,'feedback':invalid})[0]==422
 assert request('/api/review',REVIEW,payload,origin='https://elsewhere.example')[0] in (400,403)
 assert request('/api/review',REVIEW,{**payload,'base_revision':'old'})[0]==409
 with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
@@ -38,7 +40,7 @@ assert sorted(r[0] for r in results)==[202,409],results
 accepted=next(r[1] for r in results if r[0]==202)
 payload['id']=accepted['id']
 assert request('/api/review',REVIEW,payload)[0]==200
-assert request('/api/review',REVIEW,{**payload,'feedback':'Different'})[0]==400
+assert request('/api/review',REVIEW,{**payload,'feedback':'Lower the highlights'})[0]==400
 assert sync(version)[1]['request']['id']==accepted['id']
 new_version=uuid.uuid4().hex
 assert sync(new_version,{'id':accepted['id'],'status':'completed','message':'Test export verified','result_label':'Test V2'})[0]==200

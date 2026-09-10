@@ -1,0 +1,26 @@
+{
+  "examples": [
+    "Reduce the grain by half. Keep the skin texture and color.",
+    "Make the face a little brighter. Keep the background dark.",
+    "Warm the white balance slightly. Keep the skin tones natural.",
+    "Lower the highlights. Keep the shadows unchanged.",
+    "Reduce purple saturation in the background. Keep the skin tones natural.",
+    "Add a subtle vignette. Keep the crop unchanged."
+  ],
+  "actions": [
+    "(?:make|brighten|darken) (?:the )?(?:face|subject|background|photo)(?: (?:a little|slightly))?(?: (?:brighter|darker))?",
+    "(?:increase|decrease|raise|lower|reduce|boost) (?:the )?(?:exposure|contrast|highlights|shadows|whites|blacks|vibrance|saturation|clarity|texture|grain|sharpness)(?: (?:slightly|a little|by half))?",
+    "(?:warm|cool) (?:the )?(?:white balance|photo|image|background|skin tones)(?: slightly| a little)?",
+    "make (?:the )?(?:it|photo|image|white balance|background) (?:slightly |a little )?(?:warmer|cooler)",
+    "(?:reduce|increase|lower|boost) (?:red|orange|yellow|green|blue|purple|magenta) saturation(?: (?:slightly|a little))?(?: in the background)?",
+    "(?:add|reduce|remove) (?:a |the )?(?:subtle |slight )?vignette",
+    "(?:make|turn) (?:the )?(?:photo|image) black and white",
+    "(?:straighten|level) (?:the )?(?:photo|horizon)",
+    "crop (?:the )?(?:photo|image) (?:tighter|to (?:a square|4:5|3:4|1:1))"
+  ],
+  "preservation": [
+    "keep (?:the )?(?:skin texture and color|natural skin texture|skin texture|skin tones|color|colors|film-like color|crop|composition|background|dark background|face|subject|highlights|shadows)(?: (?:natural|unchanged|dark|the same))?",
+    "(?:do not|don't) change (?:the )?(?:crop|color|colors|skin texture|skin tones|background|face|composition)"
+  ],
+  "message": "This demo accepts short Lightroom requests about lighting, color, grain, texture, vignette, or crop. Try an example below. Changing identity, gender presentation, facial features, bodies, clothing, objects, or the scene is not supported."
+}

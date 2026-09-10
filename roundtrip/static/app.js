@@ -67,9 +67,9 @@ function render() {
   const job = active || photo.jobs.find(j => j.id === selectedJobId) || photo.jobs[0];
   text($('#connection'), !state.runtime.available ? 'Codex is unavailable' : active ? 'Astra is editing in Lightroom' : 'Astra · Lightroom on this Mac');
   $('#connection').prepend(Object.assign(document.createElement('span'), {className:'dot' + (active ? ' busy' : '')}));
-  $('#feedback').disabled = !!active || pending;
-  $('#submit').disabled = !!active || pending || !state.runtime.available || state.runtime.runs_remaining < 1;
-  $('#submit').textContent = active ? 'Revision in progress…' : pending ? 'Submitting…' : 'Revise in Lightroom ↗';
+  $('#feedback').disabled = !!active || pending || !!state.remote;
+  $('#submit').disabled = !!state.remote || !!active || pending || !state.runtime.available || state.runtime.runs_remaining < 1;
+  $('#submit').textContent = state.remote ? 'Use the remote review link above' : active ? 'Revision in progress…' : pending ? 'Submitting…' : 'Revise in Lightroom ↗';
   text($('#baseNote'), `Your feedback applies to ${current.label}.`);
   if (state.runtime.runs_remaining < 1 && !active) text($('#baseNote'), 'This session’s run allowance has been used.');
   renderJob(job);

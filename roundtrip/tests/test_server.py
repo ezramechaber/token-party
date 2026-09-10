@@ -44,7 +44,7 @@ class StoreTests(unittest.TestCase):
     def test_idempotency_key_cannot_change_feedback(self):
         self.job()
         with self.assertRaisesRegex(ValueError,'different feedback'):
-            self.job('Change the background')
+            self.job('Darken the background')
     def test_stale_revision_rejected(self):
         with self.assertRaisesRegex(ValueError,'newer revision'):
             self.store.create_job('portrait','v1','Make it warmer','request-stale')

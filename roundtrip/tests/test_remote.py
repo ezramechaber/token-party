@@ -34,7 +34,7 @@ class RemoteTests(unittest.TestCase):
     def test_stale_feedback_never_runs(self):
         self.sync(self.request('original'));self.runner.start.assert_not_called();self.assertEqual(self.bridge.update['status'],'stale')
     def test_busy_worker_keeps_request_in_cloud(self):
-        self.store.create_job('portrait','v2','Keep skin natural','local-request')
+        self.store.create_job('portrait','v2','Lower the highlights','local-request')
         self.sync(self.request());self.runner.start.assert_not_called();self.assertIsNone(self.bridge.update)
     def test_spent_allowance_does_not_consume_request(self):
         self.runner.started=2

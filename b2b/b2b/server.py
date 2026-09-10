@@ -59,6 +59,8 @@ def import_track(path,job):
         tid=content_id(path)
         if tid not in tracks:
             result=analyze(path,tid)
+            sidecar=path.with_suffix('.source.json')
+            if sidecar.exists():result.update(json.loads(sidecar.read_text()))
             with lock:tracks[tid]={**result,'path':str(path.resolve())};save()
         jobs[job]={'status':'done','title':tracks[tid]['title'],'track':tid}
     except Exception as e:
@@ -285,6 +287,8 @@ def listener_tracks():
     with lock:return copy.deepcopy(list(tracks.values()))
 
 def listener_import(url,update):
+    with lock:existing=next((t for t in tracks.values() if t.get('sourceUrl')==url),None)
+    if existing:return copy.deepcopy(existing)
     path=download_audio(url,IMPORTS,update)
     try:
         update(status='analyzing',title=path.stem)
@@ -294,6 +298,8 @@ def listener_import(url,update):
             if str(path.resolve())!=existing['path']:path.unlink(missing_ok=True)
             return copy.deepcopy(existing)
         result=analyze(path,ident)
+        sidecar=path.with_suffix('.source.json')
+        if sidecar.exists():result.update(json.loads(sidecar.read_text()))
         with lock:
             tracks[ident]={**result,'path':str(path.resolve()),'sourceUrl':url};save()
             return copy.deepcopy(tracks[ident])
@@ -382,6 +388,11 @@ class ResolveRequest(BaseModel):
 
 def request_context():
     with lock:return {k:copy.deepcopy(session_state.get(k,'')) for k in ('tempo','bars','tailId','crateIds','direction')}
+
+@app.post('/api/requests/local')
+def local_track_request(body:ResolveRequest):
+    try:return request_manager.submit_track(body.trackId,request_context())
+    except ValueError as error:raise HTTPException(400,str(error)) from None
 
 @app.post('/api/requests/{ident}/resolve')
 def resolve_request(ident:str,body:ResolveRequest):

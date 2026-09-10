@@ -353,3 +353,8 @@ Saved the user's selected model-coaching screenshot under B2B presentation asset
 ## 2026-09-10 — Two-sided Astra runtime
 
 Connected the dedicated local b2b API key and verified a real gpt-6-astra Responses call. Added separate structured request-fit and DJ-set decisions, validated transition choices, musical explanations, private token-usage logging, and lock-free network assessment with stale-result protection. Local key is ignored by Git and mode0600; no audio or credentials enter model prompts. Tests:129 Python tests and4 handoff regressions passed; additional existing-handoff preservation test passed. Five-song mixed-fit/YouTube exercise is in progress. Exact development token totals unavailable; API usage is measured separately in the private runtime log.
+
+
+## 2026-09-10 — Live Astra requests and browser DJ execution
+
+Added five authorized recordings, including two successful artist-uploaded YouTube downloads. Live Astra outcomes: Don Juan accepted and added as the sixth set track; Summertime needs listening review; Sunset at Paula’s passed musical judgment but needs grid review; both deliberate YouTube outliers rejected. Source metadata and measured drum-map summaries now inform both Astra roles. Browser confirmed actual deck-A playback, prepared deck B and an armed 8-bar handoff. Added local DJ test submissions and reuse of already imported YouTube URLs. Verified 133 Python tests, 4 handoff regressions and JavaScript syntax. Runtime API telemetry: 10 calls, 33,593 input and 1,917 output tokens; development/account-wide totals unavailable. Details and music provenance: [live trial](../b2b/docs/astra-live-trial.md).

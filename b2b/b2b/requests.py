@@ -209,6 +209,24 @@ class RequestManager:
         if starts >= 10:
             raise ValueError('The room received ten requests this minute. Please wait a moment.')
 
+    def submit_track(self, track_id, context):
+        """Local DJ submissions exercise the same curation as listener links."""
+        track=next((t for t in self.get_tracks() if t['id']==track_id),None)
+        if track is None:raise ValueError('Choose an analyzed crate track.')
+        context=_context(context)
+        with self.lock:
+            existing=next((r for r in reversed(self.records) if r.get('localTrackId')==track_id),None)
+            if existing:return {**self._public(existing),'duplicate':True}
+            self._pending_capacity()
+            if len(self.records)>=200:raise ValueError('This session has reached its 200-request limit.')
+            record={'id':uuid.uuid4().hex,'url':'','provider':'local','localTrackId':track_id,
+                    'trackId':track_id,'title':track.get('title',''),'artist':track.get('artist',''),
+                    'name':'DJ test','status':'pending','reason':'Waiting for Astra and the handoff check.',
+                    'createdAt':time.time(),'updatedAt':time.time(),'context':context,'queued':False,'attempt':0,'history':[]}
+            self.records.append(record);self._save();result=self._public(record)
+        if self.worker:self.worker.submit(self.process,record['id'])
+        return result
+
     def submit(self, url, name, context):
         provider, canonical = request_url(url)
         context = _context(context)
@@ -335,7 +353,10 @@ class RequestManager:
             self._update(ident, attempt=attempt, status='identifying', reason='Identifying the recording.')
         try:
             tracks = self.get_tracks()
-            if record['provider'] == 'spotify':
+            if record['provider'] == 'local':
+                track=next((t for t in tracks if t['id']==record['localTrackId']),None)
+                if track is None:raise ValueError('The local track is no longer in the crate.')
+            elif record['provider'] == 'spotify':
                 metadata = self.resolve_metadata(record['url'])
                 track, candidates = match_spotify(record['url'], metadata, tracks)
                 self._update(ident, attempt=attempt, title=str(metadata.get('title', ''))[:300], artist=str(metadata.get('artist', ''))[:200])

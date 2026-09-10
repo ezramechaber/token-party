@@ -1,5 +1,5 @@
 """Constrained ordering: executable edges first, optional Astra selection second."""
-from .astra import decide
+from .astra import decide, song_evidence
 import math
 from .mixmap import on_phrase_grid
 
@@ -116,7 +116,7 @@ def make_plan(tracks,tempo=128,bars=16,direction='',use_ai=False):
                         for e in [edge(a,b,tempo,8)] if e and e not in options]
         prompt={'task': 'Program a coherent 4/4 house DJ set. Choose the order, and choose one supplied 8/16-bar transition option per consecutive pair. Give a concise musical rationale for the set and each handoff. Use as many suitable tracks as possible once each; exclude stylistic outliers. Never invent cues. Each middle track needs 8 seconds after its incoming handoff before its outgoing transition. The audio engine uses the tested continuous-gain bass handoff; do not invent effects or curves.',
                 'setTempo':tempo,'direction':direction,
-                'tracks':[{k:t.get(k) for k in ('id','title','artist','bpm','key','energy','warnings')} for t in eligible],
+                'tracks':[song_evidence(t) for t in eligible],
                 'transitionOptions':[{**e,'option':i} for i,e in enumerate(options)]}
         result=decide('dj_set',prompt,{'type':'object','properties':{
             'order':{'type':'array','items':{'type':'string'}}, 'reason':{'type':'string'},

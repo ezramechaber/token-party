@@ -126,6 +126,11 @@ def download_audio(url: str, imports: Path, update) -> Path:
                 raise ImportError('Downloaded audio must be between 20 seconds and 15 minutes.')
             title = re.sub(r'[^\w .()-]', '_', str(info.get('title') or 'YouTube audio'))[:100].strip(' .')
             destination = imports / f'{title or "YouTube audio"} [{uuid.uuid4().hex[:12]}].mp3'
+            source = {'sourceUrl': url, 'title': str(info.get('track') or info.get('title') or title)[:300],
+                      'artist': str(info.get('artist') or info.get('creator') or info.get('uploader') or 'Unknown artist')[:200],
+                      'sourceDescription': str(info.get('description') or '')[:3000],
+                      'sourceLicense': str(info.get('license') or '')[:300]}
+            destination.with_suffix('.source.json').write_text(json.dumps(source))
             output.replace(destination)
             return destination
         except ImportError:

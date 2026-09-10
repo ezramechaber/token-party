@@ -63,3 +63,20 @@ def test_private_key_storage(tmp_path,monkeypatch):
     assert (tmp_path/'openai-key').stat().st_mode & 0o777 == 0o600
     monkeypatch.setenv('OPENAI_API_KEY','sk-env-placeholder')
     assert astra.api_key()=='sk-env-placeholder'
+
+def test_local_dj_request_uses_same_assessor(tmp_path):
+    calls=[]
+    def assess(t,tracks,context):
+        calls.append(t['id']);return {'status':'accepted','reason':'Fits the set.'}
+    m=make(tmp_path,assess)
+    r=m.submit_track('b',C);m.process(r['id'])
+    assert calls==['b'] and m.queue_ids()==['b']
+    assert m.list()[0]['provider']=='local' and m.list()[0]['name']=='DJ test'
+    assert m.submit_track('b',C)['duplicate']
+
+
+def test_song_evidence_includes_map_not_audio():
+    t=track('b',path='/private/music.mp3',waveform=[1,2,3],mixMap={'bars':[{'kickFraction':1},{'kickFraction':0}]})
+    evidence=astra.song_evidence(t)
+    assert evidence['songMap']['supportedBarFraction']==.5
+    assert 'path' not in evidence and 'waveform' not in evidence

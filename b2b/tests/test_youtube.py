@@ -67,6 +67,9 @@ def test_download_success_and_progress(tmp_path, monkeypatch):
     path = youtube.download_audio(VIDEO, imports, lambda **state: states.append(state))
     assert path.parent == imports and path.suffix == '.mp3' and path.read_bytes() == b'audio'
     assert states[-1]['progress'] == 50
+    import json
+    source=json.loads(path.with_suffix('.source.json').read_text())
+    assert source['sourceUrl']==VIDEO and source['title']=='../../House / track'
     assert list(tmp_path.iterdir()) == [imports]
 
 
@@ -120,3 +123,9 @@ def test_invalid_endpoint_url_is_400():
     with pytest.raises(HTTPException) as error:
         server.youtube(server.YoutubeRequest(url='https://example.com'))
     assert error.value.status_code == 400
+
+def test_youtube_reuses_known_source_before_network(monkeypatch):
+    monkeypatch.setattr(server,'tracks',{'a':{'id':'a','sourceUrl':VIDEO,'title':'Known'}})
+    def fail(*a):raise AssertionError('Should not download the same source twice')
+    monkeypatch.setattr(server,'download_audio',fail)
+    assert server.listener_import(VIDEO,lambda **state:None)['title']=='Known'

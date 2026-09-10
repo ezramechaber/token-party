@@ -393,3 +393,8 @@ Preserved the existing native edit, reset the seated RAW, saved a named original
 ## 2026-09-10 15:37 EDT — Roundtrip hero completed
 
 Verified the seated RAW color-and-crop edit and promoted its real before/after and feedback to the homepage.4:5 export, native white balance and background mask; successful runtime239.93seconds. Browser verified result media and slider. Preserved base/result versions and prior blocked history; recording task handed the verified result. User foreground recovery and short-name base preparation were required.
+
+
+## 2026-09-10 16:30 EDT — Roundtrip recorded edit completed
+
+Added and tested an optional manual foreground gate, submitted feedback through foreground Chrome, and waited for the user to foreground Lightroom before releasing the job. The real edit completed in254.42seconds; independently inspected the new4:5 export, native white balance and darker background. Preserved all versions. Paused for the Chrome handoff before the recorded comparison. User owns screen capture; no completed video artifact claimed.42 preparation tests passed.

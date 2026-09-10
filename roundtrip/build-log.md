@@ -139,3 +139,10 @@ Account-wide weekly usage67% at resumption and70% at close; concurrent usage pre
 ## 2026-09-10 — Recording with explicit foreground handoffs
 
 User stopped the first recorded pass because app changes were not visible. Cancelled it, preserved existing results, and restored the unedited native base. For the replacement pass, user confirmed Chrome was foreground. Added an opt-in operator ready-file gate: requests are genuinely queued and no runtime process starts until the operator signals Lightroom is visible. Default operation is unchanged. Submitted the same feedback through native Chrome controls and verified queued state, absent runtime job folder, and absent ready signal.42 tests pass, including queued wait and cancellation. Next: user foreground confirmation, release gate, complete the real edit, then pause for Chrome foreground before reviewing.
+
+
+## 2026-09-10 16:30 EDT — Recorded Lightroom pass completed
+
+After the user confirmed Lightroom was foreground, released the recording gate. The real queued request completed in 254.42 seconds from running to verified completion, excluding the manual handoff wait. Independently inspected the fresh 1638×2048 JPEG: 4:5 framing, native white balance5900K/tint+8, background mask−0.35EV, and a saved native version. Previous RAW and results remain preserved. User controls the desktop recording; its saved file has not been inspected. Paused before Chrome so the user can foreground it for the final comparison segment. No additional jobs launched.
+
+42 tests passed for the recording gate during preparation. Measured account-wide weekly usage80%, shared with concurrent work. Runtime trace reports1,350,014 input tokens,1,255,168 cached input tokens,2,550 output tokens,and259 reasoning output tokens; these are runtime-only telemetry. No reset redeemed. Next: show the completed gallery result in foreground Chrome and obtain the actual recording for editing.

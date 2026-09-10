@@ -120,3 +120,8 @@ User explicitly requested preparing the unedited seated RAW and executing review
 ### Roundtrip — 2026-09-10 15:37 EDT hero retry completion
 
 Account-wide weekly usage measured67% on resumption and70% at close. Shared meter includes concurrent tasks. User approved retry after restoring Lightroom; one label-verification attempt blocked, then the short-name base succeeded. Successful runtime telemetry:1,259,407 input tokens,1,197,696 cached input tokens,2,902 output tokens,687 reasoning output tokens; these are reported runtime values, not entire project usage. No reset redeemed or new broader numeric budget inferred.
+
+
+### Roundtrip — 2026-09-10 16:30 EDT recorded runtime
+
+Measured80% account-wide weekly usage after the user-requested recorded edit; concurrent activity prevents project attribution. The completed runtime reports1,350,014 input tokens,1,255,168 cached input tokens,2,550 output tokens,and259 reasoning output tokens. Runtime-only values; task totals unavailable. No reset redeemed or broader numeric allocation inferred.

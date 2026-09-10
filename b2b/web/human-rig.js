@@ -23,6 +23,9 @@ export function createHumanRig(nodes) {
       lengths:[upper.getWorldPosition(new THREE.Vector3()).distanceTo(lower.getWorldPosition(new THREE.Vector3())),lower.getWorldPosition(new THREE.Vector3()).distanceTo(hand.getWorldPosition(new THREE.Vector3()))]};
   }
   const origin=rig.position.clone();
+  const idleBones=['torso','head'].map(name=>nodes[name]).filter(Boolean).map(bone=>({bone,rotation:bone.getWorldQuaternion(new THREE.Quaternion())}));
+  const X=new THREE.Vector3(1,0,0),Z=new THREE.Vector3(0,0,1);
+  const turn=(axis,angle)=>new THREE.Quaternion().setFromAxisAngle(axis,angle);
   let maxReachError=0;
   const expected=rig.userData.posePositions||{};
   let initialPoseError=0;
@@ -42,8 +45,27 @@ export function createHumanRig(nodes) {
     const {gripLocal,handQ}=cache[side];
     return grip.clone().sub(gripLocal.clone().applyQuaternion(handQ));
   }
-  function update({hands,shift=0,advance=0}){
-    rig.position.copy(origin);rig.position.x+=shift;rig.position.z+=advance;rig.updateMatrixWorld(true);maxReachError=0;
+  function update({hands,shift=0,advance=0,idle=0,time=0,tempo=124,playing=false}){
+    // Slow, overlapping rhythms avoid a conspicuous repeating sway. Arm IK
+    // keeps the hands planted while the chest and weight move underneath.
+    const breath=Math.sin(time*Math.PI*2/4.8);
+    rig.position.copy(origin);
+    rig.position.x+=shift+idle*(.024*Math.sin(time*.57)+.009*Math.sin(time*.23));
+    rig.position.y+=idle*.007*breath;
+    rig.position.z+=advance+idle*.006*Math.sin(time*.67);
+    rig.updateMatrixWorld(true);
+    for(const {bone,rotation} of idleBones){
+      const q=rotation.clone();
+      if(bone.name==='torso')q.premultiply(turn(Z,idle*.008*Math.sin(time*.57))).premultiply(turn(X,idle*.006*breath));
+      else {
+        const nod=playing ? .022*Math.sin(time*Math.PI*2*tempo/60):.018*Math.sin(time*1.13);
+        q.premultiply(turn(Y,idle*(.065*Math.sin(time*.43)+.035*Math.sin(time*.19))))
+          .premultiply(turn(X,idle*(nod+.012*breath)))
+          .premultiply(turn(Z,idle*.013*Math.sin(time*.71)));
+      }
+      worldRotation(bone,q);
+    }
+    maxReachError=0;
     const actual=[],grips={};let maxContactError=0;
     for(const [index,side] of ['L','R'].entries()){
       const {upper,lower,hand,upperQ,lowerQ,handQ,lengths:[a,b]}=cache[side];

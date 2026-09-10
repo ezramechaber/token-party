@@ -2,7 +2,7 @@ import * as THREE from './vendor/three.module.min.js';
 import { GLTFLoader } from './vendor/GLTFLoader.js';
 import { RoomEnvironment } from './vendor/RoomEnvironment.js';
 import { mergeGeometries } from './vendor/BufferGeometryUtils.js';
-import { createHumanRig } from './human-rig.js?v=1e51099';
+import { createHumanRig } from './human-rig.js?v=idle-1';
 
 // This is a spatial illustration of real mixer state, never an audio clock or controller.
 export function createBoothScene(canvas) {
@@ -33,7 +33,7 @@ export function createBoothScene(canvas) {
   floor.rotation.x=-Math.PI/2; floor.position.y=.05; floor.visible=false; scene.add(floor);
   const nodes = {}, deckArt=[], crateArt=[], textures = new Map();
   let width=0,height=0,time=0,lastRender=0,disposed=false,crateKey='', state={decks:[]}, ready=false;
-  const queue=[]; let action=null; let humanRig=null;let transitionBlend=0;let peakReach=0,peakContact=0,frameCount=0,frameStart=performance.now();
+  const queue=[]; let action=null; let humanRig=null;let transitionBlend=0;let idleBlend=0;let peakReach=0,peakContact=0,frameCount=0,frameStart=performance.now();
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const vector = p => new THREE.Vector3(...p), Y=vector([0,1,0]);
   function cover(track) {
@@ -176,7 +176,10 @@ export function createBoothScene(canvas) {
       const x=(state.decks?.[1]?.fade??0)-(state.decks?.[0]?.fade??1);
       if(nodes.crossfader)nodes.crossfader.position.x=THREE.MathUtils.clamp(x,-1,1)*.18;
       if(humanRig){
-        const pose=humanRig.update({hands,shift,advance});
+        const idleTarget=!action&&transitionBlend<.01?1:0;
+        idleBlend=reduced.matches?0:idleBlend+(idleTarget-idleBlend)*(1-Math.exp(-elapsed*5));
+        const pose=humanRig.update({hands,shift,advance,idle:idleBlend,time,tempo:state.tempo||124,playing:state.decks?.some(d=>d.playing)});
+        canvas.dataset.idleMotion=idleBlend.toFixed(3);
         canvas.dataset.reachError=pose.maxReachError.toFixed(4);
         canvas.dataset.contactError=pose.maxContactError.toFixed(4);
         if(action){if(pose.maxReachError>peakReach)canvas.dataset.peakReachPhase=((time-action.start)/5.2).toFixed(3);peakReach=Math.max(peakReach,pose.maxReachError);peakContact=Math.max(peakContact,pose.maxContactError);}

@@ -5,7 +5,7 @@ import {createVisualizer} from './visualizer.js';
 import {blendCurves} from './mix-curves.js';
 import {createChannel,crossfadeGains,waveformOverview} from './channel.js';
 import {cueIncoming,handoffTime} from './handoff.js';
-import {createBoothScene} from './booth-scene.js?v=1e51099';
+import {createBoothScene} from './booth-scene.js?v=idle-1';
 const $=s=>document.querySelector(s);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const time=s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,'0')}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`;

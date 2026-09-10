@@ -130,3 +130,8 @@ At the user’s explicit request, a sub-agent corrected the carried sleeve inter
 Main-app browser verification: personalized scene ready at30fps with no console errors; real-track loading invokes the new rig. Four listener tests passed, including recursive scene-module serving. Modified JavaScript syntax passes. The audio server remains running; no playback/mixing behavior changed. Original source photographs and music remain excluded. Existing uncommitted presentation, Roundtrip and activity/usage work was preserved. Full visual-session history remains in the source checkpoint’s build and usage logs.
 
 Integration usage checkpoint:76% account-wide weekly allowance used in the10,080-minute window; no reset redeemed. The visual-task numeric cap was explicitly lifted by the user; prior usage history remains preserved in the source visual checkpoint. This shared account measurement is not per-project token usage.
+
+
+## 2026-09-10 — Quick idle-motion pass
+
+At the user’s request, added subtle breathing, weight shifts and head glances while the DJ rests, plus a small tempo-following nod when a deck plays. The idle loop fades out during sleeve loading and crossfader gestures; existing arm IK keeps resting hands planted. Reduced-motion preferences disable idle movement. Updated main-app/listener module revisions. JavaScript syntax and live visual checks performed; scope deliberately kept small per the user’s speed request.

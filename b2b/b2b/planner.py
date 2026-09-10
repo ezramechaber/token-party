@@ -2,21 +2,33 @@
 import json
 import os
 import urllib.request
+import math
+from .mixmap import on_phrase_grid
 
 def edge(a,b,tempo,bars):
     if not (a['ready'] and b['ready']): return None
     if max(abs(tempo/a['bpm']-1),abs(tempo/b['bpm']-1))>.04: return None
+    phrase_anchor=a.get('phraseAnchor')
+    if phrase_anchor is None:phrase_anchor=a.get('gridOffset',0.)
     mapped=a.get('mixMap') is not None and b.get('mixMap') is not None
     if mapped:
         pair=None
         for n in ([16,8] if bars==16 else [8]):
             exits=[w for w in a['mixMap']['exitCandidates'] if w['bars']==n and w['start']>=a['introEnd']
-                   and w['end']>=a['exitEnd']-8*240/a['bpm']-.001]
+                   and w['end']>=a['exitEnd']-16*240/a['bpm']-.001
+                   and on_phrase_grid(w['start'],phrase_anchor,a['bpm'],n)]
             entries=[w for w in b['mixMap']['entryCandidates'] if w['bars']==n and w['end']<b['exitEnd']]
             if a.get('reviewed'):exits=[w for w in exits if w['start']>=a['outroStart']-.001 and w['end']<=a['exitEnd']+.001]
             if b.get('reviewed'):entries=[w for w in entries if w['start']>=b['entry']-.001 and w['end']<=b['introEnd']+.001]
             arrival=b['mixMap'].get('musicalArrival')
             if arrival:entries=[w for w in entries if w['end']>=arrival['time']-.001]
+            # Inspect what remains after A stops, not only drums within the overlap.
+            def supported_landing(window):
+                rows=b['mixMap'].get('bars')
+                if not rows:return True  # Older maps lack this evidence.
+                landing=[row for row in rows if window['end']-.001<=row['start']<window['end']+2*240/b['bpm']-.001]
+                return len(landing)>=2 and all(row['kickFraction']>=.75 for row in landing)
+            entries=[w for w in entries if supported_landing(w)]
             if exits and entries:
                 outgoing=max(exits,key=lambda w:w['end']);incoming=min(entries,key=lambda w:abs(w['end']-arrival['time']) if arrival else w['start'])
                 pair=(n,outgoing,incoming);break
@@ -25,14 +37,18 @@ def edge(a,b,tempo,bars):
     else:
         n=16 if bars==16 and min(a['outroBars'],b['introBars'])>=16 else 8
         if min(a['outroBars'],b['introBars'])<n:return None
-        start=a['exitEnd']-n*240/a['bpm'];entry=b['introEnd']-n*240/b['bpm']
+        span=n*240/a['bpm'];latest=a['exitEnd']-span
+        start=phrase_anchor+math.floor((latest-phrase_anchor+.001)/span)*span
+        entry=b['introEnd']-n*240/b['bpm']
         if start<a['introEnd'] or entry<0 or b['introEnd']>=b['exitEnd']:return None
+        if a.get('reviewed') and start<a.get('outroStart',start)-.001:return None
     ka,kb=a['key'],b['key']; distance=(kb['root']-ka['root'])%12
     harmonic=0 if distance==0 else .2 if distance in (5,7) else .6
     if 'uncertain' in (ka['confidence'],kb['confidence']): harmonic=.3
     score=abs(a['bpm']-b['bpm'])/5+abs(a['energy']-b['energy'])+harmonic+(16-n)/32
     return {'from':a['id'],'to':b['id'],'bars':n,'exit':round(start,4),'entry':round(entry,4),
             'duration':n*240/tempo,'score':round(score,3),
+            'phraseAnchor':phrase_anchor,'phraseAnchorSource':'human' if a.get('phraseAnchor') is not None else 'estimated',
             'reason':f'{n}-bar '+('kick-supported overlap' if mapped else 'phrase overlap')+' · '+('close tonal match' if harmonic<.3 else 'check tonal overlap'),
             'mixEvidence':({'entryBar':incoming['startBar'],'exitBar':outgoing['startBar'],'incomingKickCoverage':incoming['kickCoverage'],'outgoingKickCoverage':outgoing['kickCoverage'],'confidence':'estimated','musicalArrival':b['mixMap'].get('musicalArrival')} if mapped else None)}
 

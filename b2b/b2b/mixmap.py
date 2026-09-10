@@ -2,7 +2,13 @@
 import numpy as np
 from scipy import signal
 
-VERSION = 2
+VERSION = 3
+
+
+def on_phrase_grid(time, anchor, bpm, bars):
+    """Tolerate rounded cue timestamps, without accepting another musical bar."""
+    span = bars * 240 / bpm
+    return abs(time - anchor - round((time - anchor) / span) * span) <= .03
 
 
 def _longest_gap(values):
@@ -53,6 +59,12 @@ def analyze_mix_map(y, sr, bpm, grid_offset, cues=None):
         raise ValueError('Mix maps require a positive tempo and nonnegative grid offset.')
     duration = len(y) / sr
     period = 60 / bpm
+    human_phrase = cues.get('phraseAnchor') is not None
+    phrase_anchor = float(cues['phraseAnchor']) if human_phrase else float(grid_offset)
+    if not np.isfinite(phrase_anchor) or phrase_anchor < 0 or phrase_anchor >= duration:
+        raise ValueError('Phrase anchor must be inside the track.')
+    if not on_phrase_grid(phrase_anchor, grid_offset, bpm, 1):
+        raise ValueError('Phrase anchor must lie on the current bar grid; correct the grid first.')
     count = max(0, int((duration - grid_offset) / (4 * period)))
     # Five-millisecond RMS frames preserve attacks while smoothing carrier cycles.
     hop = max(1, round(sr * .005))
@@ -112,13 +124,18 @@ def analyze_mix_map(y, sr, bpm, grid_offset, cues=None):
     entry_limit = min(count, max(64, int(cues.get('introBars', 0)) + 16))
     exit_end = min(duration, float(cues.get('exitEnd', duration)))
     for length in (8, 16):
-        for start in range(0, count - length + 1, 4):
+        for start in range(0, count - length + 1):
+            is_entry = start % 4 == 0 and start + length <= entry_limit
+            is_exit = (start >= max(0, count - 64) and
+                       on_phrase_grid(grid_offset + start * 4 * period, phrase_anchor, bpm, length))
+            if not (is_entry or is_exit):
+                continue
             window = candidate(start, length)
             if not window:
                 continue
-            if start + length <= entry_limit:
+            if is_entry:
                 entries.append(window)
-            if start >= max(0, count - 64) and window['end'] <= exit_end + .001:
+            if is_exit and window['end'] <= exit_end + .001:
                 exits.append(window)
     arrival=({'time':float(cues['musicIn']),'confidence':'confirmed','source':'human','needsAudition':False} if cues.get('musicIn') is not None else musical_arrival(y,sr,bpm,grid_offset))
     entries.sort(key=lambda item: (abs(item['end']-arrival['time']) if arrival else item['start'], -item['bars']))
@@ -131,6 +148,8 @@ def analyze_mix_map(y, sr, bpm, grid_offset, cues=None):
     intro_gap = _longest_gap(strong[:intro_end * 4]) if intro_end else 0
     warnings = ['Kick evidence is a low-band attack/decay heuristic; bass stabs can resemble kicks.',
                 'Phrase phase and musical layering need audition; no vocal or stem classification.']
+    if not human_phrase:
+        warnings.append('Outgoing phrase grid starts at estimated bar 1; confirm a phrase anchor by ear.')
     if intro_gap >= 4:
         warnings.append('The proposed intro contains a kick gap of at least one bar; avoid a blind linear low-EQ swap.')
     if not entries or not exits:
@@ -138,6 +157,7 @@ def analyze_mix_map(y, sr, bpm, grid_offset, cues=None):
     return {'version': VERSION, 'status': 'estimated', 'meter': '4/4 assumed',
             'drumsInOverride': drums_in, 'drumsInSource': 'human' if drums_in is not None else 'estimated',
             'bpm': round(float(bpm), 6), 'gridOffset': round(float(grid_offset), 6),
+            'phraseAnchor': round(phrase_anchor, 6), 'phraseAnchorSource': 'human' if human_phrase else 'estimated',
             'method': 'low-band transient attack + decay + grid support',
             'bars': bars, 'kicklessOpening': opening_kickless,
             'firstReliableKick': None if first_kick is None else round(grid_offset + first_kick * period, 4),

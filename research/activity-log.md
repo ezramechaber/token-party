@@ -252,3 +252,7 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 ## 2026-09-10 12:55 EDT — Roundtrip RAW gallery
 
 Replaced stock samples with three real Lightroom RAW exports; preserved the original study’s four revisions. Private gallery now has four photos, navigation, per-revision comments, protected R2 media, and a photographer upload form. Browser checks at 320/390/768/1440 px and gallery API tests passed. RAWs remained unchanged; personal media stays outside Git. Remote editing still awaits resolution of Sites access. See `roundtrip/build-log.md` for evidence and limitations. Weekly account usage checkpoint 31%; Roundtrip authorized ceiling 37%, shared across concurrent work; project token counts unavailable.
+
+## 2026-09-10 13:04 EDT — Back 2 Back listening reference and café DJ
+
+Measured four actual master recordings and separated fade, mastering gain and arrangement effects. The approved final version uses equal-power/loudness matching and an incoming phrase with drums continuing after handoff. Added separate16barphrase anchor and saved comparisons.93tests passed5.36s; localHLSlistener verified inbrowser. Rebuilt Blenderrobot as humanDJ inwalnutcafé; all14coverscached, withtwo release-family sources identified. Source/model/verification details in [buildlog](../b2b/docs/build-log.md). Publiclistener deferredbyuser. Usage33% accountweekly, newbaseline26%, workingstop35%; exactprojecttokens unavailable. Next: continued humanmix feedback, runtimeAstra key, and optionalpublicsharing whenrequested.

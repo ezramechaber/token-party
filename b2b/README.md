@@ -1,6 +1,6 @@
 # b2b (back 2 back)
 
-A local two-deck DJ workstation for a small crate of 4/4 house tracks. Import MP3s, inspect beat/phrase estimates, suggest an order, audition an 8- or 16-bar overlap, and let Auto perform linear channel fades with a simultaneous low-EQ swap. Take over the same live controls at any time.
+A local two-deck DJ workstation for a small crate of 4/4 house tracks. Import MP3s, inspect beat/phrase estimates, suggest an order, audition an 8- or 16-bar overlap, and let Auto perform equal-power channel fades with a low-EQ handoff and measured loudness matching. Take over the same live controls at any time.
 
 Built during the September 10, 2026 Astra hackathon. [Plan](docs/plan.md) · [Build and usage log](docs/build-log.md) · [Activity log](../research/activity-log.md).
 
@@ -33,7 +33,7 @@ This feature requires FFmpeg and **Node.js 22+** (or Deno 2.3+), in addition to 
 
 **Beat & phrase inspector:** choose deck A or B, jump to **Intro**, **Outro**, or **Playhead**, and view 4, 8, or 16 bars. The slider and arrow buttons navigate the entire file. Tall numbered lines mark bars, short lines mark beats, orange dots mark detected kick candidates, and highlighted regions mark the proposed intro/outro. Click the detailed waveform to seek, or **Listen here · Solo** to hear the displayed section alone. The close-up uses the actual decoded stereo waveform; timestamps refer to the original file. Use **Grid / cues** to correct estimates.
 
-An 8-bar blend at 128 BPM lasts 15 seconds; 16 bars lasts 30. Volume ramps are linear amplitude. Low-shelf ramps are linear dB, from 0 to −24 dB and back, around 200 Hz. This deliberately simple combination can produce a midpoint dip. Audio starts and ramps use the audio clock; waveform animation never determines beat timing.
+An 8-bar blend at 128 BPM lasts 15 seconds; 16 bars lasts 30. The default uses equal-power channel curves, low-shelf gain derived from those amplitude curves, and whole-track loudness matching toward −16 LUFS with peak headroom. This is an experimental DJ curve, not a guarantee of constant perceived bass. The original linear-amplitude/linear-dB combination remains available for comparison. Audio starts and ramps use the audio clock; waveform animation never determines beat timing.
 
 ## Mix maps and reactive art
 
@@ -55,7 +55,7 @@ Astra receives only track metadata, feature summaries, valid transition edges an
 - Keep the browser awake for continuous Auto preloading. Audio already scheduled continues against the audio clock; subsequent handoffs require the application to remain active. A late preload stops automatic progression rather than scheduling a missed window.
 - Tempo controls apply between playback runs; this is not a live time-stretching jog deck.
 - Music is not included in the open-source repository. Use recordings you may download and play; separately clear any soundtrack used in a public demo. The tested local crate includes label-offered downloads and user-provided/purchased files, not redistributable fixtures.
-- Next presentation experiment: a Blender-built 3D deck whose physical controls mirror the same audio-engine parameters.
+- The Blender-built scene mirrors the real audio state. It illustrates gestures; it does not control the audio clock.
 
 ## Verify
 
@@ -65,3 +65,29 @@ node --check web/app.js
 ```
 
 Tests synthesize their own audio to check grid recovery, tempo preparation/pitch, transition durations and constrained ordering. They do not establish real-world musical quality. See the build log for measured validation and known issues.
+
+
+## Record and compare
+
+**Record audition** plays the loaded A/B transition and captures the actual master bus. It saves a WAV, a spectrogram and full-band/35–180 Hz RMS measurements locally. Open **Recorded mix comparisons** to replay the saved takes and inspect plots. Whole-track LUFS matching reduces mastering differences; section-level loudness and musical arrangement still matter. See [the measured comparison](docs/mix-diagnostics.md).
+
+The separate **16-bar phrase anchor** in Grid / cues is an original-file timestamp on a bar boundary. A blank value uses the estimated grid origin. Outgoing overlaps align to its 8/16-bar boundaries. The planner checks two incoming bars after a handoff, preventing a basic transition from ending exactly where the incoming drums disappear.
+
+## Local listener page
+
+Start a second process from this folder:
+
+```sh
+.venv/bin/python -m uvicorn b2b.listener:app --host 127.0.0.1 --port 8780
+```
+
+Choose **Open listener view** in Requests. The local token is generated in ignored `.b2b/listener.json`; it is not committed. **Start broadcast** sends the actual master bus to a local FFmpeg encoder, producing a rolling HLS stream with a short delay. Listeners press **Listen live**. The scene follows delayed deck state approximately, rather than frame-accurately matching buffered audio. Keep the workstation tab awake.
+
+Spotify links identify recordings already available to the DJ; they do not download Spotify audio. YouTube requests use the same bounded importer as the crate. Requests are assessed for tempo, cue support, energy and tonal fit, then revalidated against the live set tail before being appended. They never interrupt an armed handoff. Uncertain matches remain for review; no audio match is labeled **Needs audio**. The listener service exposes only audience state, artwork, requests and live audio, not the workstation's control API. This demo stays local; no public tunnel is running.
+
+
+## Café scene and artwork
+
+**Watch the set** opens the Blender-built human DJ in a warm walnut booth. The editable model and reproducible generator live in `scene/`; ordinary playback only needs its checked-in GLB. Loading a track animates its album sleeve from the crate to a deck. Covers appear in the crate too; click a cover for its local source/match record.
+
+Artwork extraction is offline by default. Twelve current tracks supplied their own embedded covers. Two missing covers were matched to related releases and privately cached: [Nightcrawlers single](https://musicbrainz.org/release/91b66d95-58e5-4fbd-85d0-b7d4fe63a2b7) and [DJ Disciple Ian Carey remixes](https://music.apple.com/us/album/yes-ian-carey-dj-disciple-remixes-feat-s-u-z-y-single/1524504781). These are release-family matches, not a claim that the precise edition is known. No Discogs credentials were needed. `python -m b2b.artwork --help` documents explicit, serial batch fetching of reviewed cover matches; playback routes do not search the internet. Covers and provenance remain under ignored `.b2b/cache/`.

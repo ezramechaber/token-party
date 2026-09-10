@@ -58,3 +58,13 @@ User authorized another **10 percentage points** beyond the previously agreed 27
 ### Roundtrip — 2026-09-10 12:55 EDT completion checkpoint
 
 Measured **31% used** in the account-wide 10080-minute weekly window, versus 28% at this resumed session. Observed +3 points includes concurrent projects and is not Roundtrip-specific consumption. Authorized ceiling remains **37%**. Published and verified the private gallery using three real Lightroom exports plus the existing study. Per-project token/tool totals unavailable. No reset redeemed.
+
+## 2026-09-10 13:02 EDT — Back 2 Back listening and audience demo
+
+Measured **32% account-wide weekly usage**, 68% remaining, in the10,080-minute window; intermediate readings28%,29%,31%. New tranche baseline26%, +10percentage-point ceiling36%, workingstop35% unchanged. Observed+6points includes concurrentprojects and is not per-project token consumption. Noreset; tasktoken and dailytool totals unavailable.
+
+Four real master recordings measured; user strongly approved the equal-power/loudness-matched handoff with corrected incoming arrangement.84tests passed5.41s. Local listener HLSaudio and animated Blender booth verified in browser. Publicsharing declined for now by user; café/humanvisual revision and final two externalcovers in progress.
+
+## 2026-09-10 13:04 EDT — Back 2 Back verified café demo
+
+Measured **33% account-wide weekly usage** at13:03:41EDT, 67% remaining. Newtranchebaseline26%, observed+7percentagepoints acrossallconcurrentwork; agreed+10points, ceiling36%, workingstop35%. Noreset; per-projecttokens unavailable.93tests passed5.36s. User-approved audiblehandoff isdefault; humanBlendercafé verified inbrowser; all14tracks havecachedcovers withprovenance. Local listener intentionally retained. This is the completed demo checkpoint.

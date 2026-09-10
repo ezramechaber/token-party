@@ -40,7 +40,8 @@ def test_transition_duration_and_windows():
     a=fixture('a');b=fixture('b',128);e=edge(a,b,128,16)
     assert e['duration']==30
     assert e['bars']==16
-    assert abs((a['exitEnd']-e['exit'])*a['bpm']/240-16)<.001
+    assert e['exit']+16*240/a['bpm']<=a['exitEnd']+.001
+    assert abs(e['exit']/(16*240/a['bpm'])-round(e['exit']/(16*240/a['bpm'])))<.001
     assert abs((b['introEnd']-e['entry'])*b['bpm']/240-16)<.001
 
 def test_reject_unsafe_pair():

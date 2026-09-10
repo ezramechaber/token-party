@@ -7,7 +7,7 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, Request, UploadFile
+from fastapi import FastAPI, HTTPException, Request, UploadFile, Form
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
@@ -43,7 +43,7 @@ def save():
             temp.write_text(json.dumps(song_map(t),indent=2));temp.replace(target)
 
 def song_map(t):
-    return {k:t[k] for k in ('id','title','artist','version','bpm','gridOffset','beatConfidence','meter','barConfidence','entry','introEnd','introBars','outroStart','exitEnd','outroBars','drumsIn','musicIn','reviewed','mixMap','warnings') if k in t}
+    return {k:t[k] for k in ('id','title','artist','version','bpm','gridOffset','beatConfidence','meter','barConfidence','entry','introEnd','introBars','outroStart','exitEnd','outroBars','drumsIn','musicIn','phraseAnchor','reviewed','mixMap','warnings') if k in t}
 
 @app.get('/api/map/{tid}')
 def get_map(tid:str):
@@ -51,7 +51,7 @@ def get_map(tid:str):
     if not t:raise HTTPException(404,'Track not found')
     return JSONResponse(song_map(t),headers={'Content-Disposition':f'attachment; filename="{tid}-mix-map.json"'})
 
-def public(t):return {k:v for k,v in t.items() if k!='path'}
+def public(t):return {**{k:v for k,v in t.items() if k!='path'},'artworkUrl':'/api/art/'+t['id']}
 
 def import_track(path,job):
     try:
@@ -129,6 +129,7 @@ class Correction(BaseModel):
     reviewed:bool=True
     drumsIn:float|None=Field(default=None,ge=0)
     musicIn:float|None=Field(default=None,ge=0)
+    phraseAnchor:float|None=Field(default=None,ge=0)
 
 @app.put('/api/track/{tid}')
 def correct(tid:str,c:Correction):
@@ -137,6 +138,11 @@ def correct(tid:str,c:Correction):
         t=tracks[tid];v=c.model_dump();bar=240/c.bpm
         if c.entry+c.introBars*bar>=c.exitEnd-c.outroBars*bar or c.exitEnd>t['duration'] or any(v is not None and v>=t['duration'] for v in (c.drumsIn,c.musicIn)):
             raise HTTPException(400,'Intro and outro must fit inside the track without overlapping.')
+        if c.phraseAnchor is not None:
+            snapped=c.gridOffset+round((c.phraseAnchor-c.gridOffset)/bar)*bar
+            if not 0<=snapped<t['duration'] or abs(snapped-c.phraseAnchor)>.03:
+                raise HTTPException(400,'Phrase anchor must be on a bar boundary. Use the beat inspector to find it.')
+            v['phraseAnchor']=snapped
         t.update(v);t.update(introEnd=c.entry+c.introBars*bar,outroStart=c.exitEnd-c.outroBars*bar,
                             ready=min(c.introBars,c.outroBars)>=8,barConfidence='manually confirmed',warnings=[])
         t['mixMap']=analyze_mix_map(decode(t['path']),SR,t['bpm'],t['gridOffset'],t)
@@ -200,6 +206,193 @@ def alignment(tid:str,tempo:float=128,cue:float=0,bars:int=8):
         result=local_attack_offset(y,SR,tempo,t['gridOffset']/ratio,cue/ratio,cue/ratio+bars*240/tempo)
         alignment_cache[key]={**result,'mappedCue':cue/ratio+result['offset'],'sourceCue':cue,'tempo':tempo}
     return alignment_cache[key]
+
+DIAGNOSTICS=DATA/'diagnostics';DIAGNOSTICS.mkdir(exist_ok=True)
+level_cache={}
+
+@app.get('/api/level/{tid}')
+def track_level(tid:str):
+    from .diagnostics import loudness
+    with lock:t=tracks.get(tid)
+    if not t:raise HTTPException(404,'Track not found')
+    if tid not in level_cache:level_cache[tid]=loudness(t['path'])
+    return level_cache[tid]
+
+@app.post('/api/capture')
+async def capture(file:UploadFile,metadata:str=Form('{}')):
+    from .diagnostics import inspect_capture
+    try:details=json.loads(metadata)
+    except ValueError:raise HTTPException(400,'Invalid recording metadata.')
+    if not isinstance(details,dict):raise HTTPException(400,'Expected recording metadata.')
+    suffix=Path(file.filename or '').suffix.lower()
+    if suffix not in ('.webm','.mp4','.ogg','.wav'):raise HTTPException(400,'Unsupported recording format.')
+    path=DIAGNOSTICS/(uuid.uuid4().hex+suffix);size=0
+    try:
+        with path.open('wb') as out:
+            while chunk:=await file.read(1024*1024):
+                size+=len(chunk)
+                if size>50*1024*1024:raise HTTPException(413,'Recording limit: 50 MB.')
+                out.write(chunk)
+        return await asyncio.to_thread(inspect_capture,path,details)
+    except Exception:
+        path.unlink(missing_ok=True);raise
+
+@app.get('/api/captures')
+def captures():
+    return [json.loads(p.read_text()) for p in sorted(DIAGNOSTICS.glob('*.json'),key=lambda p:p.stat().st_mtime,reverse=True)[:10]]
+
+@app.get('/api/diagnostic/{filename}')
+def diagnostic_file(filename:str):
+    if Path(filename).name!=filename or Path(filename).suffix not in ('.png','.wav','.json'):raise HTTPException(404)
+    path=DIAGNOSTICS/filename
+    if not path.is_file():raise HTTPException(404)
+    return FileResponse(path)
+
+# Listener projection is served on a separate port; these remain local-only APIs.
+from .requests import RequestManager
+from pydantic import ConfigDict
+import copy
+import time
+
+session_state={'decks':[],'crate':[],'transition':None,'tempo':124,'bars':16,
+               'tailId':'','crateIds':[],'broadcasting':False,'updatedAt':0}
+
+def listener_tracks():
+    with lock:return copy.deepcopy(list(tracks.values()))
+
+def listener_import(url,update):
+    path=download_audio(url,IMPORTS,update)
+    try:
+        update(status='analyzing',title=path.stem)
+        ident=content_id(path)
+        with lock:existing=tracks.get(ident)
+        if existing:
+            if str(path.resolve())!=existing['path']:path.unlink(missing_ok=True)
+            return copy.deepcopy(existing)
+        result=analyze(path,ident)
+        with lock:
+            tracks[ident]={**result,'path':str(path.resolve()),'sourceUrl':url};save()
+            return copy.deepcopy(tracks[ident])
+    except Exception:
+        path.unlink(missing_ok=True);raise
+
+request_manager=RequestManager(DATA,listener_tracks,listener_import)
+
+class ListenerDeck(BaseModel):
+    id:str=Field(default='',max_length=100)
+    playing:bool=False
+    position:float=Field(default=0,ge=0,le=36000,allow_inf_nan=False)
+    level:float=Field(default=1,ge=0,le=2,allow_inf_nan=False)
+    low:float=Field(default=0,ge=-24,le=12,allow_inf_nan=False)
+    fade:float=Field(default=0,ge=0,le=1,allow_inf_nan=False)
+
+class ListenerTransition(BaseModel):
+    model_config=ConfigDict(populate_by_name=True)
+    progress:float=Field(default=0,ge=0,le=1,allow_inf_nan=False)
+    from_id:str=Field(default='',alias='from',max_length=100)
+    to:str=Field(default='',max_length=100)
+    bars:int=Field(default=16,ge=8,le=16)
+
+class SessionProjection(BaseModel):
+    decks:list[ListenerDeck]=Field(default_factory=list,max_length=2)
+    crate:list[dict]=Field(default_factory=list,max_length=30)
+    transition:ListenerTransition|None=None
+    tempo:float=Field(default=124,ge=108,le=142,allow_inf_nan=False)
+    bars:int=Field(default=16,ge=8,le=16)
+    tailId:str=Field(default='',max_length=100)
+    crateIds:list[str]=Field(default_factory=list,max_length=30)
+    broadcasting:bool=False
+
+@app.post('/api/session/state')
+def publish_session(body:SessionProjection):
+    if body.bars not in (8,16):raise HTTPException(400,'Choose an 8- or 16-bar blend.')
+    def safe_track(tid):
+        t=tracks.get(tid)
+        return ({k:t[k] for k in ('id','title','artist','bpm','duration') if k in t}
+                | {'artworkUrl':'/api/art/'+tid}) if t else {}
+    with lock:
+        decks=[{**safe_track(d.id),**d.model_dump()} for d in body.decks]
+        crate=[safe_track(str(t.get('id',''))) for t in body.crate]
+        session_state.update(decks=decks,crate=[t for t in crate if t],
+                             transition=body.transition.model_dump(by_alias=True) if body.transition else None,
+                             tempo=body.tempo,bars=body.bars,tailId=body.tailId if body.tailId in tracks else '',
+                             crateIds=[t for t in body.crateIds if t in tracks],broadcasting=body.broadcasting,updatedAt=time.time())
+    return {'ok':True}
+
+@app.get('/api/session/state')
+def get_session():
+    with lock:
+        result=copy.deepcopy(session_state)
+        if time.time()-result['updatedAt']>10:
+            result['broadcasting']=False
+            for deck in result['decks']:deck['playing']=False
+        return result
+
+class ListenerSubmission(BaseModel):
+    url:str=Field(min_length=1,max_length=2048)
+    name:str=Field(default='Listener',max_length=80)
+
+@app.post('/api/requests')
+def listener_submit(body:ListenerSubmission):
+    with lock:context={k:copy.deepcopy(session_state[k]) for k in ('tempo','bars','tailId','crateIds')}
+    try:return request_manager.submit(body.url,body.name,context)
+    except ValueError as error:raise HTTPException(400,str(error)) from error
+
+@app.get('/api/requests')
+def listener_requests():
+    return {'requests':request_manager.list(),'queue':request_manager.queue_ids()}
+
+class ConsumeRequest(BaseModel):
+    trackId:str=Field(min_length=1,max_length=100)
+
+@app.post('/api/requests/consume')
+def consume_request(body:ConsumeRequest):
+    request_manager.consume(body.trackId)
+    return {'ok':True}
+
+
+from .broadcast import Broadcast
+broadcast=Broadcast(DATA/'live')
+
+@app.get('/api/listener-info')
+def listener_info():
+    from .listener import listener_config
+    return {'url':'http://127.0.0.1:8780/s/'+listener_config(DATA)['token']+'/','public':False}
+
+@app.post('/api/broadcast/start')
+def broadcast_start():return {'session':broadcast.start()}
+
+@app.post('/api/broadcast/stop')
+def broadcast_stop(session:str):return {'stopped':broadcast.stop(session)}
+
+@app.post('/api/broadcast/chunk')
+async def broadcast_chunk(request:Request,session:str):
+    body=bytearray()
+    async for chunk in request.stream():
+        body.extend(chunk)
+        if len(body)>2*1024*1024:raise HTTPException(413,'Audio chunk too large.')
+    try:await asyncio.to_thread(broadcast.write,session,body)
+    except ValueError as error:raise HTTPException(409,str(error)) from error
+    return {'ok':True}
+
+@app.get('/api/art-info/{tid}')
+def artwork_info(tid:str):
+    if tid not in tracks:raise HTTPException(404,'Track not found')
+    path=CACHE/(tid+'-art.json')
+    return json.loads(path.read_text()) if path.exists() else {'method':'generated placeholder','source':'b2b'}
+
+@app.get('/api/art/{tid}')
+def artwork(tid:str):
+    import subprocess
+    import html
+    from fastapi.responses import Response
+    with lock:t=tracks.get(tid)
+    if not t:raise HTTPException(404,'Track not found')
+    from .artwork import locate_artwork
+    with render_lock:target=locate_artwork(t,CACHE)
+    if target:return FileResponse(target,media_type='image/jpeg')
+    hue=int(tid[:6],16)%360;title=html.escape(t['title'][:32])
+    return Response(f'<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512"><rect width="512" height="512" fill="hsl({hue},30%,55%)"/><circle cx="256" cy="230" r="165" fill="#202127"/><circle cx="256" cy="230" r="55" fill="#ded5cf"/><text x="24" y="473" font-family="sans-serif" font-size="20" fill="#fff">{title}</text></svg>',media_type='image/svg+xml')
 
 render_lock=threading.Lock()
 app.mount('/',StaticFiles(directory=ROOT/'web',html=True),name='web')

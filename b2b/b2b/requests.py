@@ -1,0 +1,224 @@
+"""Durable listener requests; acceptance reserves a queue slot, never a deck.
+
+Spotify identifies an existing recording. It is not an audio download source.
+Network callbacks and crate ownership stay outside this module.
+"""
+import copy
+import json
+import math
+import re
+import threading
+import time
+import unicodedata
+import urllib.parse
+import urllib.request
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
+from .planner import edge
+from .youtube import video_url
+
+PENDING = {'pending', 'identifying', 'downloading', 'analyzing'}
+
+
+def request_url(value):
+    """Canonicalize only individual Spotify tracks or supported YouTube videos."""
+    if not isinstance(value, str) or len(value) > 2048:
+        raise ValueError('Paste a Spotify track or YouTube video link.')
+    try:
+        parts = urllib.parse.urlsplit(value.strip())
+        if parts.scheme not in ('http', 'https') or parts.username or parts.password or parts.port:
+            raise ValueError()
+        if parts.hostname == 'open.spotify.com':
+            match = re.fullmatch(r'/(?:intl-[a-z]{2}/)?track/([A-Za-z0-9]{22})/?', parts.path)
+            if not match:
+                raise ValueError()
+            return 'spotify', 'https://open.spotify.com/track/' + match[1]
+        return 'youtube', video_url(value)
+    except ValueError as error:
+        raise ValueError('Use one Spotify track or YouTube video; albums, playlists and short redirect links are not supported.') from error
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise ValueError('Spotify metadata is temporarily unavailable.')
+
+
+def spotify_metadata(url):
+    provider, canonical = request_url(url)
+    if provider != 'spotify':
+        raise ValueError('Expected a Spotify track.')
+    endpoint = 'https://open.spotify.com/oembed?' + urllib.parse.urlencode({'url': canonical})
+    request = urllib.request.Request(endpoint, headers={'Accept': 'application/json', 'User-Agent': 'b2b/0.1'})
+    with urllib.request.build_opener(_NoRedirect()).open(request, timeout=12) as response:
+        raw = response.read(65537)
+    if len(raw) > 65536:
+        raise ValueError('Spotify metadata response was too large.')
+    data = json.loads(raw)
+    title = str(data.get('title') or '').strip()[:300]
+    if not title:
+        raise ValueError('Spotify did not provide a track title.')
+    # oEmbed may omit the artist. Never guess one from a title or provider name.
+    artist = str(data.get('author_name') or '').strip()[:200]
+    if artist.lower() == 'spotify':
+        artist = ''
+    return {'title': title, 'artist': artist}
+
+
+def normalized(value):
+    text = unicodedata.normalize('NFKD', str(value)).casefold()
+    return ' '.join(re.findall(r'[^\W_]+', ''.join(c for c in text if not unicodedata.combining(c))))
+
+
+def match_spotify(url, metadata, tracks):
+    exact = [t for t in tracks if url in (t.get('spotifyUrl'), t.get('sourceUrl'))]
+    if len(exact) == 1:
+        return exact[0], []
+    candidates = [t for t in tracks if normalized(t.get('title', '')) == normalized(metadata['title'])]
+    artist = normalized(metadata.get('artist', ''))
+    if artist:
+        candidates = [t for t in candidates if normalized(t.get('artist', '')) == artist]
+        if len(candidates) == 1:
+            return candidates[0], []
+    return None, [t['id'] for t in candidates]
+
+
+def assess_fit(track, tracks, context, tail_id=None):
+    """Evidence based fit gate. Uncertain musical matches need the DJ's review."""
+    tempo, bars = context['tempo'], context['bars']
+    if not track.get('ready') or (not track.get('reviewed') and track.get('beatConfidence', 0) <= .62):
+        return {'status': 'review', 'reason': 'The beat grid or phrase markers need a DJ review.'}
+    bpm = track.get('bpm', 0)
+    if not isinstance(bpm, (float, int)) or not math.isfinite(bpm) or bpm <= 0:
+        return {'status': 'review', 'reason': 'A reliable tempo could not be measured.'}
+    if abs(tempo / bpm - 1) > .04:
+        return {'status': 'rejected', 'reason': f'{bpm:g} BPM is outside the set’s ±4% tempo range at {tempo:g} BPM.'}
+    tail = next((t for t in tracks if t['id'] == (tail_id or context.get('tailId'))), None)
+    if tail is None:
+        return {'status': 'review', 'reason': 'Choose the set’s final track so its transition can be checked.'}
+    if tail['id'] == track['id'] or track['id'] in context.get('crateIds', []):
+        return {'status': 'rejected', 'reason': 'This recording is already in the planned set.'}
+    transition = edge(tail, track, tempo, bars)
+    if not transition:
+        return {'status': 'review', 'reason': 'No safe 8- or 16-bar handoff was found from the end of the set.'}
+    energy_delta = abs(float(tail.get('energy', 0)) - float(track.get('energy', 0)))
+    if energy_delta > .4:
+        return {'status': 'review', 'reason': 'Tempo and phrases fit, but the measured energy jump needs a DJ check.', 'transition': transition}
+    a, b = tail.get('key', {}), track.get('key', {})
+    tonal_uncertain = any(k.get('confidence') == 'uncertain' for k in (a, b))
+    reason = f'{transition["bars"]}-bar handoff fits the tempo and phrase map.'
+    if tonal_uncertain:
+        reason += ' Key is uncertain; audition the overlap.'
+    elif (b.get('root', 0) - a.get('root', 0)) % 12 not in (0, 5, 7):
+        return {'status': 'review', 'reason': 'Tempo and phrases fit, but the estimated keys need a tonal audition.', 'transition': transition}
+    return {'status': 'accepted', 'reason': reason, 'transition': transition}
+
+
+class RequestManager:
+    def __init__(self, data_dir, get_tracks, import_youtube, metadata_resolver=None, auto_process=True):
+        self.path = Path(data_dir) / 'requests.json'
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.get_tracks, self.import_youtube = get_tracks, import_youtube
+        self.resolve = metadata_resolver or spotify_metadata
+        self.lock = threading.RLock()
+        self.worker = ThreadPoolExecutor(max_workers=1, thread_name_prefix='listener-request') if auto_process else None
+        self.records = json.loads(self.path.read_text()) if self.path.exists() else []
+        for record in self.records:
+            if record['status'] in PENDING:
+                record.update(status='review', reason='Processing was interrupted. Resubmit after the DJ clears this request.')
+        self._save()
+
+    def _save(self):
+        temporary = self.path.with_suffix('.tmp')
+        temporary.write_text(json.dumps(self.records, indent=2))
+        temporary.replace(self.path)
+
+    def _update(self, ident, **fields):
+        with self.lock:
+            record = next(r for r in self.records if r['id'] == ident)
+            record.update(fields, updatedAt=time.time())
+            self._save()
+            return copy.deepcopy(record)
+
+    def list(self):
+        with self.lock:
+            # Context stays private; it may become stale while the listener waits.
+            return [{k: copy.deepcopy(v) for k, v in r.items() if k != 'context'} for r in self.records]
+
+    def queue_ids(self):
+        with self.lock:
+            return [r['trackId'] for r in self.records if r['status'] == 'accepted' and r.get('queued')]
+
+    def consume(self, track_id):
+        """Call only once the mixer has incorporated this ID into its real plan."""
+        with self.lock:
+            for record in self.records:
+                if record.get('trackId') == track_id and record.get('queued'):
+                    record.update(queued=False, updatedAt=time.time())
+            self._save()
+
+    def submit(self, url, name, context):
+        provider, canonical = request_url(url)
+        tempo, bars = context.get('tempo'), context.get('bars')
+        if not isinstance(tempo, (int, float)) or not 108 <= tempo <= 142 or bars not in (8, 16):
+            raise ValueError('The set needs a tempo from 108–142 BPM and an 8- or 16-bar blend.')
+        context = {'tempo': tempo, 'bars': bars, 'tailId': str(context.get('tailId') or '')[:100],
+                   'crateIds': [str(i)[:100] for i in context.get('crateIds', [])[:30]]}
+        with self.lock:
+            existing = next((r for r in reversed(self.records) if r['url'] == canonical), None)
+            if existing:
+                return {**{k: copy.deepcopy(v) for k, v in existing.items() if k != 'context'}, 'duplicate': True}
+            if sum(r['status'] in PENDING for r in self.records) >= 8:
+                raise ValueError('Eight requests are being checked. Please wait before adding another.')
+            if sum(time.time() - r['createdAt'] < 60 for r in self.records) >= 10:
+                raise ValueError('The room received ten requests this minute. Please wait a moment.')
+            if len(self.records) >= 200:
+                raise ValueError('This session has reached its 200-request limit.')
+            record = {'id': uuid.uuid4().hex, 'url': canonical, 'provider': provider,
+                      'name': str(name or 'Listener').strip()[:80], 'status': 'pending', 'reason': 'Waiting to check this request.',
+                      'createdAt': time.time(), 'updatedAt': time.time(), 'context': context, 'queued': False}
+            self.records.append(record)
+            self._save()
+            result = {k: copy.deepcopy(v) for k, v in record.items() if k != 'context'}
+        if self.worker:
+            self.worker.submit(self.process, record['id'])
+        return result
+
+    def process(self, ident):
+        with self.lock:
+            record = copy.deepcopy(next(r for r in self.records if r['id'] == ident))
+            if record['status'] != 'pending':
+                return
+            self._update(ident, status='identifying', reason='Identifying the recording.')
+        try:
+            tracks = self.get_tracks()
+            if record['provider'] == 'spotify':
+                metadata = self.resolve(record['url'])
+                track, candidates = match_spotify(record['url'], metadata, tracks)
+                self._update(ident, title=str(metadata.get('title', ''))[:300], artist=str(metadata.get('artist', ''))[:200])
+                if track is None:
+                    return self._update(ident, status='review' if candidates else 'needs_audio', candidateIds=candidates,
+                                        reason='Possible crate match; the DJ must confirm the recording and version.' if candidates else 'Spotify identifies the track. Add an authorized audio file or YouTube source to assess it.')
+            else:
+                def update(**state):
+                    allowed = {k: v for k, v in state.items() if k in ('title', 'progress')}
+                    self._update(ident, status=state.get('status') if state.get('status') in PENDING else 'analyzing', **allowed)
+                track = self.import_youtube(record['url'], update)
+                if not isinstance(track, dict) or not track.get('id'):
+                    raise ValueError('Import did not return an analyzed track.')
+            tracks = self.get_tracks()
+            with self.lock:
+                queued = self.queue_ids()
+                if track['id'] in queued:
+                    return self._update(ident, status='rejected', trackId=track['id'], reason='This recording is already in the request queue.')
+                fit = assess_fit(track, tracks, record['context'], tail_id=queued[-1] if queued else None)
+                return self._update(ident, **fit, trackId=track['id'], title=track.get('title', ''),
+                                    artist=track.get('artist', ''), queued=fit['status'] == 'accepted')
+        except Exception:
+            # Downloader or upstream errors can contain paths, cookies or signed URLs.
+            return self._update(ident, status='error', reason='The source could not be checked. Try an available video or ask the DJ to add the audio file.')
+
+    def close(self):
+        if self.worker:
+            self.worker.shutdown(wait=False, cancel_futures=True)

@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 from b2b.mixmap import analyze_mix_map
 
 
@@ -82,3 +83,20 @@ def test_musical_arrival_prefers_full_texture_over_weak_first_tones():
     assert arrival is not None
     assert arrival['time']==24
     assert arrival['confidence']=='candidate'
+
+
+def test_outgoing_windows_follow_phrase_length_but_entries_can_start_every_four():
+    y,sr=fixture(bars=64)
+    result=analyze_mix_map(y,sr,120,0)
+    assert result['phraseAnchorSource']=='estimated'
+    assert all((c['startBar']-1)%c['bars']==0 for c in result['exitCandidates'])
+    assert any((c['startBar']-1)%16==4 for c in result['entryCandidates'] if c['bars']==16)
+
+
+def test_human_phrase_anchor_can_shift_to_any_existing_bar():
+    y,sr=fixture(bars=64)
+    result=analyze_mix_map(y,sr,120,0,{'phraseAnchor':2})
+    assert result['phraseAnchorSource']=='human'
+    assert all((c['startBar']-2)%c['bars']==0 for c in result['exitCandidates'])
+    with pytest.raises(ValueError,match='bar grid'):
+        analyze_mix_map(y,sr,120,0,{'phraseAnchor':2.5})

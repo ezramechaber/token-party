@@ -379,3 +379,12 @@ Separated the playback set from the complete library; rejected/review requests s
 ## 2026-09-10 15:24 EDT — Seated RAW hero edit
 
 Preserved the existing native edit, reset the seated RAW, saved a named original version, exported and inspected its JPEG, and registered it as the current gallery base. Submitted color/crop feedback through the app. Runtime blocked before editing because native windows were inaccessible, including after Lightroom restart; user foreground-window recovery requested. Conditional hero promotion prepared; no completed result claimed.40 tests and JS syntax passed.
+
+
+### 2026-09-10 15:24 EDT — A more opinionated DJ voice
+
+- Objective: make taste notes feel like a discerning resident DJ, with restrained snobbery.
+- Applied a shared musical voice to set planning and listener decisions: groove, pressure, space and restraint, occasional dry wit, gracious to requesters. Removed the repetitive sentence template and discouraged detector jargon and numeric energy scores. Evidence requirements and fit criteria remain intact.
+- Verified: 13 Astra/sequence regression tests and diff whitespace checks; generated two live set plans and refined the voice after reading the output. Final example: “I’d let Deluxe Bar raise the pressure without making a ceremony of it.” Backend restarted; the refreshed plan is visible.
+- Measured runtime usage this pass: 2 calls, 23,576 input and 1,013 output tokens; 15 calls total. Development token telemetry unavailable.
+- Next: listen through the set and tune the balance between musical specificity and dry commentary.

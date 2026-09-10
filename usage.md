@@ -85,3 +85,8 @@ Resumed account-wide weekly usage **36%**, against previous 37% ceiling. User ex
 ## 2026-09-10 13:26 EDT — Back 2 Back resumed without numeric cap
 
 User clarified that continued UI, audio and request work should proceed without the earlier budget cap, then explicitly requested continued work and commits after substantial changes. This supersedes this task's earlier35% working stop/36% ceiling; historical allocations remain recorded above. Fresh measurement39% used in the account-wide10080-minute weekly window. No reset authorized or redeemed. Exact project tokens are unavailable; other tasks share the meter. Blender scene modeling stays in its separate task.
+
+
+### Roundtrip — 2026-09-10 13:30 EDT execution checkpoint
+
+Measured **42% used** account-wide in the 10080-minute weekly window, reaching the user-authorized **42% ceiling**. Intermediate checkpoint 39%. Shared concurrent usage prevents project attribution. Completed and independently inspected one real local multi-photo Lightroom job after a safely blocked attempt and manual base restoration. Server remains available for review; new model jobs paused by exhausted run allowance. No reset redeemed; per-project token totals unavailable.

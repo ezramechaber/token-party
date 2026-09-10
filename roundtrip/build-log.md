@@ -85,3 +85,12 @@ Budget: measured account-wide weekly usage 36%; user authorized extension to a 4
 ### Recovery and second live attempt
 
 The first runtime attempt safely blocked before editing because Lightroom moved to another photograph during verification. Inspected and restored the requested portrait by filename search plus visual identity. Created and visually verified `Roundtrip base gallery-three` in Lightroom, recorded that exact base in private local state, and restarted the server with the media-route fix. Retried through the local gallery’s existing-feedback action. This recovery involved assistant preparation; it is not evidence of fully unattended recovery.
+
+
+## 2026-09-10 13:30 EDT — Local multi-photo loop verified
+
+The studio portrait request completed through the real local queue: extremely washed-out native tonal/color edits, tight hands-only crop, named Lightroom version, and verified 2048×2034 JPEG returned to the correct photo history. Independently inspected the actual exported pixels and confirmed the crop excludes the face; both hands remain visible. The successful retry took 289.7 seconds. Original RAW and earlier exports are preserved. The earlier blocked attempt remains visible; manual restoration and named-base preparation preceded the retry, so this is not a claim of unattended recovery.
+
+37 unit tests passed, including imported-photo media delivery, immutable identity mapping, and the global job lock. JavaScript syntax passed. Local HTTP verified all four registered JPEGs; browser verified the actual completed revision, feedback, history, and download. Shared account weekly usage reached the authorized 42% ceiling (10080-minute window). Run allowance exhausted; the server remains alive for viewing, with further edits paused. No reset used. Per-project token totals unavailable.
+
+Commits were made during implementation, media routing repair, recovery documentation, and crop-aware display work. Hosting remains unfinished: the local queue is functional, while the Sites gallery is disconnected and unchanged. README records the future Vercel HTTP queue/database/object-storage boundary; no Vercel deployment or remote comment replay is claimed. Next: authorize further usage, add a portable hosted queue and image upload/result synchronization, then verify one remote submission end to end.

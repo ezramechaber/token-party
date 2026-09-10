@@ -300,3 +300,8 @@ Created the public GitHub repository `ezramechaber/token-party` and connected th
 ## 2026-09-10 13:27 EDT — Publish accumulated Token Party work
 
 Prepared the accumulated project research, naming decisions, Design Tutor concept, usage records, and a root README for publication. Included the three existing Roundtrip commits covering gallery verification, Lightroom retry evidence, and native crop proportions. Verified all 37 Roundtrip unit tests. Kept the downloaded third-party system-card PDF local; the research links to its original source. Personal media and credentials remain excluded. No new runtime or completed-demo claim; project token totals unavailable.
+
+
+## 2026-09-10 13:30 EDT — Roundtrip local execution verified
+
+Connected the four-photo local gallery to the shared Lightroom queue. User’s washed-out/hands-only request produced a real 2048×2034 export and returned it to the studio portrait history. Successful retry: 289.7 seconds; first attempt blocked safely and required manual base restoration. 37 tests passed; actual export independently inspected. Committed throughout. Account usage reached authorized 42% ceiling; further edits paused. Hosted relay/Vercel integration remains open. See `roundtrip/build-log.md`.

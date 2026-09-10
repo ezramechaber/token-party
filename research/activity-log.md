@@ -374,3 +374,8 @@ Separated the playback set from the complete library; rejected/review requests s
 - Design provenance: apply-design-best-practices routed to [Impeccable](https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/SKILL.md), including polish and craft-floor references; refined the existing interface without replacing its design.
 - Measured runtime telemetry: 13 logged API calls total, 68,283 input and 3,448 output tokens. This pass added two set-planner calls; development token counts unavailable.
 - Next: listen through the full set with the visible handoff explanations and refine decision wording from musical feedback. Blender remains in the separate modeling task.
+
+
+## 2026-09-10 15:24 EDT — Seated RAW hero edit
+
+Preserved the existing native edit, reset the seated RAW, saved a named original version, exported and inspected its JPEG, and registered it as the current gallery base. Submitted color/crop feedback through the app. Runtime blocked before editing because native windows were inaccessible, including after Lightroom restart; user foreground-window recovery requested. Conditional hero promotion prepared; no completed result claimed.40 tests and JS syntax passed.

@@ -110,3 +110,8 @@ b2b session: weekly account usage measured50% (shared account, including concurr
 ### Roundtrip — 2026-09-10 13:55 EDT requested navigation follow-up
 
 Measured **50% account-wide weekly usage** during the user-requested navigation unification. Prior numeric ceiling47%; user explicitly requested this follow-up but did not specify a new numeric allocation. No broader work allocation inferred. Shared concurrent consumption prevents project attribution. No Lightroom runtime jobs or reset; task token totals unavailable.
+
+
+### Roundtrip — 2026-09-10 15:24 EDT seated hero request
+
+User explicitly requested preparing the unedited seated RAW and executing reviewer feedback. Shared weekly usage measured61% on resumption and66% at the native-window blocker, with concurrent account activity and no project attribution. One runtime attempt safely blocked before editing. No numeric extension or broader work allocation inferred; no reset redeemed. Exact project token totals unavailable.

@@ -68,3 +68,9 @@ Daily chat/turn/token/tool totals are unavailable from the current usage tool. R
 - Latest weekly usage25% at approximately12:40EDT: observed +16percentage points account-wide from9% baseline, including concurrent project work. Budget remains+20points, conservative stop26%. No reset. Project tokens, generation-specific billing and aggregate daily tool/chat counts unavailable.
 
 - Final browser audition completed: A “HANDED OVER,” B “PLAYING,” eight-bar window from A bar 177 to B bar 5, musical arrival shown as 00:24 candidate. Prepared-window corrections displayed A -12 ms / B +19 ms. Stopped both decks afterward and left the pair loaded for human review. Rendered DOM contains zero decorative eyebrow elements.
+
+## 12:43 EDT — User-requested checkpoint and budget extension
+
+- Current tested implementation was already committed as `a7f35ba`; user requested another checkpoint before further development. Include existing B2B presentation working notes in this project checkpoint. Private music/caches remain ignored.
+- New explicit allocation: another 10 percentage points from the fresh 26% account-wide weekly reading at 12:43:03 EDT. Tranche ceiling 36%, working stop 35%; prior baseline/history preserved. No reset.
+- Authorized next scope: approved concept implemented as UI, a DJ and mixing booth with album-art selection and state-driven motions, and listener link requests assessed for fit before queueing. No new implementation started before this checkpoint.

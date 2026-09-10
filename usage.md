@@ -6,7 +6,7 @@ Each project lives in its own subfolder. Record starting usage and an agreed bud
 
 | Project | Folder | Status | Started | Usage at start | Project budget |
 | --- | --- | --- | --- | --- | --- |
-| Back 2 Back | `b2b/` | Local prototype verified; human mixing review underway | 2026-09-10; exact start time not recorded | 9% weekly account-wide quota used before implementation; reconciled below | +20 percentage points of weekly allowance; conservative stop at 26% total used |
+| Back 2 Back | `b2b/` | Local prototype verified; human mixing review underway | 2026-09-10; exact start time not recorded | 9% weekly account-wide quota used before implementation; reconciled below | Original +20 points; additional +10 from 26% reading on 2026-09-10 12:43 EDT; new ceiling 36%, working stop 35% |
 | Roundtrip | `roundtrip/` | Lightroom demo built; further workflow work open | 2026-09-10; exact start time not recorded | Unknown — no starting snapshot recorded | Not set; prior repository default treats token cost as unconstrained |
 
 Existing project planning and demo history remain linked from [the activity log](research/activity-log.md). Roundtrip's private demo assets currently live in ignored `.local-demo/fuji-portrait/`; they must remain excluded from commits. This register does not imply either project has a completed autonomous runtime.
@@ -42,3 +42,9 @@ User requested subagents for image-led space-themed UI and YouTube import, then 
 Account-wide weekly Codex allowance: **25% used**, 75% remaining, in the10,080-minute window. Intermediate continuation checkpoints22%,23%,24% preceded this reading. Observed change from the recorded9% baseline is+16percentage points; concurrent projects share this meter, so this is not precise Back 2 Back consumption. The user's+20-point budget and conservative26% total stopping point remain unchanged. No reset redeemed. Exact per-project tokens and image-generation billing are unavailable.
 
 Completed scope: attack-aligned playback, editable song maps and musical-arrival-aware transition planning, clean reactive art, and a second ChatGPT Image reference.54tests passed in4.40seconds. Continued human mixing feedback and runtime API setup remain open.
+
+## 2026-09-10 12:43:03 EDT — Additional Back 2 Back allocation
+
+User explicitly authorized **another 10 percentage points account-wide** for the next phase. Fresh Codex reading: **26% used, 74% remaining** in the 10,080-minute weekly window. Use 26% as the new tranche baseline: **36% total ceiling**, with a **35% working stop** for reporting lag. This conservatively counts the new allocation from the current reading rather than adding unused earlier headroom. Original baseline and historical allocations remain recorded above. No reset used.
+
+Next authorized scope: implement the approved chrome-art UI, create a DJ/booth scene tied to actual mixer state, and enable listener Spotify/YouTube requests with fit assessment and queueing. User requested a Git checkpoint before further implementation.

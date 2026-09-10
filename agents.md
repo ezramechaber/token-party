@@ -16,7 +16,7 @@ This repository contains multiple open-source hackathon projects exploring what 
 - The user selected Back 2 Back as the next project: a small-crate DJ program for 4/4 house, with manual controls and automatic phrase-aligned transitions.
 - See `b2b/docs/plan.md` for scope and `b2b/docs/build-log.md` for actual implementation, verification and weekly-usage checkpoints.
 - Current implementation: local Python/FastAPI service, NumPy/SciPy feature analysis, FFmpeg tempo preparation and a browser Web Audio mixer. Personal tracks and caches belong in ignored `b2b/.b2b/`.
-- User budget: no more than 20 percentage points of weekly Codex allowance from the measured 9% baseline. Conservative stopping point: 26% total weekly usage. Inspect usage before further substantial work and log checkpoints; do not redeem resets.
+- Latest user budget extension: another 10 percentage points account-wide, measured from 26% weekly used at 2026-09-10 12:43:03 EDT. New tranche ceiling: 36% total; conservative working stop: 35%. Preserve the original 9% baseline and +20-point allocation in the usage log. Inspect before substantial work; do not redeem resets.
 - Runtime API key will be configured later. Rule-based operation must remain explicit; do not label it as runtime Astra.
 - Future direction: Blender-built 3D deck driven by the same real audio controls, after playback is verified.
 - Preserve earlier Lightroom experiments as separate work. Prioritize a two-track audible transition before expanding the crate.

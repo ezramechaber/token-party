@@ -28,3 +28,8 @@ The final pass used [Impeccable polish](https://raw.githubusercontent.com/pbakau
 Low, mid, and high sliders now operate real Web Audio filters. Equal-power manual crossfade follows the selected handoff law. Waveform overviews show stereo peak and RMS rather than a solid amplitude wall. Inspect opens the beat/phrase view at the selected deck's playhead, with keyboard seeking on the overview.
 
 Validation: inspected the live desktop with Dedication and Nightcrawlers, plus a 390 px responsive preview. Keyboard mid-EQ adjustment and Inspect succeeded. The browser's OfflineAudioContext verification at `/audio-check.html` measured −11.94/−12.00/−11.92 dB for nominal −12 dB low/mid/high cuts, and unit total power at crossfade midpoint. Four existing handoff regression tests passed. The temporary responsive harness is removed from the shipped files.
+
+
+## 2026-09-10 13:52 EDT
+
+Playback language now separates Preview transition (jump ahead), Mix A into B (wait for the outgoing outro), and Play crate set (start a whole set). Crate playback moved to its own section with a visible order. Covers sit beside deck titles; effects stay in collapsible drawers. Review now shares the detailed waveform with marker controls and playback rather than opening an isolated timestamp modal. Continued the previously fetched Impeccable polish guidance: preserve identity, fix blocked paths, expose actual state, verify rendered layouts. Browser review testing uncovered and fixed full-precision input validation; no real song markers were changed by that test.

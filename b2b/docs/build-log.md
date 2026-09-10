@@ -114,3 +114,8 @@ Integrated listener request lifecycle: confirm local recording, recheck against 
 ## 2026-09-10 13:48 EDT — Requested checkpoint
 
 Added deck artwork, optional tempo-synced delay/flanger inserts, visible muted-deck feedback, literal transition actions separated from crate playback, and marker editing beside the detailed waveform. Syntax and four handoff regression checks pass. Checkpoint before moving forward as requested; effect DSP and integrated browser review/save verification remain pending. Private media and unrelated research remain excluded.
+
+
+## 2026-09-10 13:52 EDT
+
+Verified checkpoint 0a80fb3 in the live browser: deck artwork, effects selector/off, waveform cursor placement, playback/pause, and desktop/390px composition. Actual OfflineAudioContext passed five delay/flanger checks: 0.2419s half-beat repeat at124BPM, dry bypass, no muted-deck tail, cleared delay memory and finite modulation. Browser save fixture (production writes blocked) caught HTML step constraints rejecting precise analyzed timestamps; fixed numeric precision and verified save/reload feedback. Added bar snapping, original-tempo review outside the set range, actual prepared-BPM display, explicit set sequence, and failure-safe map reanalysis. Six server tests passed, including new success/failure marker-save cases; four handoff regressions and JS syntax passed. Fixture files removed. Human musical judgment remains required before marking real phrases confirmed.

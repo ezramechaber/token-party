@@ -34,3 +34,32 @@ def test_fixed_order_rejects_overlapping_middle_track_windows(monkeypatch):
         server.plan(server.PlanRequest(ids=['a','b','c'],tempo=124,fixed=True))
     assert error.value.status_code==400
     assert 'prepare the next deck' in error.value.detail
+
+
+def test_failed_marker_reanalysis_preserves_previous_grid(monkeypatch):
+    original={**track('a'),'duration':300,'path':'unused-test-audio','gridOffset':0.01}
+    monkeypatch.setattr(server,'tracks',{'a':original.copy()})
+    monkeypatch.setattr(server,'decode',lambda _:None)
+    def fail(*args):raise RuntimeError('decode failed')
+    monkeypatch.setattr(server,'analyze_mix_map',fail)
+    with pytest.raises(HTTPException) as error:
+        server.correct('a',server.Correction(bpm=125,gridOffset=.05,entry=.05,introBars=16,exitEnd=250,outroBars=16))
+    assert error.value.status_code==422
+    assert server.tracks['a']==original
+
+
+def test_marker_save_rebuilds_then_publishes_updated_grid(monkeypatch):
+    original={**track('a'),'duration':300,'path':'unused-test-audio','gridOffset':0.01}
+    monkeypatch.setattr(server,'tracks',{'a':original.copy()})
+    monkeypatch.setattr(server,'decode',lambda _:None)
+    observed=[]
+    def rebuild(audio,sr,bpm,offset,candidate):
+        assert server.tracks['a']==original
+        assert bpm==125 and offset==.05
+        return {'entryCandidates':[{}],'exitCandidates':[{}]}
+    monkeypatch.setattr(server,'analyze_mix_map',rebuild)
+    monkeypatch.setattr(server,'save',lambda:observed.append(server.tracks['a'].copy()))
+    monkeypatch.setattr(server,'public',lambda t:t)
+    result=server.correct('a',server.Correction(bpm=125,gridOffset=.05,entry=.05,introBars=16,exitEnd=250,outroBars=16))
+    assert observed==[result] and result['reviewed'] and result['ready']
+    assert result['introEnd']==.05+16*240/125

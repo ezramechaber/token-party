@@ -143,11 +143,17 @@ def correct(tid:str,c:Correction):
             if not 0<=snapped<t['duration'] or abs(snapped-c.phraseAnchor)>.03:
                 raise HTTPException(400,'Phrase anchor must be on a bar boundary. Use the beat inspector to find it.')
             v['phraseAnchor']=snapped
-        t.update(v);t.update(introEnd=c.entry+c.introBars*bar,outroStart=c.exitEnd-c.outroBars*bar,
-                            ready=min(c.introBars,c.outroBars)>=8,barConfidence='manually confirmed',warnings=[])
-        t['mixMap']=analyze_mix_map(decode(t['path']),SR,t['bpm'],t['gridOffset'],t)
-        t['ready']=t['ready'] and bool(t['mixMap']['entryCandidates']) and bool(t['mixMap']['exitCandidates'])
-        save();return public(t)
+        updated={**t,**v,'introEnd':c.entry+c.introBars*bar,'outroStart':c.exitEnd-c.outroBars*bar,
+                 'ready':min(c.introBars,c.outroBars)>=8,'barConfidence':'manually confirmed','warnings':[]}
+        try:updated['mixMap']=analyze_mix_map(decode(t['path']),SR,updated['bpm'],updated['gridOffset'],updated)
+        except Exception as error:raise HTTPException(422,'Could not rebuild the phrase map. Your previous markers are unchanged; try again.') from error
+        updated['ready']=updated['ready'] and bool(updated['mixMap']['entryCandidates']) and bool(updated['mixMap']['exitCandidates'])
+        tracks[tid]=updated
+        try:save()
+        except Exception as error:
+            tracks[tid]=t
+            raise HTTPException(500,'Could not save markers. Please try again.') from error
+        return public(updated)
 
 class PlanRequest(BaseModel):
     ids:list[str]=Field(min_length=1,max_length=30)

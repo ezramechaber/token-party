@@ -329,3 +329,8 @@ Located the story homepage after initially targeting the gallery workspace. Open
 ## 2026-09-10 13:51 EDT — Token Party poster
 
 Created a poster using built-in image generation: struck-through Rent, oversized Token Party lettering, fictional guest portraits, and a record-player collage. Saved the image and exact prompt in [design notes](design/token-party-poster-v1.md). Visually verified title and tagline. No application changes or completed demo; image-generation billing and project token counts unavailable.
+
+
+## 2026-09-10 13:52 EDT
+
+b2b: committed requested checkpoint 0a80fb3, then verified deck artwork, manual delay/flanger, literal playback labels and waveform-based marker review. Fixed timestamp precision blocking browser saves and made phrase-map rebuild failures preserve the previous grid. Browser and focused regression checks pass. Weekly account usage measured50%; project-specific tokens/daily tool counts unavailable. Numeric cap removed by user; no reset used.

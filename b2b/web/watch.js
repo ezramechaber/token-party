@@ -1,5 +1,5 @@
 import {requestNote} from '/request-notes.js';
-import {createBoothScene} from '/booth-scene.js';
+import {createBoothScene} from '/booth-scene.js?v=1e51099';
 const $=id=>document.getElementById(id), base=location.pathname.replace(/\/$/,''), scene=createBoothScene($('booth'));
 const delay=Math.min(12,Math.max(0,Number(new URLSearchParams(location.search).get('delay')??4)||0));
 let state={decks:[],crate:[]},frames=[],seen=['',''],hls=null,lastRequests='',playing=false;

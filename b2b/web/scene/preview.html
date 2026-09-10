@@ -1,8 +1,13 @@
-<!doctype html><html lang="en"><meta charset="utf-8"><title>b2b booth motion preview</title><style>body{margin:0;background:#d9d4cb;color:#26262b;font:15px system-ui}canvas{display:block;width:100vw;height:85vh}nav{padding:16px;display:flex;gap:14px;align-items:center}button{padding:12px;border:1px solid #999;border-radius:4px;background:#f5f1e9}</style><canvas id="preview" aria-label="Human DJ in a warm walnut listening café"></canvas><nav>Motion preview · no audio <button id="load">Load first crate track into B</button><span id="status"></span></nav><script type="module">
+<!doctype html><html lang="en"><meta charset="utf-8"><title>b2b booth motion preview</title><style>body{margin:0;background:#d9d4cb;color:#26262b;font:15px system-ui}canvas{display:block;width:100vw;height:85vh}nav{padding:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}button{padding:12px;border:1px solid #999;border-radius:4px;background:#f5f1e9}</style><canvas id="preview" aria-label="Human DJ in a warm walnut listening café"></canvas><nav>Motion preview · no audio <button id="load-a">Load A</button><button id="load">Load B</button><button id="mix">Move crossfader</button><button data-view="room">Room</button><button data-view="face">Face</button><button data-view="hands">Hands</button><button id="refresh">Refresh scene</button><label><input id="slow" type="checkbox"> Slow motion</label><span id="status" role="status"></span></nav><script type="module">
 import {createBoothScene} from '../booth-scene.js';
 const view=createBoothScene(document.querySelector('canvas'));
 const response=await fetch('/api/crate');const data=await response.json();const tracks=data.tracks||[];
 const state={decks:[{...tracks[0],playing:false,fade:1,level:1,low:0},{...tracks[1],playing:false,fade:0,level:1,low:-24}],crate:tracks};
 document.querySelector('#load').onclick=()=>{state.decks[1]={...state.decks[1],...tracks[0]};view.onTrackLoaded(1,tracks[0]);document.querySelector('#status').textContent='Select sleeve → carry → load B';};
+document.querySelector('#load-a').onclick=()=>{state.decks[0]={...state.decks[0],...tracks[1]};view.onTrackLoaded(0,tracks[1]);document.querySelector('#status').textContent='Select sleeve → carry → load A';};
+document.querySelector('#slow').onchange=e=>view.setMotionRate(e.target.checked ? .2 : 1);
+document.querySelector('#refresh').onclick=()=>location.reload();
+document.querySelector('#mix').onclick=()=>{state.transition=state.transition?null:{progress:.5};state.decks[0].fade=state.transition?.progress??1;state.decks[1].fade=state.transition?.progress??0;};
+document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>view.setView(b.dataset.view));
 function draw(){view.update(state);requestAnimationFrame(draw)}draw();
 </script></html>

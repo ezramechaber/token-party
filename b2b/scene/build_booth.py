@@ -1,6 +1,7 @@
-"""Build our original human DJ and listening-café booth. Run: blender -b --python scene/build_booth.py.
+"""Build our original human DJ and listening-café booth. Run from the visible Blender Python Console; see README.md.
 Coordinates in helpers use browser space: x right, y up, z toward audience.
-No downloaded models, textures, music, or album artwork are embedded.
+CC0 MakeHuman body and fitted assets are added by build_human.py; see assets/PROVENANCE.md.
+No music or album artwork is embedded.
 """
 from pathlib import Path
 import math
@@ -8,8 +9,9 @@ import bpy
 from mathutils import Vector
 
 ROOT = Path(__file__).resolve().parents[1]
-bpy.ops.object.select_all(action='SELECT')
-bpy.ops.object.delete(use_global=False)
+# Delete hidden guide objects too, so repeated rebuilds do not accumulate them.
+for previous in list(bpy.context.scene.objects):
+    bpy.data.objects.remove(previous,do_unlink=True)
 
 def loc(p): return (p[0], -p[2], p[1])
 def material(name, color, metal=0, rough=.3, emission=0):
@@ -56,7 +58,12 @@ def box(name,p,size,mat=dark,bevel=.05):
     if bevel:
         b=o.modifiers.new('Soft manufactured edges','BEVEL');b.width=bevel;b.segments=3
         bpy.ops.object.modifier_apply(modifier=b.name)
-    return finish(o,name,mat)
+    finish(o,name,mat)
+    if not bevel:
+        for polygon in o.data.polygons:polygon.use_smooth=False
+    else:
+        normal=o.modifiers.new('Weighted manufactured normals','WEIGHTED_NORMAL');normal.keep_sharp=True;normal.weight=50
+    return o
 
 def cylinder(name,p,radius,depth,mat=chrome):
     bpy.ops.mesh.primitive_cylinder_add(vertices=48,radius=radius,depth=depth,location=loc(p))
@@ -68,43 +75,6 @@ def rod(name,a,b,r=.07,mat=chrome):
     o=bpy.context.object;o.rotation_mode='QUATERNION';o.rotation_quaternion=d.to_track_quat('Z','Y')
     return finish(o,name,mat)
 
-# Human DJ: a quiet, stylized fashion figure, with clothing and natural facial details.
-# Semantic rig names remain compatible with the browser's two-bone animation.
-sphere('torso',(0,2.43,-.46),(.43,.52,.25),shirt)
-sphere('waist',(0,1.94,-.46),(.30,.25,.21),trousers)
-sphere('neck',(0,2.98,-.46),(.105,.19,.10),skin)
-head=sphere('head',(0,3.29,-.44),(.255,.335,.23),skin)
-head_parts=[]
-def face(name,p,scale,mat):
-    o=sphere(name,p,scale,mat);head_parts.append(o);return o
-face('hairCrown',(0,3.52,-.48),(.265,.135,.24),hair)
-face('hairBack',(0,3.38,-.61),(.25,.27,.10),hair)
-for i in range(7):
-    tuft=face('sweptHair'+str(i),(-.20+i*.060,3.50-i*.014,-.283),(.075,.10,.07),hair)
-    tuft.rotation_euler[1]=-.4
-face('earL',(-.255,3.28,-.44),(.038,.064,.04),skin)
-face('earR',(.255,3.28,-.44),(.038,.064,.04),skin)
-face('nose',(0,3.28,-.206),(.038,.060,.047),skin)
-for side,x in [('L',-.088),('R',.088)]:
-    face('eye'+side,(x,3.325,-.222),(.023,.009,.007),hair)
-    face('brow'+side,(x,3.359,-.231),(.038,.007,.009),hair)
-    face('headphone'+side,(-.29 if side=='L' else .29,3.30,-.45),(.067,.12,.087),dark)
-face('mouth',(0,3.16,-.219),(.049,.008,.004),wood_dark)
-# Headphone arch follows the crown, with understated metal adjustment hinges.
-for i in range(15):
-    a=math.pi*i/15;b=math.pi*(i+1)/15
-    o=rod('headband'+str(i),(.305*math.cos(a),3.31+.32*math.sin(a),-.46),(.305*math.cos(b),3.31+.32*math.sin(b),-.46),.022,dark);head_parts.append(o)
-for o in head_parts:
-    matrix=o.matrix_world.copy();o.parent=head;o.matrix_world=matrix
-for side,x in [('L',-.47),('R',.47)]:
-    shoulder=(x,2.75,-.46);elbow=(x*1.5,2.15,-.1);hand=(x,1.79,.45)
-    sphere('shoulder'+side,shoulder,(.15,.15,.15),shirt)
-    rod('upperArm'+side,shoulder,elbow,.117,shirt)
-    sphere('elbow'+side,elbow,(.098,.098,.098),skin)
-    rod('forearm'+side,elbow,hand,.075,skin)
-    sphere('hand'+side,hand,(.085,.05,.135),skin)
-    rod('leg'+side,(x*.48,1.92,-.46),(x*.55,.25,-.47),.145,trousers)
-    sphere('shoe'+side,(x*.55,.17,-.30),(.17,.105,.28),dark)
 # Slatted walnut listening counter, modeled rather than a flat texture.
 box('booth',(0,.86,.46),(3.8,1.36,1.25),wood_dark,.09)
 box('boothPlinth',(0,.17,.46),(3.58,.18,1.10),wood,.04)
@@ -190,12 +160,32 @@ for name,p,power,size in [('Window key',(-3.8,4,1),1400,4),('Soft fill',(2,5,4),
     l.rotation_euler=(Vector(loc((0,1.5,0)))-l.location).to_track_quat('-Z','Y').to_euler()
 bpy.context.scene.render.engine='CYCLES';bpy.context.scene.cycles.samples=24
 bpy.context.scene.render.resolution_x=1600;bpy.context.scene.render.resolution_y=900;bpy.context.scene.render.resolution_percentage=100
+exec(compile((ROOT/'scene'/'refine_cafe.py').read_text(), 'refine_cafe.py', 'exec'))
+exec(compile((ROOT/'scene'/'build_human.py').read_text(), 'build_human.py', 'exec'))
+exec(compile((ROOT/'scene'/'refine_environment.py').read_text(), 'refine_environment.py', 'exec'))
+exec(compile((ROOT/"scene/polish_objects.py").read_text(),"polish_objects.py","exec"))
 bpy.context.preferences.filepaths.save_version=0
-bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'scene'/'b2b-booth.blend'))
-bpy.ops.export_scene.gltf(filepath=str(ROOT/'web'/'scene'/'b2b-booth.glb'),export_format='GLB',export_cameras=False,export_lights=False,export_apply=True)
+bpy.data.orphans_purge(do_recursive=True)
+bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'scene'/'b2b-booth.blend'),compress=True)
+# glTF cannot export Blender Bump nodes faithfully; omit rather than mislabel color as a normal map.
+normal_links=[]
+for mat in bpy.data.materials:
+    if not mat.use_nodes:continue
+    for link in list(mat.node_tree.links):
+        if link.to_socket.name=='Normal' and link.from_node.type=='BUMP':
+            source,target=link.from_socket,link.to_socket
+            underlying=link.from_node.inputs['Normal']
+            fallback=underlying.links[0].from_socket if underlying.is_linked else None
+            normal_links.append((mat,source,target));mat.node_tree.links.remove(link)
+            if fallback:mat.node_tree.links.new(fallback,target)
+groom=bpy.data.objects.get('djCyclesHairGroom')
+if groom:groom.hide_set(True)
+bpy.ops.export_scene.gltf(filepath=str(ROOT/'web'/'scene'/'b2b-booth.glb'),export_format='GLB',export_cameras=False,export_lights=False,export_apply=True,export_rest_position_armature=False,export_current_frame=True,export_extras=True,export_image_format='JPEG',export_jpeg_quality=85,use_visible=True)
+if groom:groom.hide_set(False)
+for mat,source,target in normal_links:mat.node_tree.links.new(source,target)
 print('B2B_SCENE_EXPORTED',len(bpy.data.objects),'objects')
 
 if '--preview' in __import__('sys').argv:
     bpy.context.scene.render.resolution_x=1200;bpy.context.scene.render.resolution_y=800
-    bpy.context.scene.render.filepath=str(ROOT/'.b2b'/'cafe-preview.png')
+    bpy.context.scene.render.filepath=str(ROOT/'scene'/'cafe-reference.png')
     bpy.ops.render.render(write_still=True)

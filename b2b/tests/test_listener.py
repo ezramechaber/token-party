@@ -42,3 +42,22 @@ def test_token_media(tmp_path):
     with pytest.raises(HTTPException):handler(key,'listener.json')
     with pytest.raises(HTTPException):handler(key,'../listener.json')
     assert route('/s/{key}/api/art/{ident}')(key,'abc').media_type=='image/png'
+
+
+def test_scene_module_dependencies_are_served(tmp_path):
+    import posixpath
+    import re
+    from b2b.listener import WEB
+    route,_,_=setup(tmp_path)
+    asset=route('/{asset:path}')
+    pending=['booth-scene.js'];seen=set()
+    while pending:
+        name=pending.pop()
+        if name in seen:continue
+        seen.add(name)
+        assert asset(name).status_code==200
+        source=(WEB/name).read_text()
+        for dependency in re.findall(r"from\s+['\"]([^'\"]+)['\"]",source):
+            if dependency.startswith('.'):
+                pending.append(posixpath.normpath(posixpath.join(posixpath.dirname(name),dependency.split('?')[0])))
+    assert 'human-rig.js' in seen

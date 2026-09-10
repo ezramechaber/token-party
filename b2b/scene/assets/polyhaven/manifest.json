@@ -1,0 +1,110 @@
+[
+  {
+    "asset": "american_walnut_veneer",
+    "kind": "Diffuse",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/american_walnut_veneer/american_walnut_veneer_diff_2k.jpg",
+    "md5": "c3db17b94fbd90a079a8bdc915cd5960",
+    "file": "walnut/Diffuse.jpg",
+    "authors": {
+      "Jenelle van Heerden": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/american_walnut_veneer"
+  },
+  {
+    "asset": "american_walnut_veneer",
+    "kind": "nor_gl",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/american_walnut_veneer/american_walnut_veneer_nor_gl_2k.jpg",
+    "md5": "a123f7e5b035243d77d453cd402fe78c",
+    "file": "walnut/nor_gl.jpg",
+    "authors": {
+      "Jenelle van Heerden": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/american_walnut_veneer"
+  },
+  {
+    "asset": "american_walnut_veneer",
+    "kind": "Rough",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/american_walnut_veneer/american_walnut_veneer_rough_2k.jpg",
+    "md5": "e9319bd840c79e64a043e299f2550ece",
+    "file": "walnut/Rough.jpg",
+    "authors": {
+      "Jenelle van Heerden": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/american_walnut_veneer"
+  },
+  {
+    "asset": "painted_plaster_wall",
+    "kind": "Diffuse",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_plaster_wall/painted_plaster_wall_diff_2k.jpg",
+    "md5": "32f4f4e5ded7d20e55e337004d0d9691",
+    "file": "plaster/Diffuse.jpg",
+    "authors": {
+      "Amal Kumar": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/painted_plaster_wall"
+  },
+  {
+    "asset": "painted_plaster_wall",
+    "kind": "nor_gl",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_plaster_wall/painted_plaster_wall_nor_gl_2k.jpg",
+    "md5": "18faf9f7949aefdb3ae7cef7195cba04",
+    "file": "plaster/nor_gl.jpg",
+    "authors": {
+      "Amal Kumar": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/painted_plaster_wall"
+  },
+  {
+    "asset": "painted_plaster_wall",
+    "kind": "Rough",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/painted_plaster_wall/painted_plaster_wall_rough_2k.jpg",
+    "md5": "7cdd5fbbe56f7becb757fc5b52d11d28",
+    "file": "plaster/Rough.jpg",
+    "authors": {
+      "Amal Kumar": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/painted_plaster_wall"
+  },
+  {
+    "asset": "terrazzo_tiles",
+    "kind": "Diffuse",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/terrazzo_tiles/terrazzo_tiles_diff_2k.jpg",
+    "md5": "b4bfb01525c22e611d9a0651f372ae91",
+    "file": "floor/Diffuse.jpg",
+    "authors": {
+      "Amal Kumar": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/terrazzo_tiles"
+  },
+  {
+    "asset": "terrazzo_tiles",
+    "kind": "nor_gl",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/terrazzo_tiles/terrazzo_tiles_nor_gl_2k.jpg",
+    "md5": "6fdd6cc116b9018108b91f3d5ddf1cff",
+    "file": "floor/nor_gl.jpg",
+    "authors": {
+      "Amal Kumar": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/terrazzo_tiles"
+  },
+  {
+    "asset": "terrazzo_tiles",
+    "kind": "Rough",
+    "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/terrazzo_tiles/terrazzo_tiles_rough_2k.jpg",
+    "md5": "f75be6541a4fa5c8197408224946efb3",
+    "file": "floor/Rough.jpg",
+    "authors": {
+      "Amal Kumar": "All"
+    },
+    "license": "CC0-1.0",
+    "source": "https://polyhaven.com/a/terrazzo_tiles"
+  }
+]

@@ -16,7 +16,7 @@ from pydantic import BaseModel, Field
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / '.b2b'
 WEB = ROOT / 'web'
-ASSETS = {'request-notes.js', 'watch.js', 'watch.css', 'booth-scene.js', 'vendor/hls.min.js',
+ASSETS = {'request-notes.js', 'watch.js', 'watch.css', 'booth-scene.js', 'human-rig.js', 'vendor/hls.min.js',
           'vendor/three.module.min.js', 'vendor/three.core.min.js', 'vendor/GLTFLoader.js',
           'vendor/BufferGeometryUtils.js', 'vendor/RoomEnvironment.js', 'scene/b2b-booth.glb'}
 RECORD_FIELDS = ('id', 'name', 'title', 'artist', 'status', 'reason', 'reviewKind', 'queued', 'createdAt', 'updatedAt')

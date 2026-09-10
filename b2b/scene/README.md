@@ -1,25 +1,57 @@
-# b2b booth
+# Back 2 Back café scene
 
-An original Blender model of a stylized human DJ, a walnut slatted vinyl booth, two decks, a mixer, speakers and a sleeve crate in a warm café. `b2b-booth.blend` is editable; `../web/scene/b2b-booth.glb` is its lightweight browser export. Both contain only original geometry and materials. Cover art is applied at runtime from the current local crate; generated sleeve art is used when no cover is provided.
+An editable Blender café with a personalized, rigged DJ, two vinyl decks, mixer, sleeve crate, walnut booth, windows, plants and practical lights. The live GLB follows the existing audio application's state; it does not control playback.
 
-Rebuild from the b2b project directory with Blender 4.5 LTS:
+## Open and rebuild
 
-```sh
-blender --background --python scene/build_booth.py
+Open `b2b-booth.blend` in Blender 4.5 LTS. The current work was authored and inspected in the visible Blender application through computer use. To rebuild, switch an editor to Python Console and run:
+
+```python
+p = bpy.path.abspath('//build_booth.py')
+exec(open(p).read(), {'__file__': p})
 ```
 
-The generator uses browser coordinates (x right, y up, z toward audience), converts them for Blender, and exports glTF with semantic object names. Named anchors include `handL`, `handR`, `crate`, `deckA`, `deckB`, `mixer`, `eqA`, `eqB` and `crossfader`.
+The builder replaces the active scene's objects, saves the editable scene and exports `../web/scene/b2b-booth.glb`. Open a copy first if you want to preserve manual edits. Blender's bundled NumPy is sufficient. All required graphical source assets are included; rebuilding the café does not require FaceBuilder, a subscription, reference photographs or a network connection.
 
-`createBoothScene(canvas)` in `web/booth-scene.js` returns:
+For a visible render, run `render_preview.py` for the room or `render_portrait.py` for the DJ from the same console. These save `cafe-reference.png` and `dj-portrait.png`. The native Cycles hair curves are omitted from GLB; a simpler surface and sparse fibers serve the browser.
 
-- `update(state, dtSeconds)` renders the real mixer state. `state.decks` contains `{id, title, artworkUrl, playing, position, level, low, fade}` for A/B; `state.crate` contains tracks; optional `state.transition` contains `{progress, from, to}`.
-- `onTrackLoaded(0 | 1, track)` queues the sleeve-selection, carry and deck-placement motion.
-- `dispose()` releases renderer resources.
+## CLI workflow
 
-Low EQ is dB from -24 to 0; level and fade are 0–1. Browser animation follows these values and never controls playback. The loading gesture uses fixed known anchors and articulated limbs; it is a visualization of app events, not computer vision or autonomous robotic control. Reduced-motion preferences shorten loading gestures and disable idle bob/spinning. The renderer is limited to approximately 30 fps and a 1.6 device-pixel ratio.
+After the user authorized CLI/MCP iteration, `scene_cli.py` was added and verified against the saved scene. With Blender on PATH:
 
-The standalone `/scene/preview.html` is explicitly a motion preview with no audio. The main app must call the API from its real audio state and load events.
+```sh
+blender --background b2b/scene/b2b-booth.blend --python b2b/scene/scene_cli.py
+blender --background b2b/scene/b2b-booth.blend --python b2b/scene/scene_cli.py -- --view portrait
+blender --background b2b/scene/b2b-booth.blend --python b2b/scene/scene_cli.py -- --rebuild --view room
+```
 
-Three.js 0.180.0 is vendored locally under `web/vendor/`, including its MIT license. GLTFLoader, BufferGeometryUtils and RoomEnvironment have only local import paths changed. Blender 4.5.9 LTS was run headlessly to generate the checked-in files. The downloaded Blender runtime stays under ignored `.b2b/tools/`; it is not a project dependency for ordinary playback.
+Optional `--samples 32` and `--output /absolute/path.png` support quicker review renders. Inspect the resulting images and browser scene after each material or geometry change. CLI avoids repetitive UI input; Blender remains the authoring and rendering tool.
 
-Verified: The original chrome prototype was replaced by a 243-object human café scene, with windows, plants, original abstract prints and an olive lamp. The final Blender render was visually inspected. Existing named anchors and deck coordinates are preserved; human face/hair/headphones are parented to the animated head. `node --check web/booth-scene.js` passes. Full integration and audio-driven sequencing are verified separately by the app task.
+## Character and materials
+
+`build_human.py` fits CC0 MakeHuman body, tee, jeans and shoes to its skeleton. `integrate_fitted_head.py` attaches a reference-fitted head from `assets/likeness/fitted-head.blend`. The neck transition is restricted below the jaw to preserve facial proportions. The user-approved generated portrait supplied the likeness target; this is an approximation, not a scan. The optional FaceBuilder authoring helpers require the add-on and private inputs and are separate from the ordinary rebuild.
+
+`refine_environment.py` applies CC0 Poly Haven surface scans and builds the window/exterior, vegetation and café furniture. `refine_cafe.py` adds turntable, mixer and cup details; `polish_objects.py` adds original sleeve typography, speaker drivers and dial pointers. See [asset provenance](assets/PROVENANCE.md) and [character research](../docs/character-research.md) for sources and decisions.
+
+Original photographs, generated reference portraits, trial installers, personal music and album artwork remain outside tracked assets. Runtime album art is applied from the local crate. The committed fitted mesh and baked skin texture are derivatives depicting the consenting user; they are not third-party CC0 assets.
+
+## Browser integration
+
+`createBoothScene(canvas)` in `web/booth-scene.js` provides:
+
+- `update(state, dtSeconds)`: render deck state, levels, fades, EQ and transition progress.
+- `onTrackLoaded(0 | 1, track)`: queue the sleeve-selection and deck-loading illustration.
+- `setView('room' | 'face' | 'hands')`: select a diagnostic camera.
+- `dispose()`: release rendering resources.
+
+Deck state contains `{id, title, artworkUrl, playing, position, level, low, fade}`. `state.crate` supplies tracks; optional `state.transition` supplies `{progress, from, to}`. Low EQ is -24 to 0 dB; level and fade are 0–1. Reduced-motion preferences shorten load gestures and suppress idle/spinning motion.
+
+`bake_character_rest.py` establishes the working pose using volume-preserving wrist and forearm deformation before rebinding it. `human-rig.js` uses fixed bone lengths and two-bone inverse kinematics. The sleeve motion illustrates app events; it does not simulate record extraction or a physically accurate finger grasp. The standalone `/scene/preview.html` is explicitly a motion preview without audio and offers both deck-load triggers, crossfader inspection, smooth camera changes and a slow-motion toggle. The existing app handles audible operation separately.
+
+Rendering targets 30 fps with a maximum 1.6 device-pixel ratio. Static meshes sharing materials are batched; joints and independently controlled deck parts remain separate. Canvas data attributes expose measured frame rate, draw calls, initial pose error and arm/contact target errors for inspection.
+
+## Quality and limitations
+
+Blender and the browser are checked separately because their material support differs. The browser preserves UV normal maps but omits unsupported procedural bump; thin glasses use stable transparency. The native render has subsurface skin and curve hair unavailable in the same form in the browser. The result remains a prototype rather than a completed photorealistic digital double. Single-view skin projection, side/back likeness, hair silhouette, clothing deformation and hand grasp still have practical limits.
+
+Three.js 0.180.0 and its MIT license are vendored in `web/vendor/`. The main audio service and transport are outside this visual task's scope.

@@ -1,0 +1,9 @@
+# Sleeve interaction correction — September 10, 2026
+
+The old carry plane was centered at the wrist, so it cut through the forearm. The revised motion attaches its top edge to the midpoint of the index and middle distal finger joints. Wrist targets are derived from that grip landmark; the sleeve follows the solved hand rather than an independently animated wrist offset. The source skeleton's anatomical side labels are resolved through each hand's descendants.
+
+The right-deck path now shares the sleeve's top edge briefly before transferring it to the other hand. The released hand withdraws upward and backward before returning to rest. The sleeve lowers and rotates onto the selected platter. The hand remains in its established natural orientation instead of applying the previous unrelated carry rotation. Scene and rig URLs carry explicit revisions to prevent cached earlier assets from surviving integration.
+
+Verification used the actual exported GLB hierarchy and the current choreography at 1,001 samples for each deck (2,002 total). Maximum reach clamp error was below 1e-12 scene units; maximum solved wrist error was 0.000009; maximum requested grip error was 0.000010. Minimum distance from the carrying forearm's centerline to the finite sleeve rectangle was 0.352 scene units. This is a geometric clearance check, not a full skinned-surface collision simulation. Both load paths were also inspected in the browser at one-fifth speed; the browser reported approximately 30 fps and rounded reach/contact/grip errors of zero. JavaScript syntax and whitespace checks passed.
+
+The result remains an illustrative sleeve gesture: there is no physically simulated pinch, finger deformation around the cardboard, or separate vinyl extraction. No model asset, audio timing, audio service, or transport change was made. Account usage is shared with the parent integration task; no separate project-token total is available.

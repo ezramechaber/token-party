@@ -310,3 +310,8 @@ Connected the four-photo local gallery to the shared Lightroom queue. User’s w
 ## 2026-09-10 13:36 EDT
 
 b2b: completed revision-2 interface and rendered design pass; working three-band EQ, readable loading states, waveform detail, responsive controls. Validation and design-skill provenance in b2b/docs/ui-notes.md. Remaining: integrate listener request review and sequence guards. Account-wide weekly usage measured 45%; project-specific tokens and daily tool counts unavailable. Numeric cap lifted by user; no reset used.
+
+
+## 2026-09-10 13:40 EDT
+
+b2b: integrated request-review actions and full-sequence preparation guard. Browser checked confirm/dismiss with an isolated fixture; backend suite and API regression checks passed. Preserved approved handoff curve and documented four-pair source audit. Remaining limitations: full-set human listening and optional runtime Astra need separate verification; photorealistic Blender work remains in its own task.

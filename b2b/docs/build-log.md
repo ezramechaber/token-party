@@ -104,3 +104,8 @@ Daily chat/turn/token/tool totals are unavailable from the current usage tool. R
 ## 2026-09-10 13:36 EDT
 
 Completed revision-2 working chrome UI and bounded design-skill polish. Added real three-band EQ, equal-power manual crossfade, peak/RMS waveform overview, direct inspector access, visible preparation state, and keyboard-accessible import. Verified desktop/390px layouts, keyboard EQ/inspector, browser-rendered filter measurements, and handoff regressions. Queue lifecycle and sequence safeguards remain next; Blender stays in its separate task.
+
+
+## 2026-09-10 13:40 EDT
+
+Integrated listener request lifecycle: confirm local recording, recheck against current set, explicit energy/key approval, retry, dismiss, stale worker protection, and delivery acknowledgments. Audience sees added/dismissed states. Browser fixture verified confirmation and dismissal without production request writes; temporary fixture removed. Full sequence validation now protects rule/Astra/manual plans and queue additions while preserving armed cues. Runtime preparation failures release Auto while the current track continues. Five-track source audit retained; whole Auto set has not been auditioned end-to-end. Python suite: 119 passed; after two new API regression cases, all seven server/session tests passed. Four JS handoff tests and browser EQ checks passed earlier this session. UI milestone committed f85c5d5.

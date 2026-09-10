@@ -15,7 +15,7 @@ from pydantic import BaseModel, Field
 from .audio import analyze, content_id, prepare, decode, SR
 from .beatgrid import local_attack_offset
 from .mixmap import analyze_mix_map
-from .planner import make_plan, edge
+from .planner import make_plan, edge, validate_sequence
 from .youtube import download_audio, video_url
 
 ROOT=Path(__file__).resolve().parent.parent
@@ -168,6 +168,7 @@ def plan(req:PlanRequest):
             if not selection:raise ValueError('No tracks in this order are ready at the selected tempo.')
             transitions=[edge(a,b,req.tempo,req.bars) for a,b in zip(selection,selection[1:])]
             if any(e is None for e in transitions):raise ValueError('This order has an incompatible pair. Review cues or use Suggest order.')
+            validate_sequence(transitions,selection,req.tempo)
             return {'order':[t['id'] for t in selection],'transitions':transitions,'tempo':req.tempo,'mode':'Manual','reason':'Your order, with validated phrase windows.','excluded':excluded}
         return make_plan(selection,req.tempo,req.bars,req.direction,req.astra)
     except (ValueError,KeyError) as e:raise HTTPException(400,str(e)) from e
@@ -349,6 +350,29 @@ class ConsumeRequest(BaseModel):
 def consume_request(body:ConsumeRequest):
     request_manager.consume(body.trackId)
     return {'ok':True}
+
+
+class ResolveRequest(BaseModel):
+    trackId:str=Field(min_length=1,max_length=100)
+    approve:bool=False
+
+def request_context():
+    with lock:return {k:copy.deepcopy(session_state[k]) for k in ('tempo','bars','tailId','crateIds')}
+
+@app.post('/api/requests/{ident}/resolve')
+def resolve_request(ident:str,body:ResolveRequest):
+    try:return request_manager.resolve(ident,body.trackId,request_context(),body.approve)
+    except ValueError as error:raise HTTPException(400,str(error)) from error
+
+@app.post('/api/requests/{ident}/retry')
+def retry_request(ident:str):
+    try:return request_manager.retry(ident,request_context())
+    except ValueError as error:raise HTTPException(400,str(error)) from error
+
+@app.post('/api/requests/{ident}/dismiss')
+def dismiss_request(ident:str):
+    try:return request_manager.dismiss(ident)
+    except ValueError as error:raise HTTPException(400,str(error)) from error
 
 
 from .broadcast import Broadcast

@@ -23,3 +23,14 @@ def test_missing_key_does_not_claim_astra(monkeypatch):
     monkeypatch.setattr(server,'tracks',{'a':track('a'),'b':track('b')})
     with pytest.raises(HTTPException) as error:server.plan(server.PlanRequest(ids=['a','b'],astra=True))
     assert 'OPENAI_API_KEY' in error.value.detail
+
+
+def test_fixed_order_rejects_overlapping_middle_track_windows(monkeypatch):
+    monkeypatch.setattr(server,'tracks',{id:track(id) for id in ['a','b','c']})
+    def overlap(a,b,tempo,bars):
+        return {'from':a['id'],'to':b['id'],'entry':190,'exit':200,'duration':31}
+    monkeypatch.setattr(server,'edge',overlap)
+    with pytest.raises(HTTPException) as error:
+        server.plan(server.PlanRequest(ids=['a','b','c'],tempo=124,fixed=True))
+    assert error.value.status_code==400
+    assert 'prepare the next deck' in error.value.detail

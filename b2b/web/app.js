@@ -7,7 +7,7 @@ const $=s=>document.querySelector(s);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const time=s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,'0')}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`;
 let tracks=[],order=[],plan=null,ctx,master,analyser,active=false,transition=null,generation=0,editId=null,loading=false;
-let masterTempo=124, manualOrder=false,visualIdentity='';
+let masterTempo=124, manualOrder=false,visualIdentity='',requestAuditionContext=null;
 const visualizer=createVisualizer($('#visualizer'));
 let capture=null,recordDestination=null;
 let boothScene=null,broadcast=null,requestData={requests:[],queue:[]},requestPollBusy=false,stateBusy=false;
@@ -86,8 +86,8 @@ async function refresh(){const data=await api('crate');tracks=data.tracks;for(co
 function renderCrate(){const list=order.map(track).filter(Boolean);$('#empty').hidden=list.length>0;
  $('#tracks').innerHTML=list.map((t,i)=>`<tr data-id="${t.id}"><td>${String(i+1).padStart(2,'0')}</td><td><a href="/api/art-info/${encodeURIComponent(t.id)}" target="_blank" title="Artwork source and release match"><img class="crate-cover" src="/api/art/${encodeURIComponent(t.id)}" alt="Artwork source for ${escape(t.title)}" loading="lazy"></a><div class="song-title">${escape(t.title)}</div><div class="artist">${escape(t.artist)} · ${time(t.duration)}</div></td><td>${t.bpm.toFixed(1)}</td><td><span class="key-pill" title="${escape(t.key.confidence)}">${escape(t.key.name)} ${t.key.confidence==='uncertain'?'?':''}</span></td><td>${t.introBars} bars</td><td>${t.outroBars} bars</td><td class="${t.ready?'ready':'review-needed'}">${t.reviewed?'Confirmed':t.ready?'Estimated':'Review'}</td><td><div class="load-buttons"><button data-load="0">A</button><button data-load="1">B</button><button data-edit aria-label="Edit cues for ${escape(t.title)}">⋯</button><button data-up aria-label="Move ${escape(t.title)} earlier">↑</button></div></td></tr>`).join('');
 }
-$('#tracks').onclick=e=>{const row=e.target.closest('tr');if(!row)return;const t=track(row.dataset.id);if(e.target.hasAttribute('data-load'))safe(async()=>{takeover(false);await unlock();await decks[+e.target.dataset.load].load(t,masterTempo)});if(e.target.hasAttribute('data-edit'))edit(t.id);if(e.target.hasAttribute('data-up')){if(active)takeover();const i=order.indexOf(t.id);if(i>0)[order[i-1],order[i]]=[order[i],order[i-1]];plan=null;manualOrder=true;renderCrate();$('#planNote').textContent='Manual order · Auto will check phrase compatibility.'}};
-async function suggest(fixed=false){const reserved=new Set(requestData.queue||[]);const ids=order.filter(id=>!reserved.has(id)||consumedRequests.has(id));const p=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,direction:$('#direction').value,astra:$('#astra').checked,fixed});plan=p;manualOrder=fixed;if(!fixed)order=[...p.order,...order.filter(id=>!p.order.includes(id))];renderCrate();$('#planNote').textContent=p.mode+' · '+p.reason+(p.excluded.length?` · ${p.excluded.length} need review`:'');return p}
+$('#tracks').onclick=e=>{const row=e.target.closest('tr');if(!row)return;const t=track(row.dataset.id);if(e.target.hasAttribute('data-load'))safe(async()=>{takeover(false);plan=null;requestAuditionContext=null;await unlock();await decks[+e.target.dataset.load].load(t,masterTempo)});if(e.target.hasAttribute('data-edit'))edit(t.id);if(e.target.hasAttribute('data-up')){if(active)takeover();const i=order.indexOf(t.id);if(i>0)[order[i-1],order[i]]=[order[i],order[i-1]];plan=null;manualOrder=true;renderCrate();$('#planNote').textContent='Manual order · Auto will check phrase compatibility.'}};
+async function suggest(fixed=false){requestAuditionContext=null;const reserved=new Set(requestData.queue||[]);const ids=order.filter(id=>!reserved.has(id)||consumedRequests.has(id));const p=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,direction:$('#direction').value,astra:$('#astra').checked,fixed});plan=p;manualOrder=fixed;if(!fixed)order=[...p.order,...order.filter(id=>!p.order.includes(id))];renderCrate();$('#planNote').textContent=p.mode+' · '+p.reason+(p.excluded.length?` · ${p.excluded.length} need review`:'');return p}
 $('#suggest').onclick=()=>safe(async()=>{if(active)throw Error('Take over before changing the armed order.');$('#suggest').disabled=true;try{await suggest()}finally{$('#suggest').disabled=false}});
 async function startAuto(preview=false){await unlock();if(loading)throw Error('Audio is preparing.');loading=true;$('#auto').disabled=true;$('#preview').disabled=true;
  try{stopAll();try{requestData=await api('requests');}catch{}await suggest(manualOrder);await extendRequestedPlan(true);if(plan.order.length<2)throw Error('Auto needs two compatible tracks. Confirm their cue markers or adjust the set tempo.');const my=++generation;active=true;$('#tempo').disabled=true;$('#auto').hidden=true;$('#takeover').hidden=false;
@@ -119,7 +119,7 @@ async function arm(index,currentIndex,my,preview){if(!active||my!==generation)re
 }
 async function finishTransition(tr){if(tr!==transition||tr.completed)return;tr.completed=true;tr.a.stop();tr.a.status('HANDED OVER');tr.b.status('PLAYING');transition=null;
  if(tr.preview){active=false;$('#tempo').disabled=false;$('#autoTitle').textContent='Transition complete';$('#autoDetail').textContent='Incoming track continues. Take over or stop.';$('#auto').hidden=false;$('#takeover').hidden=false;return}
- await arm(tr.index+1,1-tr.currentIndex,tr.my,false);
+ try{await arm(tr.index+1,1-tr.currentIndex,tr.my,false);}catch(error){if(tr.my===generation){takeover(false);$('#autoDetail').textContent='Next handoff could not be prepared. The current track continues; choose another track or take over.';}throw error;}
 }
 $('#auto').onclick=()=>safe(()=>startAuto(false));$('#preview').onclick=()=>safe(auditionLoaded);
 async function auditionLoaded(options={}){
@@ -167,7 +167,7 @@ async function upload(files){for(const file of files){const form=new FormData();
 $('#youtubeForm').onsubmit=e=>{e.preventDefault();safe(async()=>{const button=$('#youtubeSubmit');button.disabled=true;button.textContent='Adding…';try{await api('youtube',{url:$('#youtubeUrl').value.trim()});$('#youtubeUrl').value='';toast('YouTube import queued. Download and analysis progress appear below the crate.');await refresh()}finally{button.disabled=false;button.textContent='Import'}})};
 $('#upload').onchange=e=>safe(()=>upload(e.target.files));$('#scan').onclick=()=>safe(async()=>{const r=await api('scan',{});toast(r.jobs.length?`Analyzing ${r.jobs.length} tracks.`:'Your local imports are already in the crate.');await refresh()});
 document.addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('dragging')});document.addEventListener('dragleave',()=>document.body.classList.remove('dragging'));document.addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('dragging');safe(()=>upload(e.dataTransfer.files))});
-document.addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('#editor').open)takeover();if(e.code==='Space'&&!['INPUT','SELECT','TEXTAREA','BUTTON'].includes(document.activeElement.tagName)){e.preventDefault();safe(async()=>{await unlock();takeover(false);const d=decks.find(d=>d.running)||decks[0];d.running?d.pause():d.play()})}});
+document.addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('#editor').open)takeover();if(e.code==='Space'&&!document.activeElement.closest('input,select,textarea,button,summary,a,[contenteditable="true"]')){e.preventDefault();safe(async()=>{await unlock();takeover(false);const d=decks.find(d=>d.running)||decks[0];d.running?d.pause():d.play()})}});
 let inspectStart=0,inspectCache=null;
 function inspection(){const d=decks[+$('#inspectDeck').value];if(!d.track)return null;const t=d.track,span=+$('#inspectBars').value*240/t.bpm;inspectStart=Math.max(0,Math.min(inspectStart,Math.max(0,t.duration-span)));return {d,t,span};}
 function inspectAt(index,seconds,open=false){$('#inspectDeck').value=index;inspectStart=Math.max(0,seconds);inspectCache=null;if(open&&$('#inspectorPanel')){$('#inspectorPanel').open=true;$('#inspectorPanel').scrollIntoView({block:'nearest'});}}
@@ -178,6 +178,7 @@ $('#inspectOutro').onclick=()=>{const v=inspection();if(v)inspectAt(+$('#inspect
 $('#inspectHere').onclick=()=>{const v=inspection();if(v)inspectAt(+$('#inspectDeck').value,v.d.position()*v.d.ratio)};
 for(const [id,sign] of [['inspectPrev',-1],['inspectNext',1]])$('#'+id).onclick=()=>{const v=inspection();if(v)inspectStart+=sign*v.span};
 $('#inspectPosition').oninput=e=>{const v=inspection();if(v)inspectStart=+e.target.value*Math.max(0,v.t.duration-v.span)};
+$('#detailWave').onkeydown=e=>{const v=inspection();if(!v?.d.buffer||!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;v.d.el.querySelector('.wave').onkeydown(e);const position=v.d.position()*v.d.ratio;if(position<inspectStart||position>inspectStart+v.span)inspectAt(+$('#inspectDeck').value,position);};
 $('#detailWave').onclick=e=>{const v=inspection();if(!v?.d.buffer)return;takeover(false);const r=e.target.getBoundingClientRect();v.d.seek((inspectStart+(e.clientX-r.left)/r.width*v.span)/v.d.ratio)};
 $('#inspectListen').onclick=()=>safe(async()=>{const v=inspection();if(!v?.d.buffer)throw Error('Load audio into the selected deck first.');await unlock();stopAll();$('#crossfader').value=v.d.letter==='A'?0:1;setFade(+$('#crossfader').value);v.d.play(ctx.currentTime+.04,inspectStart/v.d.ratio);toast('Soloing deck '+v.d.letter+' from the left edge of this view.');});
 function drawInspection(){
@@ -207,7 +208,7 @@ safe(async()=>{await refresh();await api('scan',{});await refresh()});setInterva
 
 function sessionState(){
  const deckStates=decks.map(d=>({id:d.track?.id??'',title:d.track?.title??'',artist:d.track?.artist??'',artworkUrl:d.track?'/api/art/'+d.track.id:null,playing:!!(d.running&&ctx&&ctx.currentTime>=d.start),position:d.track?d.position()*(d.ratio||1):0,duration:d.track?.duration??0,level:d.level?.gain.value??1,low:d.low?.gain.value??0,fade:d.fade?.gain.value??(d.letter==='A'?1:0)}));
- const ids=plan?.order?.length?plan.order:decks.map(d=>d.track?.id).filter(Boolean);
+ const ids=requestAuditionContext?.crateIds||(plan?.order?.length?plan.order:decks.map(d=>d.track?.id).filter(Boolean));
  return {decks:deckStates,crate:order.map(track).filter(Boolean).map(t=>({id:t.id,title:t.title,artist:t.artist,artworkUrl:'/api/art/'+t.id})),transition:transition?{progress:Math.max(0,Math.min(1,(ctx.currentTime-transition.at)/(transition.end-transition.at))),from:transition.e.from,to:transition.e.to,bars:transition.e.bars}:null,tempo:masterTempo,bars:+$('#bars').value,tailId:ids.at(-1)??'',crateIds:ids,broadcasting:!!broadcast};
 }
 $('#toggleScene').onclick=()=>safe(async()=>{
@@ -242,28 +243,53 @@ async function stopBroadcast(reason=''){
  }catch(error){reason=reason||error.message;}finally{if(broadcast===take)broadcast=null;$('#broadcastToggle').disabled=false;$('#broadcastToggle').textContent='Start broadcast';$('#broadcastStatus').textContent=reason?'Broadcast stopped · '+reason:'Not broadcasting';try{await api('session/state',sessionState());}catch{}if(reason)toast(reason);}
 }
 $('#broadcastToggle').onclick=()=>safe(async()=>{if(broadcast)await stopBroadcast();else{const button=$('#broadcastToggle');button.disabled=true;try{await startBroadcast();}catch(error){if(broadcast)await stopBroadcast(error.message);throw error;}finally{button.disabled=false;}}});
-async function publishState(){if(stateBusy)return;stateBusy=true;try{await api('session/state',sessionState());}catch(error){void stopBroadcast('Could not synchronize the listener view.');}finally{stateBusy=false;}}
+async function publishState(){if(stateBusy||(document.hidden&&!active&&!broadcast&&!decks.some(d=>d.running)))return;stateBusy=true;try{await api('session/state',sessionState());}catch(error){void stopBroadcast('Could not synchronize the listener view.');}finally{stateBusy=false;}}
+const requestSelections=new Map(),requestBusy=new Set();
+let requestSignature='';
 function renderRequests(){
- const rows=requestData.requests||[];$('#requestQueue').innerHTML=rows.length?rows.slice().reverse().map(r=>{
-  const staged=consumedRequests.has(r.trackId),status=staged?'Added to set':r.status==='accepted'&&r.queued?(active&&!transition?.preview?'Queued after this set':'Accepted · joins next Auto set'):r.status;
-  return `<article class="request-row"><div><strong>${escape(r.title||'Identifying requested track')}</strong>${r.artist?' · '+escape(r.artist):''}</div><span class="request-status">${escape(status||'pending')}</span><p>${escape(r.reason||'Checking the recording and its fit with this set.')}</p></article>`;
+ const rows=requestData.requests||[],signature=JSON.stringify([rows,[...consumedRequests],active,!!transition?.preview,[...requestBusy],tracks.map(t=>t.id)]);
+ if(signature===requestSignature)return;requestSignature=signature;
+ const labels={added:'Added to the set',dismissed:'Dismissed',needs_audio:'Choose a recording',review:'Needs your review',rejected:'Does not fit yet',error:'Could not check',pending:'Waiting to check',identifying:'Identifying recording',downloading:'Downloading',analyzing:'Analyzing'};
+ $('#requestQueue').innerHTML=rows.length?rows.slice().reverse().map(r=>{
+  const staged=consumedRequests.has(r.trackId)||r.status==='added',busy=requestBusy.has(r.id),reviewable=['review','needs_audio','rejected','error','dismissed'].includes(r.status);
+  const status=staged?'Added to the set':r.status==='accepted'&&r.queued?(active&&!transition?.preview?'Queued after this set':'Accepted · joins next Auto set'):labels[r.status]||r.status;
+  const chosen=requestSelections.get(r.id)||r.trackId||r.candidateIds?.[0]||'';
+  const candidates=[...tracks].sort((a,b)=>(r.candidateIds||[]).includes(b.id)-(r.candidateIds||[]).includes(a.id));
+  const options='<option value="">Choose a crate recording…</option>'+candidates.map(t=>`<option value="${escape(t.id)}" ${t.id===chosen?'selected':''}>${escape(t.title)} · ${escape(t.artist)}</option>`).join('');
+  const controls=reviewable?`<label class="request-recording">Recording<select data-recording ${busy?'disabled':''}>${options}</select></label><button data-action="resolve" ${busy?'disabled':''}>Confirm & check fit</button>${r.transition&&['energy','key'].includes(r.reviewKind)?`<button data-action="approve" ${busy?'disabled':''}>Accept musical fit</button>`:''}<button data-action="load" ${busy?'disabled':''}>Load B to audition</button><button data-action="retry" ${busy?'disabled':''}>Retry link</button>`:'';
+  return `<article class="request-row" data-request="${escape(r.id)}"><div><strong>${escape(r.title||'Identifying requested track')}</strong>${r.artist?' · '+escape(r.artist):''}</div><span class="request-status">${escape(busy?'Updating…':status||'Waiting')}</span><p>${escape(r.reason||'Checking the recording and its fit with this set.')}</p>${!staged?`<div class="request-actions">${controls}${r.status!=='dismissed'?`<button data-action="dismiss" ${busy?'disabled':''}>Dismiss</button>`:''}</div>`:''}</article>`;
  }).join(''):'<p class="help">No requests yet. Listeners can send a Spotify track or YouTube video from the listener view.</p>';
 }
+$('#requestQueue').onchange=e=>{const row=e.target.closest('[data-request]');if(row&&e.target.matches('[data-recording]'))requestSelections.set(row.dataset.request,e.target.value);};
+$('#requestQueue').onclick=e=>safe(async()=>{
+ const button=e.target.closest('[data-action]'),row=button?.closest('[data-request]');if(!row)return;
+ const id=row.dataset.request,action=button.dataset.action,trackId=row.querySelector('[data-recording]')?.value;
+ if(requestBusy.has(id))return;
+ if(['resolve','approve','load'].includes(action)&&!trackId)throw Error('Choose the recording in your crate first.');
+ if(action==='load'){requestAuditionContext??={crateIds:[...sessionState().crateIds]};takeover(false);await unlock();await decks[1].load(track(trackId),masterTempo);toast('Loaded B. Use Audition A to B to hear the handoff.');return;}
+ requestBusy.add(id);renderRequests();
+ try{await api('session/state',sessionState());await api('requests/'+encodeURIComponent(id)+'/'+(action==='approve'?'resolve':action),['resolve','approve'].includes(action)?{trackId,approve:action==='approve'}:{});requestData=await api('requests');}
+ finally{requestBusy.delete(id);renderRequests();}
+});
 async function extendRequestedPlan(starting=false){
  if(!plan?.order?.length||(!starting&&(!active||transition?.preview)))return;
  const workingPlan=plan,my=generation;
  for(const id of requestData.queue||[]){
   if(consumedRequests.has(id))continue;
-  if(workingPlan.order.includes(id)){consumedRequests.add(id);await api('requests/consume',{trackId:id});continue;}
-  if(!track(id))continue;
-  const tail=workingPlan.order.at(-1);const addition=await api('plan',{ids:[tail,id],tempo:masterTempo,bars:+$('#bars').value,fixed:true});
+  if(workingPlan.order.includes(id)){await api('requests/consume',{trackId:id});consumedRequests.add(id);continue;}
+  if(!track(id))break;
+  let addition;
+  try{addition=await api('plan',{ids:[...workingPlan.order,id],tempo:masterTempo,bars:+$('#bars').value,fixed:true});}
+  catch(error){$('#planNote').textContent='Requested track is still queued: '+error.message;break;}
   if(plan!==workingPlan||generation!==my||(!starting&&!active))return;
-  if(addition.order.length!==2||addition.transitions.length!==1||addition.order[0]!==tail||addition.order[1]!==id)continue;
-  workingPlan.order.push(id);workingPlan.transitions.push(addition.transitions[0]);consumedRequests.add(id);await api('requests/consume',{trackId:id});
+  // Preserve the already armed cues. Validate the entire chain, including preparation time.
+  if(JSON.stringify(addition.order)!==JSON.stringify([...workingPlan.order,id])||JSON.stringify(addition.transitions.slice(0,-1))!==JSON.stringify(workingPlan.transitions)){$('#planNote').textContent='Requested track is still queued. The set changed; review its order before adding it.';break;}
+  workingPlan.order.push(id);workingPlan.transitions.push(addition.transitions.at(-1));
+  await api('requests/consume',{trackId:id});consumedRequests.add(id);
  }
  renderRequests();
 }
-async function refreshRequests(){if(requestPollBusy)return;requestPollBusy=true;try{requestData=await api('requests');await extendRequestedPlan();renderRequests();}catch(error){$('#requestQueue').textContent='Requests are temporarily unavailable.';}finally{requestPollBusy=false;}}
+async function refreshRequests(){if(requestPollBusy)return;requestPollBusy=true;try{requestData=await api('requests');await extendRequestedPlan();renderRequests();}catch(error){requestSignature='';$('#requestQueue').textContent='Requests could not synchronize. Retrying shortly. '+error.message;}finally{requestPollBusy=false;}}
 setInterval(()=>{void publishState();},500);
 setInterval(()=>{void refreshRequests();},4000);
 void loadListenerLink().catch(()=>{$('#listenerLink').textContent='Listener view is preparing.';});void refreshRequests();

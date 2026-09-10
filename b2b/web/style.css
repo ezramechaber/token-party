@@ -27,3 +27,5 @@ button:disabled,input:disabled{cursor:not-allowed}button:disabled:hover{backgrou
 .table-wrap:focus-visible{outline:2px solid var(--acid);outline-offset:3px}
 @media(max-width:899px){.deck-header{min-height:98px}.track-heading h2{font-size:17px}.deck-bpm{font-size:13px}.deck-state{font-size:10px}.deck-secondary>button{font-size:11px}.eq input{width:28px;min-width:28px}.level-control input{min-width:34px}}
 @media(max-width:560px){.deck-header{min-height:91px}.track-heading h2{font-size:19px}.deck-secondary>button,.deck-info>summary{min-height:40px}.load-buttons button{min-width:36px;min-height:36px}.table-wrap table{min-width:720px}.session-settings{max-width:calc(100vw - 28px)}}
+
+.request-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-top:12px}.request-actions button{font-size:12px;min-height:36px}.request-recording{display:flex;flex-direction:column;gap:5px;flex:1 1 280px;min-width:0}.request-recording select{width:100%;max-width:100%;min-height:36px;background:#1b1d21;border:1px solid #50535b;border-radius:5px;padding:8px;color:var(--cream);font-size:12px}

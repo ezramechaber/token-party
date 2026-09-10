@@ -153,6 +153,13 @@ class HttpTests(unittest.TestCase):
     def test_valid_post_starts_one_job(self):
         code,_=self.request('POST','/api/revisions',self.valid())
         self.assertEqual(code,202);self.assertEqual(len(self.started),1)
+    def test_imported_photo_media_is_served(self):
+        catalog=self.root/'catalog.json'
+        catalog.write_text(json.dumps([{'id':'gallery-three','title':'Studio','source_filename':'studio.ORF','jpeg':str(FIXTURES/'gray.jpg')}]))
+        self.store.import_catalog(catalog)
+        code,data=self.request('GET','/media/gallery-three-original.jpg')
+        self.assertEqual(code,200)
+        self.assertEqual(data,(FIXTURES/'gray.jpg').read_bytes())
     def test_cross_origin_post_rejected(self):
         code,_=self.request('POST','/api/revisions',self.valid(),origin='https://evil.example')
         self.assertEqual(code,403);self.assertFalse(self.started)

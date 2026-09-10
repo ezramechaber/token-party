@@ -77,3 +77,7 @@ Usage: user authorized +10 percentage points beyond the prior 27% ceiling, givin
 User requested going as far as possible with a local gallery while hosting is unresolved, and committing as work proceeds. Added trusted private RAW catalog import, per-photo navigation, shared job-busy presentation, and support for a washed-out look plus hands-only crop. Fresh imports require the worker to match the actual current Lightroom photo to the reference and save a named base before editing. Existing history and identity mappings cannot be overwritten by catalog re-import. Hosted Sites code is not redeployed in this local-only phase.
 
 Budget: measured account-wide weekly usage 36%; user authorized extension to a 42% ceiling. Remote hosting remains disconnected. Next: validate and run the user's actual studio-portrait edit locally, then inspect the returned JPEG and gallery revision.
+
+### Local live execution started
+
+36 unit tests and JavaScript syntax checks passed. Committed the local multi-photo workflow before execution. Restarted the server without remote pairing, registered the three private RAW identities, and submitted the user's exact washed-out/hands-only request through the studio portrait’s visible form. The app admitted a real Astra runtime job and disabled concurrent submissions. Outcome verification pending; no success claimed yet.

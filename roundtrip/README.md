@@ -100,3 +100,13 @@ Local gallery API verification: run the relay on port 8770 with its local D1/R2 
 ## Supported reviewer prompts
 
 The hosted page offers six example prompts. A deliberately narrow, shared request grammar validates every clause on both the relay and the Mac. It accepts supported light, color, grain, texture, vignette, and crop commands; unknown or mixed transformation requests are rejected before they can launch Lightroom. This may reject some otherwise reasonable paraphrases; the example buttons provide accepted wording. The runtime also checks the whole request before using tools. No image generation, identity/gender-presentation changes, body/face reshaping, clothing swaps, or object/scene synthesis is permitted.
+
+## Local multi-photo demo
+
+For local execution without a hosted relay, omit `--remote-config` and supply `--catalog PATH` with a private JSON array. Each entry has `id`, `title`, `source_filename`, and an absolute `jpeg` path. Optional `base_version` names an existing Lightroom version. Without it, the worker must visually match the current Lightroom edit to the imported JPEG and save a named base before editing. Camera filenames alone are insufficient identity evidence. Re-import preserves existing photo identities and revisions.
+
+The gallery offers photo selection, one shared Lightroom queue, feedback attached to each job, progress, revision history, and JPEG downloads. `?photo=PHOTO_ID` opens a particular photograph. The request button starts a real native editing job; it is not an ordinary comment. Earlier hosted comments are not automatically replayed. The washed-out/hands-only proof-of-concept request is supported by the shared admission policy.
+
+## Hosting portability
+
+The complete editing process runs on the photographer’s Mac. A future Vercel deployment would host only the reviewer interface and short HTTP requests for authentication, durable job submission/status, and signed image delivery. It must use persistent database/object storage, not serverless process memory or a local SQLite file. Keep the Mac worker polling outward over authenticated HTTPS, with photo identity, base revision, idempotency key, and a single global edit lease in each job contract. Publish a completed revision only after its actual JPEG has been uploaded and verified. The current Sites relay uses D1/R2 and still requires a storage adapter and multi-photo worker protocol before being deployed on Vercel; no Vercel deployment is claimed here.

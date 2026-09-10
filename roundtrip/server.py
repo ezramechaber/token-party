@@ -365,7 +365,7 @@ class Handler(BaseHTTPRequestHandler):
             job=self.server.store.get_job(path.rsplit('/',1)[-1])
             return self.json(200 if job else 404,job or {'error':'Job not found.'})
         if path.startswith('/media/'):
-            match=re.fullmatch(r'/media/([a-z0-9]+)\.jpg',path)
+            match=re.fullmatch(r'/media/([a-z0-9-]{2,80})\.jpg',path)
             revision=self.server.store.revision(match[1]) if match else None
             if not revision: return self.json(404,{'error':'Image not found.'})
             return self.file(Path(revision['path']))

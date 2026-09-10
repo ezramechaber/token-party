@@ -10,7 +10,6 @@ Token Party brings together experiments in DJ mixing and native photo editing, b
 | --- | --- | --- |
 | [Back 2 Back](b2b/README.md) | A browser DJ mixer with audio analysis, manual controls, and phrase-aligned transitions. | Local playback and rule-based mixing verified; live Astra planning still needs runtime verification. |
 | [Roundtrip](roundtrip/README.md) | A Lightroom workflow connecting photo feedback, native edits, exports, and gallery revisions. | Local editing demonstrated; see the build log for current remote-access and workflow limits. |
-| [Design Tutor](design-tutor/README.md) | A proposed website-to-Figma reconstruction and teaching experience. | Idea generation only; no implementation. |
 
 Start with each project's README for setup. Personal tracks, RAW photos, exports, credentials, and local caches are excluded from Git; provide your own media and local configuration.
 

@@ -14,16 +14,25 @@ def call(path,key=None,data=None,ctype='application/json'):
 assert call('/api/media/testexport')[0]==401
 assert call('/api/comments',data={})[0]==401
 assert call('/api/gallery/upload',REVIEW,b'')[0]==401
-boundary='RoundtripTestBoundary'
-parts=[]
-for k,v in {'id':'testexport','label':'Test fixture','summary':'Generated solid-color integration-test fixture','created':'1'}.items():parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
 fixture=(Path(__file__).resolve().parents[2]/'tests/fixtures/gray.jpg').read_bytes()
-parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="test.jpg"\r\nContent-Type: image/jpeg\r\n\r\n'.encode()+fixture+b'\r\n')
-parts.append(f'--{boundary}--\r\n'.encode())
-assert call('/api/gallery/upload',WORKER,b''.join(parts),'multipart/form-data; boundary='+boundary)[0] in (200,201)
+def upload(photo_id,revision_id):
+ boundary='RoundtripTestBoundary'
+ parts=[]
+ for k,v in {'photo_id':photo_id,'id':revision_id,'label':'Test fixture','summary':'Generated solid-color integration-test fixture','created':'1'}.items():
+  parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{k}"\r\n\r\n{v}\r\n'.encode())
+ parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="file"; filename="test.jpg"\r\nContent-Type: image/jpeg\r\n\r\n'.encode()+fixture+b'\r\n')
+ parts.append(f'--{boundary}--\r\n'.encode())
+ return call('/api/gallery/upload',WORKER,b''.join(parts),'multipart/form-data; boundary='+boundary)[0]
+assert upload('portrait','testexport') in (200,201)
+for photo_id in ('gallery-one','gallery-two','gallery-three'):
+ assert upload(photo_id,photo_id+'-original') in (200,201)
+assert upload('unknown','testunknown')==400
+assert upload('gallery-one','testexport')==400
 assert call('/api/media/testexport',REVIEW)==(200,fixture)
 s=json.loads(call('/api/review',REVIEW)[1]);assert len(s['photos'])==4
-payload={'id':uuid.uuid4().hex,'photo_id':'sample-one','revision_id':'sample-one-original','text':'Local test comment'}
+assert all(r['photo_id']==p['id'] for p in s['photos'] for r in p['revisions'])
+assert all(r['url'].startswith('/api/media/') for p in s['photos'] for r in p['revisions'])
+payload={'id':uuid.uuid4().hex,'photo_id':'gallery-one','revision_id':'gallery-one-original','text':'Local test comment'}
 assert call('/api/comments',REVIEW,payload)[0]==201
 assert call('/api/comments',REVIEW,payload)[0]==200
 assert call('/api/comments',REVIEW,{**payload,'text':'Different'})[0]==400

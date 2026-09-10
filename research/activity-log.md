@@ -247,3 +247,8 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 **Visual decisions:** User rejected orbital rings and approved the direction of a second chrome/robot-inspired ChatGPT Image concept. Working UI keeps neutral controls with separate audio-reactive generative ribbons. Visually inspected smooth rendering and removed decorative eyebrows/footer. See [design history](../b2b/docs/design/README.md) and [mix-map decisions](../b2b/docs/mix-maps.md).
 
 **Limits and next steps:** Human audition still decides musical quality; spectral power does not recognize a hook. Full-crate Auto and live runtime Astra remain unverified. API key still pending. Usage25% account-wide versus9% baseline, allocation+20percentage points; totals include concurrent work. Exact projecttokens and dailychat/tool totals unavailable; noresetused.
+
+
+## 2026-09-10 12:55 EDT — Roundtrip RAW gallery
+
+Replaced stock samples with three real Lightroom RAW exports; preserved the original study’s four revisions. Private gallery now has four photos, navigation, per-revision comments, protected R2 media, and a photographer upload form. Browser checks at 320/390/768/1440 px and gallery API tests passed. RAWs remained unchanged; personal media stays outside Git. Remote editing still awaits resolution of Sites access. See `roundtrip/build-log.md` for evidence and limitations. Weekly account usage checkpoint 31%; Roundtrip authorized ceiling 37%, shared across concurrent work; project token counts unavailable.

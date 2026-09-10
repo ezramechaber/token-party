@@ -48,3 +48,13 @@ Completed scope: attack-aligned playback, editable song maps and musical-arrival
 User explicitly authorized **another 10 percentage points account-wide** for the next phase. Fresh Codex reading: **26% used, 74% remaining** in the 10,080-minute weekly window. Use 26% as the new tranche baseline: **36% total ceiling**, with a **35% working stop** for reporting lag. This conservatively counts the new allocation from the current reading rather than adding unused earlier headroom. Original baseline and historical allocations remain recorded above. No reset used.
 
 Next authorized scope: implement the approved chrome-art UI, create a DJ/booth scene tied to actual mixer state, and enable listener Spotify/YouTube requests with fit assessment and queueing. User requested a Git checkpoint before further implementation.
+
+
+### Roundtrip — 2026-09-10 12:52 EDT budget extension
+
+User authorized another **10 percentage points** beyond the previously agreed 27% weekly ceiling: new ceiling **37% account-wide weekly usage**. First resumed measurement is **28% used** (10080-minute window). Other projects share this account; the difference cannot be attributed solely to Roundtrip. No reset redeemed. Objective: replace stock gallery samples with exports from selected existing Lightroom RAWs, verify the gallery, and publish privately. Per-project token counts and tool-call totals unavailable.
+
+
+### Roundtrip — 2026-09-10 12:55 EDT completion checkpoint
+
+Measured **31% used** in the account-wide 10080-minute weekly window, versus 28% at this resumed session. Observed +3 points includes concurrent projects and is not Roundtrip-specific consumption. Authorized ceiling remains **37%**. Published and verified the private gallery using three real Lightroom exports plus the existing study. Per-project token/tool totals unavailable. No reset redeemed.

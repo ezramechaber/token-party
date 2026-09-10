@@ -6,7 +6,7 @@ Each project lives in its own subfolder. Record starting usage and an agreed bud
 
 | Project | Folder | Status | Started | Usage at start | Project budget |
 | --- | --- | --- | --- | --- | --- |
-| Back 2 Back | `b2b/` | Implementation underway | 2026-09-10; exact start time not recorded | Unknown — no starting snapshot recorded | Not set; prior repository default treats token cost as unconstrained |
+| Back 2 Back | `b2b/` | Local prototype verified; human mixing review underway | 2026-09-10; exact start time not recorded | 9% weekly account-wide quota used before implementation; reconciled below | +20 percentage points of weekly allowance; conservative stop at 26% total used |
 | Roundtrip | `roundtrip/` | Lightroom demo built; further workflow work open | 2026-09-10; exact start time not recorded | Unknown — no starting snapshot recorded | Not set; prior repository default treats token cost as unconstrained |
 
 Existing project planning and demo history remain linked from [the activity log](research/activity-log.md). Roundtrip's private demo assets currently live in ignored `.local-demo/fuji-portrait/`; they must remain excluded from commits. This register does not imply either project has a completed autonomous runtime.
@@ -36,3 +36,9 @@ Status: local two-deck prototype demonstrated with 13 privately held tracks, a c
 ## 2026-09-10 12:26 EDT — Back 2 Back continuation
 
 User requested subagents for image-led space-themed UI and YouTube import, then two more for beat alignment and intro/mix-map improvements. Starting continuation observation20% weekly used; 12:22:44 EDT20%; next checkpoint approximately12:24 EDT21% (10,080-minute account window). Original measured9% baseline and +20-percentage-point allocation remain unchanged; conservative totalstop26%. Observed account increase12points includes concurrent work. No reset. Image-generation billing and per-project token totals are not exposed by the quota tool.
+
+## 2026-09-10 12:40 EDT — Back 2 Back map and visual verification
+
+Account-wide weekly Codex allowance: **25% used**, 75% remaining, in the10,080-minute window. Intermediate continuation checkpoints22%,23%,24% preceded this reading. Observed change from the recorded9% baseline is+16percentage points; concurrent projects share this meter, so this is not precise Back 2 Back consumption. The user's+20-point budget and conservative26% total stopping point remain unchanged. No reset redeemed. Exact per-project tokens and image-generation billing are unavailable.
+
+Completed scope: attack-aligned playback, editable song maps and musical-arrival-aware transition planning, clean reactive art, and a second ChatGPT Image reference.54tests passed in4.40seconds. Continued human mixing feedback and runtime API setup remain open.

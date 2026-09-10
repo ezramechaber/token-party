@@ -12,13 +12,15 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from .audio import analyze, content_id, prepare
+from .audio import analyze, content_id, prepare, decode, SR
+from .beatgrid import local_attack_offset
+from .mixmap import analyze_mix_map
 from .planner import make_plan, edge
 from .youtube import download_audio, video_url
 
 ROOT=Path(__file__).resolve().parent.parent
-DATA=ROOT/'.b2b'; IMPORTS=DATA/'imports'; CACHE=DATA/'cache'
-for p in (IMPORTS,CACHE):p.mkdir(parents=True,exist_ok=True)
+DATA=ROOT/'.b2b'; IMPORTS=DATA/'imports'; CACHE=DATA/'cache'; MAPS=DATA/'maps'
+for p in (IMPORTS,CACHE,MAPS):p.mkdir(parents=True,exist_ok=True)
 MANIFEST=DATA/'crate.json'
 lock=threading.RLock(); workers=ThreadPoolExecutor(max_workers=1)
 tracks=json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {}
@@ -36,6 +38,18 @@ async def local_only(request:Request,call_next):
 def save():
     with lock:
         tmp=MANIFEST.with_suffix('.tmp');tmp.write_text(json.dumps(tracks));tmp.replace(MANIFEST)
+        for tid,t in tracks.items():
+            target=MAPS/(tid+'.json');temp=target.with_suffix('.tmp')
+            temp.write_text(json.dumps(song_map(t),indent=2));temp.replace(target)
+
+def song_map(t):
+    return {k:t[k] for k in ('id','title','artist','version','bpm','gridOffset','beatConfidence','meter','barConfidence','entry','introEnd','introBars','outroStart','exitEnd','outroBars','drumsIn','musicIn','reviewed','mixMap','warnings') if k in t}
+
+@app.get('/api/map/{tid}')
+def get_map(tid:str):
+    with lock:t=tracks.get(tid)
+    if not t:raise HTTPException(404,'Track not found')
+    return JSONResponse(song_map(t),headers={'Content-Disposition':f'attachment; filename="{tid}-mix-map.json"'})
 
 def public(t):return {k:v for k,v in t.items() if k!='path'}
 
@@ -113,16 +127,20 @@ class Correction(BaseModel):
     exitEnd:float=Field(gt=0)
     outroBars:int=Field(ge=4,le=64)
     reviewed:bool=True
+    drumsIn:float|None=Field(default=None,ge=0)
+    musicIn:float|None=Field(default=None,ge=0)
 
 @app.put('/api/track/{tid}')
 def correct(tid:str,c:Correction):
     with lock:
         if tid not in tracks:raise HTTPException(404,'Track not found')
         t=tracks[tid];v=c.model_dump();bar=240/c.bpm
-        if c.entry+c.introBars*bar>=c.exitEnd-c.outroBars*bar or c.exitEnd>t['duration']:
+        if c.entry+c.introBars*bar>=c.exitEnd-c.outroBars*bar or c.exitEnd>t['duration'] or any(v is not None and v>=t['duration'] for v in (c.drumsIn,c.musicIn)):
             raise HTTPException(400,'Intro and outro must fit inside the track without overlapping.')
         t.update(v);t.update(introEnd=c.entry+c.introBars*bar,outroStart=c.exitEnd-c.outroBars*bar,
                             ready=min(c.introBars,c.outroBars)>=8,barConfidence='manually confirmed',warnings=[])
+        t['mixMap']=analyze_mix_map(decode(t['path']),SR,t['bpm'],t['gridOffset'],t)
+        t['ready']=t['ready'] and bool(t['mixMap']['entryCandidates']) and bool(t['mixMap']['exitCandidates'])
         save();return public(t)
 
 class PlanRequest(BaseModel):
@@ -164,6 +182,24 @@ def audio(tid:str,tempo:float=128):
             except Exception as e:
                 temp.unlink(missing_ok=True);raise HTTPException(422,'Audio preparation failed. The file may be protected or damaged.') from e
     return FileResponse(target,media_type='audio/wav')
+
+alignment_cache={}
+
+@app.get('/api/alignment/{tid}')
+def alignment(tid:str,tempo:float=128,cue:float=0,bars:int=8):
+    import math
+    with lock:t=tracks.get(tid)
+    if not t:raise HTTPException(404,'Track not found')
+    if not math.isfinite(cue) or not 0<=cue<t['duration'] or bars not in (8,16):
+        raise HTTPException(400,'Choose a cue inside the file and an 8- or 16-bar window.')
+    if not math.isfinite(tempo) or not .92<=tempo/t['bpm']<=1.08:
+        raise HTTPException(400,'Choose a set tempo within 8% of this track.')
+    key=(tid,t.get('version'),t['bpm'],t['gridOffset'],tempo,round(cue,4),bars)
+    if key not in alignment_cache:
+        prepared=audio(tid,tempo);ratio=tempo/t['bpm'];y=decode(prepared.path)
+        result=local_attack_offset(y,SR,tempo,t['gridOffset']/ratio,cue/ratio,cue/ratio+bars*240/tempo)
+        alignment_cache[key]={**result,'mappedCue':cue/ratio+result['offset'],'sourceCue':cue,'tempo':tempo}
+    return alignment_cache[key]
 
 render_lock=threading.Lock()
 app.mount('/',StaticFiles(directory=ROOT/'web',html=True),name='web')

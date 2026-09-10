@@ -1,20 +1,21 @@
+import {createVisualizer} from './visualizer.js';
 const $=s=>document.querySelector(s);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const time=s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,'0')}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`;
 let tracks=[],order=[],plan=null,ctx,master,analyser,active=false,transition=null,generation=0,editId=null,loading=false;
-let masterTempo=124, manualOrder=false;
+let masterTempo=124, manualOrder=false,visualIdentity='';
+const visualizer=createVisualizer($('#visualizer'));
 async function api(path,body,method='POST'){
  const res=await fetch('/api/'+path,body===undefined?{}:{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
  if(!res.ok){let message;try{message=(await res.json()).detail}catch{message=res.statusText}throw Error(typeof message==='string'?message:JSON.stringify(message))}return res.json();
 }
 function toast(s){$('#toast').textContent=s;$('#toast').hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').hidden=true,6500)}
-function audioContext(){if(!ctx){ctx=new AudioContext();master=ctx.createGain();master.gain.value=+.65;analyser=ctx.createAnalyser();analyser.fftSize=256;master.connect(analyser);analyser.connect(ctx.destination)}return ctx}
+function audioContext(){if(!ctx){ctx=new AudioContext();master=ctx.createGain();master.gain.value=+.65;analyser=ctx.createAnalyser();analyser.fftSize=2048;master.connect(analyser);analyser.connect(ctx.destination)}return ctx}
 async function unlock(){audioContext();await ctx.resume()}
 function track(id){return tracks.find(t=>t.id===id)}
 class Deck{
  constructor(letter){this.letter=letter;this.el=$('#deck'+letter);this.track=null;this.buffer=null;this.source=null;this.offset=0;this.start=0;this.running=false;this.token=0;
  this.el.querySelector('.play').onclick=()=>safe(async()=>{await unlock();takeover(false);this.running?this.pause():this.play()});
- this.el.querySelector('.platter').onclick=this.el.querySelector('.play').onclick;
  this.el.querySelector('.cue').onclick=()=>safe(async()=>{await unlock();takeover(false);this.seek(this.track.entry/this.ratio);this.play()});
  this.el.querySelector('.outcue').onclick=()=>safe(async()=>{await unlock();takeover(false);this.seek(Math.max(0,this.track.outroStart/this.ratio));this.play()});
  this.el.querySelector('.review').onclick=()=>this.track&&edit(this.track.id);
@@ -42,7 +43,6 @@ class Deck{
  draw(){const canvas=this.el.querySelector('.wave'),w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr}
  const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);c.strokeStyle='#243342';c.lineWidth=1;c.beginPath();c.moveTo(0,h/2);c.lineTo(w,h/2);c.stroke();
  if(!this.track)return;const t=this.track,color=this.letter==='A'?'#6ae8fc':'#b8a0ff',duration=t.duration,p=this.position()*this.ratio;
- this.el.querySelector('.orbit-ring').style.transform=`rotate(${p*180}deg)`;this.el.querySelector('.platter').classList.toggle('is-playing',this.running&&ctx.currentTime>=this.start);
  const sx=seconds=>seconds/duration*w;
  c.fillStyle=this.letter==='A'?'#6ae8fc16':'#b8a0ff16';c.fillRect(sx(t.entry),0,sx(t.introEnd-t.entry),h);c.fillRect(sx(t.outroStart),0,sx(t.exitEnd-t.outroStart),h);
  for(let x=0;x<w;x+=2){const i=Math.floor(x/w*t.waveform.length),amp=t.waveform[i]||0;const barIndex=Math.floor((x/w*duration-t.gridOffset)/(240/t.bpm));const band=t.bands[Math.max(0,barIndex)];c.fillStyle=x<sx(p)?color:(band&&band[0]>band[2]?'#397583':'#51466f');const a=Math.max(1,amp*h*.43);c.fillRect(x,h/2-a,1.4,a*2)}
@@ -84,9 +84,12 @@ async function startAuto(preview=false){await unlock();if(loading)throw Error('A
  }catch(e){takeover(false);throw e}finally{loading=false;$('#auto').disabled=false;$('#preview').disabled=false}}
 async function arm(index,currentIndex,my,preview){if(!active||my!==generation)return;const a=decks[currentIndex],b=decks[1-currentIndex],e=plan.transitions[index];if(!e){$('#autoTitle').textContent='Last record';$('#autoDetail').textContent='Enjoy the rest of the track.';active=false;$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;return}
  if(index>0){await b.load(track(e.to),masterTempo);if(my!==generation)return}
- const at=a.start+(e.exit/a.ratio-a.offset),end=at+e.duration;
+ const [alignA,alignB]=await Promise.all([api(`alignment/${a.track.id}?tempo=${masterTempo}&cue=${e.exit}&bars=${e.bars}`),api(`alignment/${b.track.id}?tempo=${masterTempo}&cue=${e.entry}&bars=${e.bars}`)]);
+ if(!active||my!==generation)return;
+ const at=a.start+(alignA.mappedCue-a.offset),end=at+e.duration;
+ $('#mixEvidence').textContent=(e.mixEvidence?`A bar ${e.mixEvidence.exitBar} → B bar ${e.mixEvidence.entryBar} · kick-supported window estimated. ${e.mixEvidence.musicalArrival?'B musical arrival '+time(e.mixEvidence.musicalArrival.time)+' ('+e.mixEvidence.musicalArrival.confidence+'). ':''}`:'')+(alignA.reliable&&alignB.reliable?`Prepared attacks aligned · A ${Math.round(alignA.offset*1000)} ms / B ${Math.round(alignB.offset*1000)} ms correction.`:'Attack alignment uncertain on one deck — check by ear.');
  if(at<ctx.currentTime+.06){takeover(false);throw Error('The mixing window has passed. Audition the next transition or cue the track again.')}
- b.fade.gain.cancelScheduledValues(ctx.currentTime);b.fade.gain.setValueAtTime(0,ctx.currentTime);b.low.gain.setValueAtTime(-24,ctx.currentTime);b.play(at,e.entry/b.ratio);
+ b.fade.gain.cancelScheduledValues(ctx.currentTime);b.fade.gain.setValueAtTime(0,ctx.currentTime);b.low.gain.setValueAtTime(-24,ctx.currentTime);b.play(at,alignB.mappedCue);
  a.fade.gain.setValueAtTime(1,at);a.fade.gain.linearRampToValueAtTime(0,end);b.fade.gain.setValueAtTime(0,at);b.fade.gain.linearRampToValueAtTime(1,end);
  a.low.gain.setValueAtTime(0,at);a.low.gain.linearRampToValueAtTime(-24,end);b.low.gain.setValueAtTime(-24,at);b.low.gain.linearRampToValueAtTime(0,end);
  // Both sources and all ramps are armed on the audio clock. The UI timer only manages the next preload.
@@ -121,8 +124,8 @@ $('#mixNow').onclick=()=>safe(async()=>{
  await unlock();plan=next;const my=++generation;active=true;$('#tempo').disabled=true;$('#auto').hidden=true;$('#takeover').hidden=false;
  if(!a.running)a.play();try{await arm(0,index,my,false)}catch(e){takeover(false);throw e}
 });
-function edit(id){if(active)takeover();editId=id;const t=track(id);$('#editTitle').textContent=t.title+' · '+t.artist;for(const k of ['bpm','gridOffset','entry','introBars','exitEnd','outroBars'])$('#editForm').elements[k].value=t[k];$('#editWarning').textContent=t.warnings.join(' · ');$('#editor').showModal()}
-$('#closeEditor').onclick=()=>$('#editor').close();$('#editForm').onsubmit=e=>{e.preventDefault();safe(async()=>{if(decks.some(d=>d.running))throw Error('Stop playback before changing the grid.');const values=Object.fromEntries(new FormData(e.target));for(const k in values)values[k]=+values[k];await api('track/'+editId,{...values,reviewed:true},'PUT');plan=null;decks.filter(d=>d.track?.id===editId).forEach(d=>{d.buffer=null;d.status('RELOAD WITH NEW GRID')});$('#editor').close();await refresh()})};
+function edit(id){if(active)takeover();editId=id;const t=track(id);$('#editTitle').textContent=t.title+' · '+t.artist;for(const k of ['bpm','gridOffset','entry','introBars','exitEnd','outroBars','drumsIn','musicIn'])$('#editForm').elements[k].value=t[k]??'';$('#editWarning').textContent=t.warnings.join(' · ');$('#editor').showModal()}
+$('#closeEditor').onclick=()=>$('#editor').close();$('#editForm').onsubmit=e=>{e.preventDefault();safe(async()=>{if(decks.some(d=>d.running))throw Error('Stop playback before changing the grid.');const values=Object.fromEntries(new FormData(e.target));for(const k in values)values[k]=values[k]===''?null:+values[k];await api('track/'+editId,{...values,reviewed:true},'PUT');plan=null;decks.filter(d=>d.track?.id===editId).forEach(d=>{d.buffer=null;d.status('RELOAD WITH NEW GRID')});$('#editor').close();await refresh()})};
 async function upload(files){for(const file of files){const form=new FormData();form.append('file',file);const res=await fetch('/api/upload',{method:'POST',body:form});if(!res.ok)throw Error((await res.json()).detail)}toast('Tracks added. Analysis is running locally.');await refresh()}
 $('#youtubeForm').onsubmit=e=>{e.preventDefault();safe(async()=>{const button=$('#youtubeSubmit');button.disabled=true;button.textContent='ADDING…';try{await api('youtube',{url:$('#youtubeUrl').value.trim()});$('#youtubeUrl').value='';toast('YouTube import queued. Download and analysis progress appear below the crate.');await refresh()}finally{button.disabled=false;button.textContent='↓ IMPORT AUDIO'}})};
 $('#upload').onchange=e=>safe(()=>upload(e.target.files));$('#scan').onclick=()=>safe(async()=>{const r=await api('scan',{});toast(r.jobs.length?`Analyzing ${r.jobs.length} tracks.`:'Your local imports are already in the crate.');await refresh()});
@@ -143,7 +146,7 @@ $('#inspectListen').onclick=()=>safe(async()=>{const v=inspection();if(!v?.d.buf
 function drawInspection(){
  const canvas=$('#detailWave'),w=canvas.clientWidth,h=canvas.clientHeight,dpr=devicePixelRatio||1;
  if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr;inspectCache=null}
- const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);const v=inspection();if(!v)return;const {d,t,span}=v;
+ const c=canvas.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,w,h);const v=inspection();if(!v)return;const {d,t,span}=v;$('#exportMap').href='/api/map/'+t.id;$('#exportMap').hidden=false;
  const sx=s=>(s-inspectStart)/span*w,color=d.letter==='A'?'#6ae8fc':'#b8a0ff';
  const key=[d.letter,d.token,!!d.buffer,inspectStart,span,w].join(':');
  if(inspectCache?.key!==key){const peaks=[];if(d.buffer){const channels=Array.from({length:d.buffer.numberOfChannels},(_,i)=>d.buffer.getChannelData(i));const rate=d.buffer.sampleRate/d.ratio;for(let x=0;x<w;x++){const start=Math.max(0,Math.floor((inspectStart+x/w*span)*rate)),end=Math.min(channels[0].length,Math.ceil((inspectStart+(x+1)/w*span)*rate));let peak=0;for(let i=start;i<end;i++)for(const ch of channels)peak=Math.max(peak,Math.abs(ch[i]));peaks.push(peak)}}inspectCache={key,peaks};}
@@ -151,13 +154,14 @@ function drawInspection(){
  c.fillStyle=color+'99';inspectCache.peaks.forEach((p,x)=>c.fillRect(x,h/2-p*(h-65)/2,1,Math.max(1,p*(h-65))));
  const beat=60/t.bpm,first=Math.max(0,Math.ceil((inspectStart-t.gridOffset)/beat));
  for(let i=first;t.gridOffset+i*beat<=inspectStart+span;i++){const x=sx(t.gridOffset+i*beat),bar=i%4===0;c.strokeStyle=bar?'#e8edfc99':'#e8edfc30';c.beginPath();c.moveTo(x,bar?22:40);c.lineTo(x,h-22);c.stroke();c.fillStyle=bar?'#e8edfc':'#94a4bf';c.font=(bar?'bold ':'')+'10px monospace';c.fillText(bar?'BAR '+(Math.floor(i/4)+1):String(i%4+1),x+3,bar?15:34);}
+ for(const row of t.mixMap?.bars||[]){if(row.end<inspectStart||row.start>inspectStart+span)continue;c.fillStyle=row.kickState==='supported'?'#6ae8fc55':row.kickState==='absent'?'#ed997d88':'#b8a0ff66';c.fillRect(sx(row.start),h-5,sx(row.end)-sx(row.start),5)}
  c.fillStyle='#e8af6d';for(const k of t.kickTimes||[])if(k>=inspectStart&&k<=inspectStart+span){c.beginPath();c.arc(sx(k),h-12,2,0,Math.PI*2);c.fill()}
- for(const [s,label] of [[t.entry,'INTRO IN'],[t.introEnd,'INTRO END'],[t.outroStart,'OUTRO IN'],[t.exitEnd,'OUTRO END']])if(s>=inspectStart&&s<=inspectStart+span){c.fillStyle=color;c.fillRect(sx(s),22,2,h-44);c.font='bold 10px monospace';c.fillText(label,Math.max(2,Math.min(w-75,sx(s)+4)),h-27)}
+ for(const [s,label] of [[t.entry,'INTRO IN'],[t.introEnd,'INTRO END'],[t.outroStart,'OUTRO IN'],[t.exitEnd,'OUTRO END'],...(t.mixMap?.musicalArrival?[[t.mixMap.musicalArrival.time,'MUSIC IN?']]:[])])if(s>=inspectStart&&s<=inspectStart+span){c.fillStyle=color;c.fillRect(sx(s),22,2,h-44);c.font='bold 10px monospace';c.fillText(label,Math.max(2,Math.min(w-75,sx(s)+4)),h-27)}
  const p=d.position()*d.ratio;if(p>=inspectStart&&p<=inspectStart+span){c.fillStyle='#fff';c.fillRect(sx(p),22,2,h-44)}
  $('#inspectPosition').value=inspectStart/Math.max(.001,t.duration-span);
  $('#inspectTitle').textContent=`Deck ${d.letter} · ${t.title} · original ${t.bpm.toFixed(2)} BPM · 4/4 assumed`;
- $('#inspectReadout').textContent=`Original file ${time(inspectStart)}–${time(inspectStart+span)} · ${$('#inspectBars').value} bars · tall lines = bars, short lines = beats, orange dots = kick candidates · ${t.reviewed?'cues confirmed':'grid and phrases estimated'}${d.buffer?'':' · preparing detailed audio'}`;
+ $('#inspectReadout').textContent=`Original file ${time(inspectStart)}–${time(inspectStart+span)} · ${$('#inspectBars').value} bars · tall lines = bars, short lines = beats, orange dots = kick candidates · ${t.reviewed?'cues confirmed':'grid and phrases estimated'}${t.mixMap?' · bottom strip: cyan = kick support, coral = absent':''}${d.buffer?'':' · preparing detailed audio'}`;
 }
-function frame(){drawInspection();decks.forEach(d=>d.draw());if(analyser){const samples=new Uint8Array(analyser.frequencyBinCount);analyser.getByteTimeDomainData(samples);const peak=Math.max(...samples.map(v=>Math.abs(v-128)))/128;const percentage=Math.max(0,Math.min(100,100+(20*Math.log10(Math.max(peak,.001)))*2));$('#meterL').style.clipPath=`inset(${100-percentage}% 0 0)`;$('#meterR').style.clipPath=`inset(${100-percentage}% 0 0)`}
+function frame(){const audible=decks.filter(d=>d.running&&ctx?.currentTime>=d.start&&d.fade?.gain.value>.001);if(audible.length)visualIdentity=audible.map(d=>d.track.id).join(':');visualizer.draw(analyser,visualIdentity||decks.map(d=>d.track?.id||'').join(':'),audible.length>0);drawInspection();decks.forEach(d=>d.draw());if(analyser){const samples=new Uint8Array(analyser.frequencyBinCount);analyser.getByteTimeDomainData(samples);const peak=Math.max(...samples.map(v=>Math.abs(v-128)))/128;const percentage=Math.max(0,Math.min(100,100+(20*Math.log10(Math.max(peak,.001)))*2));$('#meterL').style.clipPath=`inset(${100-percentage}% 0 0)`;$('#meterR').style.clipPath=`inset(${100-percentage}% 0 0)`}
  if(transition&&ctx.state==='running'){const tr=transition,p=Math.max(0,Math.min(1,(ctx.currentTime-tr.at)/(tr.end-tr.at)));$('#crossfader').value=tr.currentIndex===0?p:1-p;if(ctx.currentTime<tr.at)$('#autoDetail').textContent=`${tr.e.bars}-bar handoff in ${time(tr.at-ctx.currentTime)} → ${tr.b.track.title}`;else $('#autoDetail').textContent=`Blending · bar ${Math.min(tr.e.bars,Math.floor(p*tr.e.bars)+1)} / ${tr.e.bars} · swapping low EQ`;if(ctx.currentTime>=tr.end)safe(()=>finishTransition(tr))}requestAnimationFrame(frame)}
 safe(async()=>{await refresh();await api('scan',{});await refresh()});setInterval(()=>safe(refresh),4000);requestAnimationFrame(frame);

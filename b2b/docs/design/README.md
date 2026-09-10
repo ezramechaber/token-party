@@ -1,4 +1,29 @@
-# b2b orbital interface concept
+# b2b visual explorations
+
+## Revision 2: chrome art, familiar controls
+
+The second concept uses a separate sculptural chrome art strip, restrained charcoal controls, and pastel reflections. It was generated with the built-in ChatGPT Image tool in one generation on September 10, 2026, following the user's request to continue ChatGPT Image. No API key was required.
+
+![Chrome art above neutral DJ controls](b2b-chrome-art-ui-v2.png)
+
+Preserve the real app's controls, phrase inspector and measured timing. The generated metadata, extra EQ controls and third track are illustrative. This is a visual concept, not a functional screenshot or a request to replace existing controls.
+
+### Revision 2 prompt
+
+```text
+Use case: ui-mockup
+Asset type: one high-fidelity desktop DJ application interface concept, landscape.
+Primary request: Create a beautiful contemporary working DJ app called "b2b (back 2 back)". Keep the actual controls simple and usable. Put the expressive visual identity in a wide generative-art strip ABOVE the controller, visually separate from every interactive control.
+Art direction: premium fashion and industrial sculpture. A flowing liquid-chrome synthetic form, with a subtly suggested sleek robotic profile dissolving into satin-metal ribbons. Sophisticated, sculptural, ambiguous, not a mascot. Soft pink, pale lime, lavender and silver reflections, luxurious smooth surfaces, softly lit graphite backdrop. The art should suggest music-reactive motion captured at one instant.
+Composition: Full application screen, front-on, no monitor, no browser chrome. Small exact brand "b2b (back 2 back)" at top left; restrained heading "Your mix". Beneath the header a wide shallow artwork strip spanning the whole interface, roughly a fifth of the screen height. Below it, two ordinary clean deck panels A and B with track names "Dedication" and "Push The Feeling On", readable "124 BPM", short colored waveforms with labeled "INTRO" and "OUTRO", simple play buttons and low EQ sliders. Central compact crossfader and clearly legible "Audition A to B" and "Start Auto" buttons. NO giant turntables, orbital rings or decorative control instruments. Lower portion a useful "Crate" table with 3 rows, columns Track / BPM / Intro / Outro and load buttons. Include a modest field "Paste a YouTube link" with "Import" button.
+Visual design: neutral charcoal and silver interface, matte panels, subtle boundaries, generous but practical spacing, exceptionally clear typography. Muted pink and lavender waveform accents. Contemporary editorial design, quietly confident. The application must look usable and the separate artwork must look extraordinary.
+Text constraints: exact product name "b2b (back 2 back)". Use only useful functional labels. No slogans, no decorative footer, no eyebrow labels, no "LIVE SESSION", no "LIVE STUDY", no "RECORD BAG".
+Avoid: early-2000s sci-fi, cyberpunk, space HUDs, neon, stars, planets, orbital rings, shiny decorative buttons, robot mascot embedded in controls, fantasy dashboards, excessive glassmorphism, marketing landing page, fake surveillance telemetry.
+```
+
+**Superseded:** the user rejected the orbital interface as too reminiscent of early-2000s sci-fi. The working interface now keeps neutral controls and places spectrum-reactive sculptural ribbons in a separate art strip (`web/visualizer.js`). The original concept below is retained only as decision history.
+
+## Archived orbital concept
 
 Generated on September 10, 2026 with the built-in ChatGPT Image tool, one generation. No API key was required. The image is a design reference; its sample track metadata and extra controls are illustrative, not measured or implemented behavior.
 

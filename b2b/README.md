@@ -35,6 +35,12 @@ This feature requires FFmpeg and **Node.js 22+** (or Deno 2.3+), in addition to 
 
 An 8-bar blend at 128 BPM lasts 15 seconds; 16 bars lasts 30. Volume ramps are linear amplitude. Low-shelf ramps are linear dB, from 0 to −24 dB and back, around 200 Hz. This deliberately simple combination can produce a midpoint dip. Audio starts and ramps use the audio clock; waveform animation never determines beat timing.
 
+## Mix maps and reactive art
+
+Every track has a private JSON mix map with beat/phrase evidence, drum support, and a proposed musical arrival. The planner chooses a supported overlap that hands over near that arrival, then checks the actual tempo-prepared audio for local attack alignment. Download the map from the inspector; correct **Musical arrival** or **First real kick** through **Grid / cues**. These are editable estimates. [How the maps guide mixing](docs/mix-maps.md).
+
+A separate generative-art strip responds to the playing audio spectrum. Song identity seeds its palette and form; bass, mids, and highs shape its movement and reflected light. It pauses with playback and respects reduced motion. The controls remain ordinary HTML. The earlier space-deck mockup is an archived exploration.
+
 ## Optional Astra planning
 
 The audio workstation and rule-based planner work without a key. To enable the separate **Plan with Astra** option, set `OPENAI_API_KEY` in the server environment and restart. Do not paste a key into the app or commit it. `.env.example` documents the name; the application does not automatically load `.env`.

@@ -239,3 +239,11 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 **Completed:** Two explicitly requested subagents produced one ChatGPT Image orbital UI concept and a yt-dlp audio importer. Parent applied the concept to the live controls and added the URL form/status flow. Forty tests pass; a live Big Buck Bunny extraction converted and validated a23.86MB MP3 in6.76seconds, then removed the test output. No music added to public repository. See [design reference](../b2b/docs/design/README.md) and [build log](../b2b/docs/build-log.md).
 
 **Next:** Two further user-requested agents investigate the reported steady sync offset and drum support across intro windows. A per-song mix map is the proposed evidence layer for model planning. Usage latest21% account-wide versus9% originalbaseline; budget unchanged. Exact projecttokens and dailytool totals unavailable.
+
+## 2026-09-10 12:40 EDT — Back 2 Back musical handoffs and clean reactive visuals
+
+**Completed:** Integrated two analysis agents' findings: prepared attacks had~42ms offset, and kick coverage alone did not preserve musical texture. Added local attack correction, private editable/exportable song maps, drum-supported overlap validation and spectral musical-arrival proposals. Proposed Nightcrawlers entry8.9666s and arrival24.7037s. Refreshed13maps;54tests passed in4.40seconds.
+
+**Visual decisions:** User rejected orbital rings and approved the direction of a second chrome/robot-inspired ChatGPT Image concept. Working UI keeps neutral controls with separate audio-reactive generative ribbons. Visually inspected smooth rendering and removed decorative eyebrows/footer. See [design history](../b2b/docs/design/README.md) and [mix-map decisions](../b2b/docs/mix-maps.md).
+
+**Limits and next steps:** Human audition still decides musical quality; spectral power does not recognize a hook. Full-crate Auto and live runtime Astra remain unverified. API key still pending. Usage25% account-wide versus9% baseline, allocation+20percentage points; totals include concurrent work. Exact projecttokens and dailychat/tool totals unavailable; noresetused.

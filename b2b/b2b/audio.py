@@ -5,11 +5,13 @@ import subprocess
 from pathlib import Path
 
 import numpy as np
-from scipy import signal, optimize
+from scipy import signal
+from .beatgrid import rhythm
+from .mixmap import analyze_mix_map
 
 SR = 22050
 HOP = 220
-VERSION = 2
+VERSION = 3
 NOTES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B']
 MAJOR = np.array([6.35,2.23,3.48,2.33,4.38,4.09,2.52,5.19,2.39,3.66,2.29,2.88])
 MINOR = np.array([6.33,2.68,3.52,5.38,2.60,3.53,2.54,4.75,3.98,2.69,3.34,3.17])
@@ -31,34 +33,6 @@ def metadata(path):
     tags = {k.lower():v for k,v in data.get('tags',{}).items()}
     return {'title':tags.get('title',Path(path).stem),'artist':tags.get('artist','Unknown artist'),
             'genre':tags.get('genre',''), 'duration':float(data.get('duration',0))}
-
-def rhythm(y):
-    # Band-limited transient energy is a kick proxy, not a stem classifier.
-    low = signal.sosfilt(signal.butter(3,[35,180],fs=SR,btype='band',output='sos'),y)
-    n = len(low)//HOP
-    envelope = np.sqrt(np.mean(low[:n*HOP].reshape(n,HOP)**2,axis=1))
-    novelty = np.maximum(0, envelope-np.roll(envelope,2))
-    novelty[:2] = 0
-    peaks,_ = signal.find_peaks(novelty, distance=int(.27*SR/HOP),prominence=max(float(np.percentile(novelty,75))*.6,1e-5))
-    times = peaks*HOP/SR
-    weights = novelty[peaks]
-    if len(times)<16: raise ValueError('Not enough stable percussion to build a house beat grid.')
-    # A weighted phase-coherence scan finds fractional BPM without quantizing to frame lags.
-    # Several windows avoid a single intro/break dominating a whole-track estimate.
-    candidates = np.arange(108,142,.025)
-    scores = np.array([abs(np.sum(weights*np.exp(2j*np.pi*times*b/60))) for b in candidates])
-    b0 = float(candidates[np.argmax(scores)])
-    fit = optimize.minimize_scalar(lambda b:-abs(np.sum(weights*np.exp(2j*np.pi*times*b/60))),bounds=(b0-.04,b0+.04),method='bounded')
-    bpm=float(fit.x); period=60/bpm
-    vector=np.sum(weights*np.exp(2j*np.pi*times/period))
-    phase=float((np.angle(vector)%(2*np.pi))*period/(2*np.pi))
-    residual=np.abs((times-phase+period/2)%period-period/2)
-    good=residual<.055
-    confidence=float(np.sum(weights[good])/max(np.sum(weights),1e-8))
-    # Undo typical envelope onset lag by finding attack near the median kick peak.
-    phase=max(0,phase-.012)
-    beats=np.arange(phase,len(y)/SR,period)
-    return bpm,phase,beats,confidence, times[good], envelope
 
 def tonal(y):
     import librosa
@@ -129,7 +103,7 @@ def analyze(path, track_id):
     for chunk in np.array_split(y,1200): waveform.append(float(np.max(np.abs(chunk))))
     key=tonal(y[::1])
     grid_ok=confidence>.62 and count>=24
-    return {**info,'id':track_id,'version':VERSION,'duration':round(len(y)/SR,3),'bpm':round(bpm,3),
+    result = {**info,'id':track_id,'version':VERSION,'duration':round(len(y)/SR,3),'bpm':round(bpm,3),
             'gridOffset':round(downbeat,4),'beatConfidence':round(confidence,3),'meter':'4/4 assumed',
             'barConfidence':'needs audition','introBars':intro,'outroBars':outro,
             'entry':round(downbeat,4),'exitEnd':round(usable_end,4),
@@ -139,6 +113,11 @@ def analyze(path, track_id):
             'bands':np.round(scaled,3).tolist(),'kickTimes':np.round(kicks,3).tolist(),
             'ready':grid_ok and not fade and min(intro,outro)>=8,
             'reviewed':False,'warnings':(["Check beat one and phrase markers"]+(['Faded or quiet intro'] if fade else [])+(['Unstable house grid'] if not grid_ok else []))}
+
+    result['mixMap']=analyze_mix_map(y,SR,bpm,downbeat,result)
+    result['warnings']+=result['mixMap']['warnings'][-1:] if result['mixMap']['introMaxKicklessBeats']>=4 else []
+    result['ready']=result['ready'] and bool(result['mixMap']['entryCandidates']) and bool(result['mixMap']['exitCandidates'])
+    return result
 
 def content_id(path):
     h=hashlib.sha256()

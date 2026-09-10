@@ -1,0 +1,15 @@
+{
+  "type":"object","additionalProperties":false,
+  "properties":{
+    "status":{"type":"string","enum":["completed","blocked"]},
+    "source_filename":{"type":"string"},
+    "base_version":{"type":"string"},
+    "lightroom_version":{"type":"string"},
+    "export_path":{"type":"string"},
+    "summary":{"type":"string"},
+    "changes":{"type":"array","items":{"type":"string"}},
+    "identity_verified":{"type":"boolean"},
+    "export_reviewed":{"type":"boolean"}
+  },
+  "required":["status","source_filename","base_version","lightroom_version","export_path","summary","changes","identity_verified","export_reviewed"]
+}

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Request a photo revision and watch Astra make recoverable changes in Lightroom."><title>Roundtrip — Review a portrait</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header><a class="brand" href="/">roundtrip<span>↗</span></a><div class="connection" id="connection"><span class="dot"></span>Connecting to Lightroom</div></header>
+<main>
+<div class="intro"><div><h1>What if client feedback went straight into Lightroom?</h1><p>Imagine a client asks for brighter eyes or less grain. Astra opens the original photo in Lightroom, makes recoverable edits, and brings the new export back for review.</p></div><a class="study-link" href="http://127.0.0.1:8765/" target="_blank" rel="noreferrer">See the first editing session ↗</a></div>
+<div id="loadError" class="error" role="alert" hidden></div>
+<div class="workspace" id="workspace" hidden>
+<section class="viewer" aria-label="Portrait comparison">
+<div class="viewer-toolbar"><label>Compare <select id="beforeSelect" aria-label="Earlier version"></select></label><span class="versus">with</span><strong id="currentLabel">V2</strong><a id="download" href="#" download>Download</a></div>
+<div id="photo" class="photo" role="slider" tabindex="0" aria-label="Photo comparison divider" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><img id="beforeImage" alt="Earlier portrait version" draggable="false"><img id="afterImage" class="after" alt="Current portrait version" draggable="false"><div class="divider"><span>↔</span></div><span id="leftLabel" class="photo-label left">V1</span><span id="rightLabel" class="photo-label right">V2</span></div>
+<p class="hint">Drag across the photo to compare. Arrow keys work too.</p>
+<div class="image-meta"><span id="dimensions"></span><span id="nativeVersion"></span></div>
+</section>
+<aside class="review">
+<section id="remoteInbox" class="remote-inbox" hidden><div class="section-row"><h2>Remote review</h2><span id="remoteStatus"></span></div><p>Send this link to a reviewer. Their feedback arrives here and starts a Lightroom revision.</p><a id="reviewLink" target="_blank" rel="noreferrer">Open review link ↗</a><button type="button" id="copyReview" class="text-button">Copy link</button><p id="remoteError" class="error" hidden></p></section>
+<section class="request"><h2>What would you change?</h2><form id="feedbackForm"><label class="sr-only" for="feedback">Photo feedback</label><textarea id="feedback" name="feedback" rows="5" maxlength="2000" required minlength="3" placeholder="For example: make the face a little brighter, but keep the dark background and natural skin texture."></textarea><div class="form-footer"><span id="baseNote">Your feedback applies to V2.</span><span id="charCount">0 / 2000</span></div><button id="submit" type="submit">Revise in Lightroom <span aria-hidden="true">↗</span></button><p class="small">Astra will operate Lightroom on this Mac. Your earlier versions stay available.</p><div id="formError" class="error" role="alert" hidden></div></form></section>
+<section id="activeJob" class="job" hidden aria-live="polite"><div class="section-row"><h2 id="jobHeading">Revision in progress</h2><button type="button" class="text-button" id="cancelJob">Stop</button></div><blockquote id="jobFeedback"></blockquote><div class="status-line"><span id="jobDot" class="dot"></span><strong id="jobStatus"></strong></div><p id="jobError" class="error" hidden></p><button id="reuseFeedback" type="button" class="text-button" hidden>Use this feedback again</button><ol id="eventList" class="events"></ol></section>
+<section class="latest"><h2 id="summaryHeading">Current edit</h2><p id="summary"></p><ul id="changes"></ul></section>
+<details class="principles"><summary>What stays editable?</summary><p>The source RAW stays in Lightroom. Astra uses native color, light, and masking controls and saves a named version for each completed revision. It does not generate a replacement face.</p></details>
+</aside>
+</div>
+<section class="history-section" id="historySection" hidden><div class="section-row"><h2>Version history</h2><p>Each image is a separate export.</p></div><div class="history" id="history"></div></section>
+<section class="past-requests" id="pastRequests" hidden><h2>Earlier requests</h2><div id="requestHistory"></div></section>
+<footer>Local prototype · Astra runs through your signed-in Codex account. The gallery publishes a revision only after the export passes its checks.</footer>
+</main>
+</body></html>

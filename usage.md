@@ -18,3 +18,9 @@ Existing project planning and demo history remain linked from [the activity log]
 | 2026-09-10 11:43 EDT (15:43 UTC) | Account-wide Codex quota, 10,080-minute (7-day) window | 9% used; 91% remaining | Read from Codex usage limits while establishing this register. Both projects already existed, so this is not a starting baseline or project-specific consumption. Token counts unavailable. |
 
 For new projects, capture usage before implementation and record the budget with explicit units (for example tokens, quota percentage points, dollars, or elapsed time). Record an explicitly agreed unlimited budget as such; an unset budget is not an agreed unlimited allocation. Account-wide quota changes can include other work and resets and must not be attributed entirely to one project.
+
+## 2026-09-10 12:16 EDT — Roundtrip runtime session
+
+User authorized up to 15% of weekly credits for Roundtrip development. Interpreted conservatively as 15 percentage points above the measured 9% account-wide weekly usage at the start of this continuation, with a 24% total ceiling. This is a continuation baseline, not the original project-start measurement. Checkpoints during work: 15%, 17%, and 18% used (latest read at approximately 12:13 EDT). The window is 10,080 minutes. Concurrent project work shares the account; these changes cannot be attributed entirely to Roundtrip. No reset consumed.
+
+Roundtrip now has one verified autonomous local Lightroom revision and a privately published remote inbox. External reviewer access and the production remote pickup test await approval. See [build log](roundtrip/build-log.md).

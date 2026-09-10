@@ -211,3 +211,13 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 **Open questions and next steps:** Record agreed budgets when available, capture baselines before new projects start, and keep new project-specific files inside their project folder.
 
 **Activity statistics:** Three Markdown files changed by this session (measured). Project token counts and aggregate daily telemetry unavailable.
+
+## 2026-09-10 12:16 EDT — Roundtrip runtime and remote inbox
+
+**Objective:** Turn gallery feedback into a real Lightroom revision and prepare remote reviewer requests.
+
+**Completed:** Built the local Astra job runner, immutable export history, progress UI, and a hosted D1 feedback inbox with an outbound Mac poller. A real local job made a recoverable face adjustment and returned a verified JPEG in 257.6 seconds. Thirty-two Python tests, relay API integration checks, TypeScript, and production build passed. See [Roundtrip build log](../roundtrip/build-log.md) for evidence, failures, and the updated 75/100 rubric assessment.
+
+**Open:** The inbox is published with owner-only access. Automatic approval review rejected external access expansion; user approval is pending. The production remote-to-Lightroom run and cloud image delivery are not complete. Personal media and raw traces remain ignored.
+
+**Usage:** The runtime session began from a 9% account-wide weekly observation; latest checkpoint 18% used. User authorized up to 15 percentage points, interpreted as a ceiling of 24% total. Concurrent projects share this account, so the increase is not Roundtrip-specific consumption. Token totals unavailable; no reset used.

@@ -1,0 +1,7 @@
+.local-demo/
+.b2b/
+.venv/
+__pycache__/
+.pytest_cache/
+.env
+node_modules/

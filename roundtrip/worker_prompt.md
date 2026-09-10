@@ -24,3 +24,5 @@ Practical observations from the prior real edit (verify current layout; these ar
 - The Versions panel lives in the right rail. Create Version may need a second click to activate; inspect before retrying.
 - Native background/subject masks are allowed. They are recoverable edits, not generative replacement.
 - Light, Color, and Effects panels change vertical positions when expanded. Never reuse stale coordinates.
+
+- If Create Version in the panel does not open a dialog, use the Photo menu's Create Version command. The source filename appears in the AX loupe image label; named version text may require a screenshot. Select the clearly visible exact base name and compare the rendered image with the supplied JPEG.

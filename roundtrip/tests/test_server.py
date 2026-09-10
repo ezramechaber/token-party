@@ -31,6 +31,20 @@ class StoreTests(unittest.TestCase):
         shutil.copy(FIXTURES/'white.jpg',path)
         self.store.set_status(job['id'],'verifying')
         return directory,{'status':'completed','source_filename':'test.ORF','base_version':'Roundtrip 02 - Subject first','lightroom_version':'Roundtrip job '+job['id'],'export_path':str(path),'summary':'Face brightened','changes':['Subject exposure +0.2'],'identity_verified':True,'export_reviewed':True}
+    def test_catalog_identity_and_global_job_lock(self):
+        catalog=self.root/'catalog.json'
+        catalog.write_text(json.dumps([{'id':'another-photo','title':'Another photo','source_filename':'other.ORF','jpeg':str(FIXTURES/'gray.jpg')}]))
+        self.store.import_catalog(catalog)
+        self.store.import_catalog(catalog)
+        self.assertEqual(len(self.store.snapshot()),2)
+        job,_=self.store.create_job('another-photo','another-photo-original','Crop to his hands only','request-another')
+        self.assertEqual(job['photo_id'],'another-photo')
+        with self.assertRaisesRegex(ValueError,'already working'):
+            self.job()
+        catalog.write_text(json.dumps([{'id':'another-photo','title':'Another photo','source_filename':'wrong.ORF','jpeg':str(FIXTURES/'gray.jpg')}]))
+        with self.assertRaisesRegex(ValueError,'cannot be reassigned'):
+            self.store.import_catalog(catalog)
+
     def test_seed_preserves_lineage(self):
         photo=self.store.snapshot()[0]
         self.assertEqual(photo['current_revision'],'v2')

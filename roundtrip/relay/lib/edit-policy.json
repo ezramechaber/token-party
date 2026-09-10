@@ -16,7 +16,9 @@
     "(?:add|reduce|remove) (?:a |the )?(?:subtle |slight )?vignette",
     "(?:make|turn) (?:the )?(?:photo|image) black and white",
     "(?:straighten|level) (?:the )?(?:photo|horizon)",
-    "crop (?:the )?(?:photo|image) (?:tighter|to (?:a square|4:5|3:4|1:1))"
+    "crop (?:the )?(?:photo|image) (?:tighter|to (?:a square|4:5|3:4|1:1))",
+    "make (?:this|it|the photo|the image) (?:extremely |very |slightly )?washed out",
+    "crop (?:to |the photo to )?(?:his |her |their |the )?hands only"
   ],
   "preservation": [
     "keep (?:the )?(?:skin texture and color|natural skin texture|skin texture|skin tones|color|colors|film-like color|crop|composition|background|dark background|face|subject|highlights|shadows)(?: (?:natural|unchanged|dark|the same))?",

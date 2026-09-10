@@ -4,7 +4,7 @@ import re
 from pathlib import Path
 POLICY=json.loads((Path(__file__).parent/'relay/lib/edit-policy.json').read_text())
 def supported_edit(feedback):
-    clauses=[s.strip() for s in re.split(r"[.!;]+|,?\s+but\s+|,\s*(?=keep\b)",re.sub(r'^please\s+','',feedback.lower().strip())) if s.strip()]
+    clauses=[s.strip() for s in re.split(r"[.!;]+|,?\s+but\s+|,\s*(?=keep\b)|\s+and\s+(?=crop\b)",re.sub(r'^(?:please|just for proof of concept)\s+','',feedback.lower().strip())) if s.strip()]
     if not clauses or len(clauses)>6:return False
     edits=0
     for clause in clauses:

@@ -1,7 +1,7 @@
 'use strict';
 const $ = selector => document.querySelector(selector);
 const terminal = new Set(['completed', 'failed', 'cancelled']);
-let draftBase, state, photo, current, beforeId, split = 50, pending = false, requestId, lastRender = '', selectedJobId, lastJobRender = '';
+let selectedPhotoId=new URLSearchParams(location.search).get('photo'), navRender='', draftBase, state, photo, current, beforeId, split = 50, pending = false, requestId, lastRender = '', selectedJobId, lastJobRender = '';
 function text(node, value) { node.textContent = value ?? ''; }
 function showError(node, message) { text(node, message); node.hidden = !message; }
 function currentJob() { return photo?.jobs.find(j => !terminal.has(j.status)); }
@@ -51,7 +51,11 @@ function renderJob(job) {
   }));
 }
 function render() {
-  photo = state.photos[0];
+  photo = state.photos.find(p=>p.id===selectedPhotoId)||state.photos[0];
+  const globalActive=state.photos.flatMap(p=>p.jobs).find(j=>!terminal.has(j.status));
+  text($('#photoTitle'),photo?.title);
+  const navKey=state.photos.map(p=>p.id+':'+p.current_revision).join('|')+photo?.id;
+  if(navRender!==navKey){navRender=navKey;$('#photoNav').replaceChildren(...state.photos.map(p=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(p.id===photo.id));const img=document.createElement('img');img.src=p.revisions.find(r=>r.id===p.current_revision).url;img.alt='';const title=document.createElement('span');title.textContent=p.title;b.append(img,title);b.onclick=()=>{if(pending)return;selectedPhotoId=p.id;beforeId=undefined;draftBase=undefined;selectedJobId=undefined;lastRender='';lastJobRender='';$('#feedback').value='';text($('#charCount'),'0 / 2000');showError($('#formError'),'');const u=new URL(location.href);u.searchParams.set('photo',p.id);history.replaceState(null,'',u);render();};return b;}));}
   if (!photo) { showError($('#loadError'), 'No portrait has been imported. See the local setup instructions.'); return; }
   $('#workspace').hidden = false;
   $('#historySection').hidden = false;
@@ -67,17 +71,17 @@ function render() {
   const job = active || photo.jobs.find(j => j.id === selectedJobId) || photo.jobs[0];
   text($('#connection'), !state.runtime.available ? 'Codex is unavailable' : active ? 'Astra is editing in Lightroom' : 'Astra · Lightroom on this Mac');
   $('#connection').prepend(Object.assign(document.createElement('span'), {className:'dot' + (active ? ' busy' : '')}));
-  $('#feedback').disabled = !!active || pending || !!state.remote;
-  $('#submit').disabled = !!state.remote || !!active || pending || !state.runtime.available || state.runtime.runs_remaining < 1;
-  $('#submit').textContent = state.remote ? 'Use the remote review link above' : active ? 'Revision in progress…' : pending ? 'Submitting…' : 'Revise in Lightroom ↗';
-  text($('#baseNote'), `Your feedback applies to ${current.label}.`);
+  $('#feedback').disabled = !!globalActive || pending || !!state.remote;
+  $('#submit').disabled = !!state.remote || !!globalActive || pending || !state.runtime.available || state.runtime.runs_remaining < 1;
+  $('#submit').textContent = state.remote ? 'Use the remote review link above' : globalActive ? 'One Lightroom edit is in progress…' : pending ? 'Submitting…' : 'Revise in Lightroom ↗';
+  text($('#baseNote'), globalActive&&globalActive.photo_id!==photo.id?'Lightroom is editing another photo. One edit runs at a time.':`Your feedback applies to ${current.label}.`);
   if (state.runtime.runs_remaining < 1 && !active) text($('#baseNote'), 'This session’s run allowance has been used.');
   renderJob(job);
   const key = photo.revisions.map(r=>r.id).join('|');
   if (lastRender !== key) {
     lastRender = key;
     const select = $('#beforeSelect');
-    select.replaceChildren(...photo.revisions.filter(r=>r.id !== current.id).map(r=>{
+    select.replaceChildren(...photo.revisions.filter(r=>r.id !== current.id||photo.revisions.length===1).map(r=>{
       const option = document.createElement('option'); option.value = r.id; option.textContent = r.label; return option;
     }));
     $('#afterImage').src = current.url;

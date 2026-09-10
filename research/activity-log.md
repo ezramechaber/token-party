@@ -315,3 +315,8 @@ b2b: completed revision-2 interface and rendered design pass; working three-band
 ## 2026-09-10 13:40 EDT
 
 b2b: integrated request-review actions and full-sequence preparation guard. Browser checked confirm/dismiss with an isolated fixture; backend suite and API regression checks passed. Preserved approved handoff curve and documented four-pair source audit. Remaining limitations: full-set human listening and optional runtime Astra need separate verification; photorealistic Blender work remains in its own task.
+
+
+## 2026-09-10 13:43 EDT — Roundtrip layout
+
+Rebuilt the local gallery around the photograph, preserving the user-approved mark. Collection rail, adjacent feedback, version strip, and optional in-image comparison replace the previous stacked layout. Desktop/mobile rendering and keyboard comparison checked; JavaScript syntax passed. Hosted gallery unchanged. Account-wide usage45% at resumption and47% at close, reaching the new approved ceiling; project token totals unavailable. Design decisions and specialist sources are recorded in roundtrip/design.md.

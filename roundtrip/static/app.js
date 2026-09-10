@@ -1,6 +1,8 @@
 'use strict';
 const $ = selector => document.querySelector(selector);
 const terminal = new Set(['completed', 'failed', 'cancelled']);
+let comparing=false;
+const drafts=new Map();
 let selectedPhotoId=new URLSearchParams(location.search).get('photo'), navRender='', draftBase, state, photo, current, beforeId, split = 50, pending = false, requestId, lastRender = '', selectedJobId, lastJobRender = '';
 function text(node, value) { node.textContent = value ?? ''; }
 function showError(node, message) { text(node, message); node.hidden = !message; }
@@ -20,13 +22,26 @@ function compare(id) {
   text($('#leftLabel'), before.label);
   updateSplit(split);
 }
+function setComparison(enabled) {
+  comparing=enabled&&photo.revisions.length>1;
+  $('#photo').classList.toggle('comparing',comparing);
+  $('#photo').setAttribute('role',comparing?'slider':'group');
+  $('#photo').setAttribute('aria-label',comparing?'Photo comparison divider':'Current photo');
+  $('#photo').tabIndex=comparing?0:-1;
+  $('#compareToggle').setAttribute('aria-pressed',String(comparing));
+  $('#comparisonOptions').hidden=!comparing;$('#compareHint').hidden=!comparing;
+  if(comparing)updateSplit(split);
+  else for(const attr of ['aria-valuenow','aria-valuetext','aria-valuemin','aria-valuemax'])$('#photo').removeAttribute(attr);
+  if(comparing){$('#photo').setAttribute('aria-valuemin','0');$('#photo').setAttribute('aria-valuemax','100');}
+}
+$('#compareToggle').addEventListener('click',()=>setComparison(!comparing));
 function renderJob(job) {
   const fingerprint = job ? `${job.id}:${job.status}:${job.events.at(-1)?.id}:${job.error}` : '';
   if (fingerprint === lastJobRender) return;
   lastJobRender = fingerprint;
   $('#activeJob').hidden = !job;
   if (!job) return;
-  text($('#jobHeading'), terminal.has(job.status) ? 'Revision result' : 'Revision in progress');
+  text($('#jobHeading'), terminal.has(job.status) ? 'Latest request' : 'Revision in progress');
   text($('#jobFeedback'), job.feedback);
   const labels = {queued:'Waiting for Lightroom',running:'Astra is working in Lightroom',verifying:'Checking the exported photo',completed:'New version ready',failed:'Revision needs attention',cancelled:'Revision stopped'};
   text($('#jobStatus'), labels[job.status] || job.status);
@@ -55,7 +70,7 @@ function render() {
   const globalActive=state.photos.flatMap(p=>p.jobs).find(j=>!terminal.has(j.status));
   text($('#photoTitle'),photo?.title);
   const navKey=state.photos.map(p=>p.id+':'+p.current_revision).join('|')+photo?.id;
-  if(navRender!==navKey){navRender=navKey;$('#photoNav').replaceChildren(...state.photos.map(p=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(p.id===photo.id));const img=document.createElement('img');img.src=p.revisions.find(r=>r.id===p.current_revision).url;img.alt='';const title=document.createElement('span');title.textContent=p.title;b.append(img,title);b.onclick=()=>{if(pending)return;selectedPhotoId=p.id;beforeId=undefined;draftBase=undefined;selectedJobId=undefined;lastRender='';lastJobRender='';$('#feedback').value='';text($('#charCount'),'0 / 2000');showError($('#formError'),'');const u=new URL(location.href);u.searchParams.set('photo',p.id);history.replaceState(null,'',u);render();};return b;}));}
+  if(navRender!==navKey){navRender=navKey;$('#photoNav').replaceChildren(...state.photos.map(p=>{const b=document.createElement('button');b.type='button';b.setAttribute('aria-pressed',String(p.id===photo.id));const img=document.createElement('img');img.src=p.revisions.find(r=>r.id===p.current_revision).url;img.alt='';img.width=140;img.height=108;const title=document.createElement('span');title.textContent=p.title;b.append(img,title);b.onclick=()=>{if(pending)return;drafts.set(photo.id,{text:$('#feedback').value,base:draftBase});selectedPhotoId=p.id;requestId=undefined;beforeId=undefined;draftBase=undefined;selectedJobId=undefined;lastRender='';lastJobRender='';const saved=drafts.get(p.id);$('#feedback').value=saved?.text||'';draftBase=saved?.base;text($('#charCount'),`${$('#feedback').value.length} / 2000`);showError($('#formError'),'');comparing=false;const u=new URL(location.href);u.searchParams.set('photo',p.id);history.replaceState(null,'',u);render();};return b;}));}
   if (!photo) { showError($('#loadError'), 'No portrait has been imported. See the local setup instructions.'); return; }
   $('#workspace').hidden = false;
   $('#historySection').hidden = false;
@@ -73,9 +88,9 @@ function render() {
   $('#connection').prepend(Object.assign(document.createElement('span'), {className:'dot' + (active ? ' busy' : '')}));
   $('#feedback').disabled = !!globalActive || pending || !!state.remote;
   $('#submit').disabled = !!state.remote || !!globalActive || pending || !state.runtime.available || state.runtime.runs_remaining < 1;
-  $('#submit').textContent = state.remote ? 'Use the remote review link above' : globalActive ? 'One Lightroom edit is in progress…' : pending ? 'Submitting…' : 'Revise in Lightroom ↗';
+  $('#submit').textContent = state.remote ? 'Use the remote review link above' : globalActive ? 'One Lightroom edit is in progress…' : pending ? 'Submitting…' : 'Revise in Lightroom';
   text($('#baseNote'), globalActive&&globalActive.photo_id!==photo.id?'Lightroom is editing another photo. One edit runs at a time.':`Your feedback applies to ${current.label}.`);
-  if (state.runtime.runs_remaining < 1 && !active) text($('#baseNote'), 'This session’s run allowance has been used.');
+  if (state.runtime.runs_remaining < 1 && !active) text($('#baseNote'), 'Editing is paused at the session’s usage limit.');
   renderJob(job);
   const key = photo.revisions.map(r=>r.id).join('|');
   if (lastRender !== key) {
@@ -84,6 +99,8 @@ function render() {
     select.replaceChildren(...photo.revisions.filter(r=>r.id !== current.id||photo.revisions.length===1).map(r=>{
       const option = document.createElement('option'); option.value = r.id; option.textContent = r.label; return option;
     }));
+    $('#compareToggle').disabled=photo.revisions.length<2;
+    $('#photo').style.setProperty('--photo-ratio',String(current.width/current.height));
     $('#photo').style.aspectRatio = `${current.width} / ${current.height}`;
     $('#afterImage').src = current.url;
     $('#afterImage').alt = `${current.label}: ${current.summary}`;
@@ -92,10 +109,11 @@ function render() {
     text($('#currentLabel'), current.label); text($('#rightLabel'), current.label);
     text($('#dimensions'), `${current.width} × ${current.height} · JPEG`);
     text($('#nativeVersion'), current.version);
-    text($('#summaryHeading'), `${current.label}: current edit`);
+    text($('#summaryHeading'), 'Edit details');
     text($('#summary'), current.summary);
     $('#changes').replaceChildren(...current.changes.map(change=>{const li=document.createElement('li');li.textContent=change;return li;}));
     compare(oldCurrent && oldCurrent !== current.id ? oldCurrent : beforeId);
+    setComparison(comparing);
     $('#history').replaceChildren(...photo.revisions.map(revision => {
       const figure=document.createElement('figure');figure.className='revision'+(revision.id===current.id?' current':'');
       const img=document.createElement('img');img.src=revision.url;img.alt=`${revision.label}: ${revision.summary}`;img.width=revision.width;img.height=revision.height;
@@ -105,7 +123,7 @@ function render() {
       const tag=document.createElement('span');tag.textContent=revision.id===current.id?'Current':'';head.append(title,tag);
       const detail=document.createElement('small');detail.textContent=revision.summary;
       const actions=document.createElement('div');actions.className='revision-actions';
-      if(revision.id!==current.id){const compareButton=document.createElement('button');compareButton.type='button';compareButton.textContent='Compare';compareButton.setAttribute('aria-label',`Compare ${revision.label} with ${current.label}`);compareButton.onclick=()=>{compare(revision.id);$('#photo').scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};actions.append(compareButton);}
+      if(revision.id!==current.id){const compareButton=document.createElement('button');compareButton.type='button';compareButton.textContent='Compare';compareButton.setAttribute('aria-label',`Compare ${revision.label} with ${current.label}`);compareButton.onclick=()=>{compare(revision.id);setComparison(true);$('#photo').scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};actions.append(compareButton);}
       const download=document.createElement('a');download.href=revision.url;download.download=`roundtrip-${revision.label.toLowerCase()}.jpg`;download.textContent='Download';download.setAttribute('aria-label',`Download ${revision.label}`);actions.append(download);
       caption.append(head,detail,actions);figure.append(img,caption);return figure;
     }));
@@ -139,8 +157,8 @@ $('#feedbackForm').addEventListener('submit',async event=>{
   requestId ||= crypto.randomUUID();pending=true;showError($('#formError'),'');render();
   try {
     const result=await post('/api/revisions',{photo_id:photo.id,base_revision:draftBase||current.id,feedback,request_id:requestId});
-    selectedJobId=result.job_id;draftBase=undefined;$('#feedback').value='';text($('#charCount'),'0 / 2000');requestId=undefined;
-  } catch(error){showError($('#formError'),error.message);}
+    selectedJobId=result.job_id;drafts.delete(photo.id);draftBase=undefined;$('#feedback').value='';text($('#charCount'),'0 / 2000');requestId=undefined;
+  } catch(error){showError($('#formError'),error.message);$('#formError').focus();}
   finally{pending=false;await refresh();}
 });
 $('#feedback').addEventListener('input',()=>{draftBase ||= current?.id;if(!$('#feedback').value)draftBase=undefined;requestId=undefined;text($('#charCount'),`${$('#feedback').value.length} / 2000`);});
@@ -149,10 +167,10 @@ $('#beforeSelect').addEventListener('change',event=>compare(event.target.value))
 $('#cancelJob').addEventListener('click',async()=>{try{await post(`/api/jobs/${$('#cancelJob').dataset.job}/cancel`,{});await refresh();}catch(error){showError($('#jobError'),error.message);}});
 const slider=$('#photo');
 function move(event){const rect=slider.getBoundingClientRect();updateSplit((event.clientX-rect.left)/rect.width*100);}
-slider.addEventListener('pointerdown',event=>{if(event.button!==0)return;slider.focus({preventScroll:true});slider.setPointerCapture(event.pointerId);move(event);});
+slider.addEventListener('pointerdown',event=>{if(!comparing||event.button!==0)return;slider.focus({preventScroll:true});slider.setPointerCapture(event.pointerId);move(event);});
 slider.addEventListener('pointermove',event=>{if(slider.hasPointerCapture(event.pointerId))move(event);});
 slider.addEventListener('pointerup',event=>{if(slider.hasPointerCapture(event.pointerId)){move(event);slider.releasePointerCapture(event.pointerId);}});
-slider.addEventListener('keydown',event=>{const step=event.shiftKey?10:2;const keys={ArrowLeft:split-step,ArrowDown:split-step,ArrowRight:split+step,ArrowUp:split+step,Home:0,End:100};if(event.key in keys){event.preventDefault();updateSplit(keys[event.key]);}});
+slider.addEventListener('keydown',event=>{if(!comparing)return;const step=event.shiftKey?10:2;const keys={ArrowLeft:split-step,ArrowDown:split-step,ArrowRight:split+step,ArrowUp:split+step,Home:0,End:100};if(event.key in keys){event.preventDefault();updateSplit(keys[event.key]);}});
 async function poll(){await refresh();setTimeout(poll,2000);}poll();
 
 // Expose the same gallery actions to an agent without bypassing server checks.
@@ -194,3 +212,5 @@ if (document.modelContext?.registerTool) {
 }
 
 $('#copyReview').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(state.remote.review_url);text($('#copyReview'),'Copied');setTimeout(()=>text($('#copyReview'),'Copy link'),2000);}catch{text($('#copyReview'),'Open the link to copy it');}});
+
+addEventListener('beforeunload',event=>{if($('#feedback').value.trim()||[...drafts.values()].some(d=>d.text.trim())){event.preventDefault();event.returnValue='';}});

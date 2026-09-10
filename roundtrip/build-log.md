@@ -94,3 +94,10 @@ The studio portrait request completed through the real local queue: extremely wa
 37 unit tests passed, including imported-photo media delivery, immutable identity mapping, and the global job lock. JavaScript syntax passed. Local HTTP verified all four registered JPEGs; browser verified the actual completed revision, feedback, history, and download. Shared account weekly usage reached the authorized 42% ceiling (10080-minute window). Run allowance exhausted; the server remains alive for viewing, with further edits paused. No reset used. Per-project token totals unavailable.
 
 Commits were made during implementation, media routing repair, recovery documentation, and crop-aware display work. Hosting remains unfinished: the local queue is functional, while the Sites gallery is disconnected and unchanged. README records the future Vercel HTTP queue/database/object-storage boundary; no Vercel deployment or remote comment replay is claimed. Next: authorize further usage, add a portable hosted queue and image upload/result synchronization, then verify one remote submission end to end.
+
+
+## 2026-09-10 13:43 EDT — Photo review layout
+
+Applied the requested design skill: preserved the logo mark, moved collection navigation left and feedback right, enlarged the central photograph, and placed versions below it. Comparison is an explicit toggle with an in-image keyboard-accessible slider. Activity and edit details use disclosure controls. Per-photo feedback drafts survive navigation. See design.md for decisions and source provenance.
+
+Verified rendered desktop at 1440px and mobile at 390px; measured no horizontal page overflow at 1440, 390, and 320px. Current JPEG loaded at 2048px; comparison toggle and Home-key slider operation passed. JavaScript syntax passed. No new Lightroom jobs or hosted deployment. User-approved ceiling increased to 47%; first reading45%, close47%, account-wide shared usage. Next: broader interaction audit and remote queue hosting when authorized usage is available.

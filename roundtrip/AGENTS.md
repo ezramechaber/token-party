@@ -9,3 +9,5 @@ The server uses the locally signed-in Codex CLI with GPT-6 Astra. The UI must di
 The hosted gallery now uses private Lightroom JPEG exports only. Keep the three additional photos comment-only until each has explicit native-source identity and worker routing; never route their feedback to the original study. As of 2026-09-10 12:55 EDT, the user granted another 10 percentage points beyond the prior 27% ceiling: Roundtrip ceiling 37% account-wide weekly usage. Resumed measurement 28%; latest 31%. Record changes in top-level usage.md and this project’s build-log.md. No reset redemption authorized.
 
 2026-09-10 13:18 EDT: user authorized a 42% account-wide weekly ceiling for local multi-photo execution and the washed-out/hands-only proof of concept. User requested commits as work proceeds. Local gallery is the current execution surface; hosted gallery remains disconnected. No reset authorized.
+
+2026-09-10 13:43 EDT: user approved another 5 percentage points for layout work, raising the ceiling to 47% account-wide weekly usage. Closing measurement47%; further model work pauses. Local review layout redesigned, hosted gallery unchanged. No reset authorized.

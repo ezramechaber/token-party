@@ -68,3 +68,7 @@ Four real master recordings measured; user strongly approved the equal-power/lou
 ## 2026-09-10 13:04 EDT — Back 2 Back verified café demo
 
 Measured **33% account-wide weekly usage** at13:03:41EDT, 67% remaining. Newtranchebaseline26%, observed+7percentagepoints acrossallconcurrentwork; agreed+10points, ceiling36%, workingstop35%. Noreset; per-projecttokens unavailable.93tests passed5.36s. User-approved audiblehandoff isdefault; humanBlendercafé verified inbrowser; all14tracks havecachedcovers withprovenance. Local listener intentionally retained. This is the completed demo checkpoint.
+
+## 2026-09-10 13:13 EDT — Back 2 Back working stop
+
+Measured35% weekly account usage (10080-minute window), reaching the agreed working stop; new tranche baseline26%, ceiling36%. Closed out the Mix Next paused-cue regression: four JS tests pass and browser confirmed B moved from paused00:13 to its planned00:32 cue/ARMED. Notified the separate model task to wrap up. Broader transition audit and full revision-2 UI remain outstanding; no new numeric allocation or reset assumed. Exact task tokens unavailable.

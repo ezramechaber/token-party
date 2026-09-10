@@ -1,5 +1,6 @@
 import {createVisualizer} from './visualizer.js';
 import {blendCurves} from './mix-curves.js';
+import {cueIncoming,handoffTime} from './handoff.js';
 import {createBoothScene} from './booth-scene.js';
 const $=s=>document.querySelector(s);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -91,10 +92,11 @@ async function arm(index,currentIndex,my,preview){if(!active||my!==generation)re
  if(index>0){await b.load(track(e.to),masterTempo);if(my!==generation)return}
  const [alignA,alignB]=await Promise.all([api(`alignment/${a.track.id}?tempo=${masterTempo}&cue=${e.exit}&bars=${e.bars}`),api(`alignment/${b.track.id}?tempo=${masterTempo}&cue=${e.entry}&bars=${e.bars}`)]);
  if(!active||my!==generation)return;
- const at=a.start+(alignA.mappedCue-a.offset),end=at+e.duration;
+ const now=ctx.currentTime;cueIncoming(b,alignB.mappedCue,now);
+ const at=handoffTime(a,alignA.mappedCue,now),end=at+e.duration;
  $('#mixEvidence').textContent=(e.mixEvidence?`A bar ${e.mixEvidence.exitBar} → B bar ${e.mixEvidence.entryBar} · kick-supported window estimated. ${e.mixEvidence.musicalArrival?'B musical arrival '+time(e.mixEvidence.musicalArrival.time)+' ('+e.mixEvidence.musicalArrival.confidence+'). ':''}`:'')+(alignA.reliable&&alignB.reliable?`Prepared attacks aligned · A ${Math.round(alignA.offset*1000)} ms / B ${Math.round(alignB.offset*1000)} ms correction.`:'Attack alignment uncertain on one deck — check by ear.');
- if(at<ctx.currentTime+.06){takeover(false);throw Error('The mixing window has passed. Audition the next transition or cue the track again.')}
- b.fade.gain.cancelScheduledValues(ctx.currentTime);b.fade.gain.setValueAtTime(0,ctx.currentTime);b.low.gain.setValueAtTime(-24,ctx.currentTime);b.play(at,alignB.mappedCue);
+ if(!a.running)a.play(now+.1,a.offset);
+ b.play(at,alignB.mappedCue);
  if($('#mixCurve').value==='balanced'){
  const curves=blendCurves();a.fade.gain.setValueCurveAtTime(curves.a,at,e.duration);b.fade.gain.setValueCurveAtTime(curves.b,at,e.duration);a.low.gain.setValueCurveAtTime(curves.lowA,at,e.duration);b.low.gain.setValueCurveAtTime(curves.lowB,at,e.duration);
  }else{
@@ -143,10 +145,12 @@ $('#mixNow').onclick=()=>safe(async()=>{
  if(!decks.every(d=>d.buffer))throw Error('Load both decks first.');
  if(decks.every(d=>d.running))throw Error('Pause the incoming deck before arming a handoff.');
  const index=decks[0].running?0:decks[1].running?1:0,a=decks[index],b=decks[1-index];
- const next=await api('plan',{ids:[a.track.id,b.track.id],tempo:masterTempo,bars:+$('#bars').value,fixed:true});
+ const requestedGeneration=generation,ids=[a.track.id,b.track.id];
+ const next=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,fixed:true});
+ if(generation!==requestedGeneration||a.track?.id!==ids[0]||b.track?.id!==ids[1])return;
  if(next.order.length!==2)throw Error('Both tracks need compatible grids, phrases and tempos.');
  await unlock();plan=next;const my=++generation;active=true;$('#tempo').disabled=true;$('#auto').hidden=true;$('#takeover').hidden=false;
- if(!a.running)a.play();try{await arm(0,index,my,false)}catch(e){takeover(false);throw e}
+ try{await arm(0,index,my,false)}catch(e){takeover(false);throw e}
 });
 function edit(id){if(active)takeover();editId=id;const t=track(id);$('#editTitle').textContent=t.title+' · '+t.artist;for(const k of ['bpm','gridOffset','entry','introBars','exitEnd','outroBars','drumsIn','musicIn','phraseAnchor'])$('#editForm').elements[k].value=t[k]??'';$('#editWarning').textContent=t.warnings.join(' · ');$('#editor').showModal()}
 $('#closeEditor').onclick=()=>$('#editor').close();$('#editForm').onsubmit=e=>{e.preventDefault();safe(async()=>{if(decks.some(d=>d.running))throw Error('Stop playback before changing the grid.');const values=Object.fromEntries(new FormData(e.target));for(const k in values)values[k]=values[k]===''?null:+values[k];await api('track/'+editId,{...values,reviewed:true},'PUT');plan=null;decks.filter(d=>d.track?.id===editId).forEach(d=>{d.buffer=null;d.status('RELOAD WITH NEW GRID')});$('#editor').close();await refresh()})};

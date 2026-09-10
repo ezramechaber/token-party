@@ -233,3 +233,9 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 **Verification and limits:** Eleven synthetic audio/planning/server tests passed in 2.07 seconds; JavaScript syntax checked. Browser waveform inspected and loaded-pair handoff completed. This does not establish human listening quality or sustained full-crate Auto reliability. Human cue review is next.
 
 **Usage:** 9% recorded baseline → 19% weekly account-wide quota used at 12:17:02 EDT; user allocation 20 percentage points, conservative total stop 26%. Account-wide change includes other projects; per-project tokens and daily chat/turn/tool totals unavailable. See [usage register](../usage.md).
+
+## 2026-09-10 12:26 EDT — Back 2 Back visual direction and YouTube ingestion
+
+**Completed:** Two explicitly requested subagents produced one ChatGPT Image orbital UI concept and a yt-dlp audio importer. Parent applied the concept to the live controls and added the URL form/status flow. Forty tests pass; a live Big Buck Bunny extraction converted and validated a23.86MB MP3 in6.76seconds, then removed the test output. No music added to public repository. See [design reference](../b2b/docs/design/README.md) and [build log](../b2b/docs/build-log.md).
+
+**Next:** Two further user-requested agents investigate the reported steady sync offset and drum support across intro windows. A per-song mix map is the proposed evidence layer for model planning. Usage latest21% account-wide versus9% originalbaseline; budget unchanged. Exact projecttokens and dailytool totals unavailable.

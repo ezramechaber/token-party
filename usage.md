@@ -32,3 +32,7 @@ The initial register marked Back 2 Back's baseline and budget unknown. The proje
 At **12:15:10 EDT** and **12:17:02 EDT**, Codex reported **19% used, 81% remaining**, in the 10,080-minute weekly account window. Observed change since baseline: +10 percentage points account-wide, including concurrent projects and reporting lag; this is not Back 2 Back's exact consumption. No resets redeemed. Daily chats, turns, tokens and tool-call totals are unavailable.
 
 Status: local two-deck prototype demonstrated with 13 privately held tracks, a completed eight-bar loaded-pair audition, and a waveform inspector. Eleven tests passed in 2.07 seconds. Runtime Astra awaits an API key; human musical-quality review and sustained full-crate Auto remain open. Blender/3D deck is a future presentation direction.
+
+## 2026-09-10 12:26 EDT — Back 2 Back continuation
+
+User requested subagents for image-led space-themed UI and YouTube import, then two more for beat alignment and intro/mix-map improvements. Starting continuation observation20% weekly used; 12:22:44 EDT20%; next checkpoint approximately12:24 EDT21% (10,080-minute account window). Original measured9% baseline and +20-percentage-point allocation remain unchanged; conservative totalstop26%. Observed account increase12points includes concurrent work. No reset. Image-generation billing and per-project token totals are not exposed by the quota tool.

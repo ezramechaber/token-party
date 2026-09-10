@@ -48,3 +48,11 @@ Daily chat/turn/token/tool totals are unavailable from the current usage tool. R
 - Moved project code, web interface, tests, documentation and private media into `b2b/`. Audio/cache archives remain ignored. Runtime API path has not been live-tested without a key.
 - Usage checkpoints after 16%: 17%, 18%, then **19% at 12:15:10 and 12:17:02 EDT**. These are account-wide; the observed +10 points is not exact task consumption. Updated the top-level register with the previously recorded baseline and budget, preserving unrelated project entries. No reset used.
 - Next: human listening/cue correction, sustained Auto verification, runtime Astra connection, then consider a Blender model linked to the actual mixer state.
+
+## 12:26 EDT — Orbital UI concept and YouTube imports
+
+- User explicitly requested subagents. One generated a single ChatGPT Image interface concept; one implemented YouTube ingestion. Parent integrated URL controls, job progress and the concept's cyan/violet graphite styling into the live interface. Orbital platter buttons use the actual deck play/pause state and audio position; reduced-motion preference is respected. The generated reference and exact prompt are in `docs/design/`.
+- Added yt-dlp 2026.8.19 with local FFmpeg conversion and Node/Deno runtime. Single-video YouTube links queue through download, analysis and crate completion. URL, duration, byte limits and cleanup are enforced; no cookies or login bypass.
+- Forty tests passed in 2.19 seconds. Browser verified invalid-host URL rejection and responsive deck layout. Live official yt-dlp Big Buck Bunny example downloaded/converted in 6.76 seconds: 23,861,804-byte MP3 validated with ffprobe and removed from its temporary test directory. Live download succeeded; analysis queue covered separately by integration tests.
+- Usage: 20% weekly at continuation start and 12:22:44 EDT; 21% at next checkpoint around 12:24 EDT. Shared account baseline remains 9%, budget +20 percentage points, conservative stop26%. No reset; task-level token and daily tool totals unavailable.
+- New user feedback: fixed timing offset and inappropriate kickless transition section. Two further user-requested agents are investigating beat phase/prepared-audio timing and arrangement-aware per-track mix maps. These improvements are not included in this checkpoint.

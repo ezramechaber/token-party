@@ -1,4 +1,4 @@
-# Back 2 Back
+# b2b (back 2 back)
 
 A local two-deck DJ workstation for a small crate of 4/4 house tracks. Import MP3s, inspect beat/phrase estimates, suggest an order, audition an 8- or 16-bar overlap, and let Auto perform linear channel fades with a simultaneous low-EQ swap. Take over the same live controls at any time.
 
@@ -16,6 +16,12 @@ python3 -m venv .venv
 ```
 
 Open <http://127.0.0.1:8779>. Add files with **Add tracks** or drag/drop. Alternatively place files in `.b2b/imports/` and choose **Scan local imports**. Files, analysis and prepared audio stay under ignored `.b2b/`. The local service deliberately rejects other host names and cross-origin browser requests.
+
+## YouTube audio import
+
+Paste a single YouTube video URL into **Import from YouTube** in the crate, then choose **Import audio**. The local server uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) to download its audio, converts it with FFmpeg, and runs the same analysis as a file upload. Download and analysis status appear under the crate. Imports are private files under ignored `.b2b/`.
+
+This feature requires FFmpeg and **Node.js 22+** (or Deno 2.3+), in addition to the Python dependencies. Current yt-dlp uses a JavaScript runtime for YouTube extraction. Single videos must fit the app's 20-second–15-minute and 150-MB bounds. Playlists are not imported. Restricted, unavailable, or login-only videos surface an error; the importer does not use browser cookies or attempt access bypasses. Use videos you are allowed to download.
 
 ## Mixing
 

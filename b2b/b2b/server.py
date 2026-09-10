@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field
 
 from .audio import analyze, content_id, prepare
 from .planner import make_plan, edge
+from .youtube import download_audio, video_url
 
 ROOT=Path(__file__).resolve().parent.parent
 DATA=ROOT/'.b2b'; IMPORTS=DATA/'imports'; CACHE=DATA/'cache'
@@ -50,6 +51,33 @@ def import_track(path,job):
 
 def queue(path):
     job=uuid.uuid4().hex;jobs[job]={'status':'analyzing','title':path.stem};workers.submit(import_track,path,job);return job
+
+def import_youtube(url,job):
+    path=None
+    def update(**state):
+        with lock:jobs[job]=state
+    try:
+        path=download_audio(url,IMPORTS,update)
+        update(status='analyzing',title=path.stem)
+        import_track(path,job)
+        if jobs[job]['status']=='error':path.unlink(missing_ok=True)
+    except Exception as error:
+        if path:path.unlink(missing_ok=True)
+        update(status='error',title='YouTube import',error=str(error)[:240])
+
+class YoutubeRequest(BaseModel):
+    url:str=Field(min_length=1,max_length=2048)
+
+@app.post('/api/youtube')
+def youtube(req:YoutubeRequest):
+    try:url=video_url(req.url)
+    except ValueError as error:raise HTTPException(400,str(error)) from error
+    with lock:
+        if sum(j['status'] in ('queued','downloading','analyzing') for j in jobs.values())>=30:
+            raise HTTPException(429,'Wait for current imports to finish before adding more.')
+        job=uuid.uuid4().hex;jobs[job]={'status':'queued','title':'YouTube audio'}
+    workers.submit(import_youtube,url,job)
+    return {'job':job}
 
 @app.get('/api/crate')
 def crate():

@@ -1,0 +1,50 @@
+# Back 2 Back — build and usage log
+
+2026-09-10. Times EDT. Append-only checkpoints. Usage percentages are account-wide measurements returned by Codex, rounded by the service; they are not exact per-task billing. Other tasks and reporting lag can affect the difference. No usage-reset credits authorized or redeemed.
+
+## Budget
+
+- User limit: spend no more than 20 percentage points of the weekly allowance on this build.
+- Baseline before implementation: **9% weekly used**.
+- Conservative working stop: **26% total weekly used**, leaving a three-point margin below the 29% baseline-plus-budget boundary. Check before further substantial work and at handoff. Do not treat unavailable usage as zero.
+- Runtime OpenAI API key is not available yet. The user chose to handle it later. Local analysis and rule-based mixing can proceed; Astra runtime integration is optional until a key is configured.
+
+## 11:38–11:47 — Audio acquisition and first analysis modules
+
+- Inspected the repository, located the Music library and its cloud-backed House playlist (141 tracks). Requested ten downloads in Music; no usable local files were observed from those requests at that checkpoint.
+- Created the local Python environment and installed analysis/server dependencies. Added numerical kick-proxy/grid estimation, spectral pitch-class key estimation, arrangement-boundary proposals and constrained transition planning.
+- Usage checkpoint: **9%** still reported during initial implementation. No claim of zero actual consumption; reporting had not advanced.
+- No actual audio quality or accuracy verification at this checkpoint.
+
+## 11:47–12:05 — Authorized alternative music sources
+
+- User directed a switch to free internet downloads and authorized music links/attachments in their email.
+- Downloaded Krystal Klear's four-track [Dedication EP](https://unknowntotheunknown.bandcamp.com/album/dedication-ep-free-dowload) through the label's offered zero-price Bandcamp flow, as 320-kbps MP3s. The release is inspired by 1990s NYC club sounds; it is not an original 1990s release.
+- Recovered eight tracks from Laberge's *Extended Vacation* using the user's prior purchase receipt and normal Bandcamp re-download flow.
+- Recovered Nightcrawlers' *Push The Feeling On* from an existing user email attachment. Metadata confirms artist/title and approximately 6:38 duration.
+- **13 MP3 files** locally present and inspected with ffprobe. No new payment, subscription, email sending, credential reset or public music upload performed.
+- Kept original audio, archives, private links, caches and manifests under ignored `.b2b/`; email bodies and receipt tokens are not committed. Acquisition does not establish permission to redistribute recordings or include them in a public demo soundtrack. Public-demo music clearance remains separate.
+- Usage checkpoints: **12%, 15%**. At 15%, observed account-wide change from baseline is **+6 percentage points**.
+
+## 12:05 — Workstation implementation
+
+- Added a local FastAPI service, import queue, correction endpoints, bounded uploads and tempo-prepared PCM cache. Source paths remain private; the service accepts localhost host/origin values.
+- Added a two-deck browser interface, waveform/cue visualization, playback controls, gain/low EQ, crossfader, master meter, crate ordering, transition audition and Auto scheduling.
+- Playback preparation uses FFmpeg `atempo`; numerical analysis uses NumPy/SciPy. Unlike the initial proposal, librosa is not required by current analysis code and can be removed from the runtime requirements after verification.
+- Usage checkpoint: **16% weekly used**, observed **+7 points** from baseline. App and musical validation still in progress.
+- User's next presentation direction: a Blender-built 3D deck/controller, or similar, driven by the same real mixer state. Defer until the underlying audio controls and handoffs work; do not make a disconnected decorative model.
+
+## Telemetry boundaries
+
+Daily chat/turn/token/tool totals are unavailable from the current usage tool. Record actual track counts, measured analysis timings, tests and changed-file counts when verified. Avoid inventing daily totals or estimating token costs from the percentage meter.
+
+## 12:17 EDT — Verified audition and detailed waveform inspection
+
+- Replaced biased FFT pitch voting with harmonic separation and CQT chroma from three excerpts; librosa is therefore retained, superseding the earlier dependency note. Reanalysis of 13 tracks measured 27.75 seconds. Many tonal estimates correctly remain marked uncertain.
+- Eleven tests passed in 2.07 seconds after moving the project into `b2b/`: synthetic beat recovery, pitch-preserving tempo conversion, major/minor key fixtures, phrase durations, ordering constraints, fixed-order behavior and missing-key handling. JavaScript syntax check passed.
+- Browser verification: a complete eight-bar transition from the currently loaded A to B reached “Transition complete,” with A handed over and B playing. Earlier sixteen-bar transition exercised but not completed. Full-crate continuous Auto and audible musical quality are not established by these checks.
+- Audition now always uses the two loaded decks, starting A two bars before the blend. Start Auto separately rebuilds the crate plan. Added detailed decoded-stereo waveform, selectable 4/8/16-bar views, numbered bars/beats, cue boundaries, detected kick candidates, whole-file navigation and solo listening. Inspected its actual rendered waveform.
+- Fixed initial/reloaded deck crossfader levels and preserved manual takeover of scheduled fades. Added conservative ±4% Auto tempo compatibility; manual preparation permits ±8%.
+- Moved project code, web interface, tests, documentation and private media into `b2b/`. Audio/cache archives remain ignored. Runtime API path has not been live-tested without a key.
+- Usage checkpoints after 16%: 17%, 18%, then **19% at 12:15:10 and 12:17:02 EDT**. These are account-wide; the observed +10 points is not exact task consumption. Updated the top-level register with the previously recorded baseline and budget, preserving unrelated project entries. No reset used.
+- Next: human listening/cue correction, sustained Auto verification, runtime Astra connection, then consider a Blender model linked to the actual mixer state.

@@ -11,10 +11,14 @@ This repository contains multiple open-source hackathon projects exploring what 
 - Usage limits are account-wide; do not present them as per-project token counts. If historical starting usage or a budget was not recorded, mark it unknown or not set rather than inventing it. Preserve baseline entries and append later measurements or budget changes with timestamps.
 - Commit after each completed demo. Verify the demo, update its activity and usage records, and commit the relevant project changes with a descriptive message. Exclude secrets, private media, and unrelated unfinished work.
 
-## Current phase: Back 2 Back planning
+## Current phase: Back 2 Back implementation
 
 - The user selected Back 2 Back as the next project: a small-crate DJ program for 4/4 house, with manual controls and automatic phrase-aligned transitions.
-- See `research/back-2-back-plan.md` for confirmed scope and proposed implementation. Technical choices remain proposals until implementation validates them.
+- See `b2b/docs/plan.md` for scope and `b2b/docs/build-log.md` for actual implementation, verification and weekly-usage checkpoints.
+- Current implementation: local Python/FastAPI service, NumPy/SciPy feature analysis, FFmpeg tempo preparation and a browser Web Audio mixer. Personal tracks and caches belong in ignored `b2b/.b2b/`.
+- User budget: no more than 20 percentage points of weekly Codex allowance from the measured 9% baseline. Conservative stopping point: 26% total weekly usage. Inspect usage before further substantial work and log checkpoints; do not redeem resets.
+- Runtime API key will be configured later. Rule-based operation must remain explicit; do not label it as runtime Astra.
+- Future direction: Blender-built 3D deck driven by the same real audio controls, after playback is verified.
 - Preserve earlier Lightroom experiments as separate work. Prioritize a two-track audible transition before expanding the crate.
 - Initial mix rules: clean club intros/outros, matched 8- or 16-bar overlaps, linear channel fades and low-EQ swaps. Separate measured audio timing from Astra's runtime planning.
 

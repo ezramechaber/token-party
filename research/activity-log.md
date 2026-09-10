@@ -221,3 +221,15 @@ Concise, append-only notes on the project's progress. Longer research and decisi
 **Open:** The inbox is published with owner-only access. Automatic approval review rejected external access expansion; user approval is pending. The production remote-to-Lightroom run and cloud image delivery are not complete. Personal media and raw traces remain ignored.
 
 **Usage:** The runtime session began from a 9% account-wide weekly observation; latest checkpoint 18% used. User authorized up to 15 percentage points, interpreted as a ceiling of 24% total. Concurrent projects share this account, so the increase is not Roundtrip-specific consumption. Token totals unavailable; no reset used.
+
+## 2026-09-10 12:17 EDT — Back 2 Back playable prototype and phrase inspection
+
+**Objective:** Build local phrase-aligned house mixing and make its timing reviewable by ear and eye.
+
+**Completed:** Organized the implementation under `b2b/`; acquired 13 authorized MP3s kept outside version control; added local beat/phrase/key analysis, manual deck controls, constrained ordering, scheduled linear fades and low-EQ swaps. Added audition of exactly the loaded A/B pair and a 4/8/16-bar waveform inspector with solo listening, beat/bar lines and kick candidates. The eight-bar A-to-B browser audition reached its completed handoff state. See [build log](../b2b/docs/build-log.md).
+
+**Decisions:** Assume 4/4 and expose estimated cues for correction. Use harmonic CQT chroma for key estimation after the earlier FFT approach showed bias. Keep private media local. Defer runtime Astra until the user configures a key. A future Blender deck should drive the existing mixer controls.
+
+**Verification and limits:** Eleven synthetic audio/planning/server tests passed in 2.07 seconds; JavaScript syntax checked. Browser waveform inspected and loaded-pair handoff completed. This does not establish human listening quality or sustained full-crate Auto reliability. Human cue review is next.
+
+**Usage:** 9% recorded baseline → 19% weekly account-wide quota used at 12:17:02 EDT; user allocation 20 percentage points, conservative total stop 26%. Account-wide change includes other projects; per-project tokens and daily chat/turn/tool totals unavailable. See [usage register](../usage.md).

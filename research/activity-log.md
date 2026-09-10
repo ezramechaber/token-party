@@ -320,3 +320,12 @@ b2b: integrated request-review actions and full-sequence preparation guard. Brow
 ## 2026-09-10 13:43 EDT — Roundtrip layout
 
 Rebuilt the local gallery around the photograph, preserving the user-approved mark. Collection rail, adjacent feedback, version strip, and optional in-image comparison replace the previous stacked layout. Desktop/mobile rendering and keyboard comparison checked; JavaScript syntax passed. Hosted gallery unchanged. Account-wide usage45% at resumption and47% at close, reaching the new approved ceiling; project token totals unavailable. Design decisions and specialist sources are recorded in roundtrip/design.md.
+
+## 2026-09-10 — Roundtrip homepage clarification
+
+Located the story homepage after initially targeting the gallery workspace. Opened its current localhost:8765 version; the older file tab retained a stale title. Saved homepage includes the revised story, recipe reference, and on-photo comparison. Undid mistaken gallery edits and recorded the user's homepage design constraints. No photo or hosted changes.
+
+
+## 2026-09-10 13:51 EDT — Token Party poster
+
+Created a poster using built-in image generation: struck-through Rent, oversized Token Party lettering, fictional guest portraits, and a record-player collage. Saved the image and exact prompt in [design notes](design/token-party-poster-v1.md). Visually verified title and tagline. No application changes or completed demo; image-generation billing and project token counts unavailable.

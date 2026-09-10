@@ -101,3 +101,7 @@ Commits were made during implementation, media routing repair, recovery document
 Applied the requested design skill: preserved the logo mark, moved collection navigation left and feedback right, enlarged the central photograph, and placed versions below it. Comparison is an explicit toggle with an in-image keyboard-accessible slider. Activity and edit details use disclosure controls. Per-photo feedback drafts survive navigation. See design.md for decisions and source provenance.
 
 Verified rendered desktop at 1440px and mobile at 390px; measured no horizontal page overflow at 1440, 390, and 320px. Current JPEG loaded at 2048px; comparison toggle and Home-key slider operation passed. JavaScript syntax passed. No new Lightroom jobs or hosted deployment. User-approved ceiling increased to 47%; first reading45%, close47%, account-wide shared usage. Next: broader interaction audit and remote queue hosting when authorized usage is available.
+
+## 2026-09-10 — Homepage clarification
+
+User's design feedback concerned the story homepage, not the gallery workspace. The existing file tab retained the earlier “one photograph, two passes” title; the current saved page served at localhost:8765 has the revised story, recipe reference, and directly available on-photo comparison slider. Opened the current served version. Reverted mistaken uncommitted gallery changes. No photo edits or hosted changes. Future homepage work must preserve the story and hero image, avoid eyebrow labels and padded copy, and retain the on-photo slider.

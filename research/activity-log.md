@@ -363,3 +363,14 @@ Added five authorized recordings, including two successful artist-uploaded YouTu
 ## 2026-09-10 — Set-list controls and concise request notes
 
 Separated the playback set from the complete library; rejected/review requests stay out of automatic candidates and carry clear library labels. Added drag handles with keyboard alternatives, validated upcoming-track moves, and locks for played/current/prepared tracks. Added explicit Let Astra DJ, Preview Astra’s plan and Play my order controls. Listener/DJ notes now show a brief decision with expandable evidence. Browser verified request notes, library labels, keyboard movement, and a live upcoming-track reorder while the scheduled handoff remained uninterrupted; restored the original order. Seven JavaScript regressions and ten focused server/listener tests pass. Runtime API totals measured: 11 calls, 45,103 input and 2,467 output tokens; estimated standard-price cost $0.57 before credits, based on official OpenAI Docs pricing. Development usage remains unavailable.
+
+
+### 2026-09-10 15:18 EDT — Request controls and Astra’s next move
+
+- Objective: remove redundant recording selection and expose concise musical decision summaries beside the decks.
+- Identified requests now open their waveform/grid inspector directly, with recheck or musical approval only in relevant states. Unresolved recordings retain a collapsed matching flow; added songs have no redundant approval action.
+- Added the actual selected handoff’s track art, musical explanation, and timing state; full-set explanations expand below the current choice. Manual ordering is labeled separately. The model returns short public summaries, with estimates distinguished from listening.
+- Verified: 11 JavaScript regression tests, 44 request/sequence Python tests, JS syntax and diff whitespace checks. Browser-checked real requests at desktop and 390px widths, opened Sunset at Paula’s waveform editor, and generated two real Astra plans to inspect explanations.
+- Design provenance: apply-design-best-practices routed to [Impeccable](https://github.com/pbakaus/impeccable/blob/main/.agents/skills/impeccable/SKILL.md), including polish and craft-floor references; refined the existing interface without replacing its design.
+- Measured runtime telemetry: 13 logged API calls total, 68,283 input and 3,448 output tokens. This pass added two set-planner calls; development token counts unavailable.
+- Next: listen through the full set with the visible handoff explanations and refine decision wording from musical feedback. Blender remains in the separate modeling task.

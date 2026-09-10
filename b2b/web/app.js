@@ -1,3 +1,4 @@
+import {nextDecision,requestActions} from './dj-decisions.js';
 import {setCandidates,heldRequestIds,moveTrack} from './playlist.js';
 import {requestNote} from './request-notes.js';
 import {createVisualizer} from './visualizer.js';
@@ -9,6 +10,7 @@ const $=s=>document.querySelector(s);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const time=s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,'0')}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`;
 let tracks=[],order=[],plan=null,ctx,master,analyser,active=false,transition=null,generation=0,editId=null,loading=false;
+let decisionEdge=null,setFinished=false,decisionSignature="";
 let libraryView=false,draftSet=null,draggedTrack=null,playlistBusy=false,crateSignature="";
 let masterTempo=124, manualOrder=false,visualIdentity='',requestAuditionContext=null;
 const visualizer=createVisualizer($('#visualizer'));
@@ -75,7 +77,7 @@ class Deck{
 const decks=[new Deck('A'),new Deck('B')];
 async function safe(fn){try{await fn()}catch(e){toast(e.message);console.error(e)}}
 function hold(param){if(!param)return;if(param.cancelAndHoldAtTime)param.cancelAndHoldAtTime(ctx.currentTime);else{const v=param.value;param.cancelScheduledValues(ctx.currentTime);param.setValueAtTime(v,ctx.currentTime)}}
-function takeover(notify=true){if(capture)capture.metadata.manualIntervention=true;generation++;active=false;
+function takeover(notify=true){decisionEdge=null;setFinished=false;if(capture)capture.metadata.manualIntervention=true;generation++;active=false;
  if(transition){clearTimeout(transition.timer);for(const d of decks){if(d.start>ctx.currentTime)d.stop();hold(d.fade?.gain);hold(d.low?.gain)}transition=null}
  $('#autoTitle').textContent='Manual control';$('#autoDetail').textContent='No transition scheduled. Preview or mix the loaded pair.';$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;
  if(notify)toast('You have the decks. Current levels are held.');setButtons();}
@@ -92,7 +94,20 @@ async function refresh(){const data=await api('crate');tracks=data.tracks;for(co
  $('#jobs').innerHTML=Object.values(data.jobs).slice(-5).reverse().map(j=>`<div>${j.status==='error'?'⚠':j.status==='done'?'✓':'◌'} ${escape(j.title)}${j.error?' — '+escape(j.error):' · '+escape(j.status==='done'?'ready in crate':j.status)+(Number.isFinite(j.progress)?' '+Math.round(j.progress)+'%':'')}</div>`).join('');renderCrate();}
 function setListIds(){return draftSet||plan?.order||setCandidates(order,tracks,requestData.requests,masterTempo,consumedRequests);}
 function lockedSetPrefix(){return active?(transition?transition.index+2:plan?.order.length||0):0;}
+function renderDecision(){
+ const d=nextDecision(plan,transition?.e||decisionEdge,{active,finished:setFinished,planning:playlistBusy&&!active&&!manualOrder});
+ const selected=track(d.trackId),signature=JSON.stringify([d,selected?.title,!!transition,plan?.order,plan?.transitions]);
+ if(signature===decisionSignature)return;decisionSignature=signature;
+ $('#djDecisionHeading').textContent=d.heading;
+ $('#djDecisionTrack').textContent=selected?`${d.title}: ${selected.title}`:d.title;
+ $('#djDecisionReason').textContent=d.reason;
+ $('#djDecisionTiming').textContent=d.bars?`${d.bars}-bar handoff${transition?' · scheduled on the audio clock':active?' · preparing the handoff':' · ready to schedule'}`:'';
+ const art=$('#djDecisionArt');art.hidden=!selected;if(selected){art.src='/api/art/'+encodeURIComponent(selected.id);art.alt=selected.title+' artwork';}
+ const entries=plan?.transitions||[];$('#setDecisions').hidden=!entries.length;
+ $('#setDecisionList').innerHTML=entries.map(e=>`<li><strong>${escape(track(e.to)?.title||e.to)}</strong><p>${escape(e.astraReason||e.reason)}</p></li>`).join('');
+}
 function setButtons(){
+ renderDecision();
  $('#auto').hidden=false;$('#auto').disabled=active||loading||playlistBusy||$('#astra').disabled;
  $('#auto').textContent=loading?'Preparing the set…':active?(manualOrder?'Playing your order':'Astra is DJing'):'Let Astra DJ';
  $('#playOrder').hidden=!manualOrder;$('#playOrder').disabled=active||loading||playlistBusy;
@@ -147,7 +162,7 @@ async function suggest(fixed=false){
  try{
   const p=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,direction:$('#direction').value,astra:!fixed,fixed});
   if(fixed&&JSON.stringify(p.order)!==JSON.stringify(ids))throw Error('Some tracks are not playable at this tempo. Your order is unchanged; review the Library.');
-  plan=p;draftSet=[...p.order];manualOrder=fixed;order=[...p.order,...order.filter(id=>!p.order.includes(id))];
+  plan=p;decisionEdge=null;setFinished=false;draftSet=[...p.order];manualOrder=fixed;order=[...p.order,...order.filter(id=>!p.order.includes(id))];
   $('#planNote').textContent=`${p.mode}: ${p.reason}`;
   $('#cratePlayHelp').textContent=`${p.order.length} tracks, starting with ${track(p.order[0])?.title||'the first track'}.`+(p.excluded.length?` ${p.excluded.length} tracks are outside this set.`:'');
   return p;
@@ -161,7 +176,8 @@ async function startAuto(preview=false,fixed=false){await unlock();if(loading)th
  const first=plan.transitions[0];const position=preview?Math.max(track(first.from).entry,first.exit-8*60/track(first.from).bpm)/decks[0].ratio:track(first.from).entry/decks[0].ratio;
  decks[0].play(ctx.currentTime+.1,position);await arm(0,0,my,preview);
  }catch(e){takeover(false);throw e}finally{loading=false;$('#auto').disabled=false;$('#preview').disabled=false;renderCrate();}}
-async function arm(index,currentIndex,my,preview){if(!active||my!==generation)return;const a=decks[currentIndex],b=decks[1-currentIndex],e=plan.transitions[index];if(!e){$('#autoTitle').textContent='Last record';$('#autoDetail').textContent='Enjoy the rest of the track.';active=false;$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;renderCrate();return}
+async function arm(index,currentIndex,my,preview){if(!active||my!==generation)return;const a=decks[currentIndex],b=decks[1-currentIndex],e=plan.transitions[index];if(!e){setFinished=true;decisionEdge=null;$('#autoTitle').textContent='Last record';$('#autoDetail').textContent='Enjoy the rest of the track.';active=false;$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;renderCrate();return}
+ decisionEdge=e;renderDecision();
  if(index>0){await b.load(track(e.to),masterTempo);if(my!==generation)return}
  const [alignA,alignB]=await Promise.all([api(`alignment/${a.track.id}?tempo=${masterTempo}&cue=${e.exit}&bars=${e.bars}`),api(`alignment/${b.track.id}?tempo=${masterTempo}&cue=${e.entry}&bars=${e.bars}`)]);
  if(!active||my!==generation)return;
@@ -333,22 +349,30 @@ function renderRequests(){
  if(signature===requestSignature)return;requestSignature=signature;
  const labels={added:'Added to the set',dismissed:'Dismissed',needs_audio:'Choose a recording',review:'Needs your review',rejected:'Not this set',error:'Could not check',pending:'Waiting to check',identifying:'Identifying recording',downloading:'Downloading',analyzing:'Analyzing'};
  $('#requestQueue').innerHTML=rows.length?rows.slice().reverse().map(r=>{
-  const staged=consumedRequests.has(r.trackId)||r.status==='added',busy=requestBusy.has(r.id),reviewable=['review','needs_audio','rejected','error','dismissed'].includes(r.status);
+  const staged=consumedRequests.has(r.trackId)||r.status==='added',busy=requestBusy.has(r.id);
   const status=staged?'Added to the set':r.status==='accepted'&&r.queued?(active&&!transition?.preview?'Queued after this set':'Accepted · joins the next set'):labels[r.status]||r.status;
-  const chosen=requestSelections.get(r.id)||r.trackId||r.candidateIds?.[0]||'';
+  const known=!!track(r.trackId),actions=requestActions(staged?{...r,status:'added'}:r,known),note=requestNote(r);
+  const chosen=requestSelections.get(r.id)||r.candidateIds?.[0]||'';
   const candidates=[...tracks].sort((a,b)=>(r.candidateIds||[]).includes(b.id)-(r.candidateIds||[]).includes(a.id));
-  const options='<option value="">Choose a crate recording…</option>'+candidates.map(t=>`<option value="${escape(t.id)}" ${t.id===chosen?'selected':''}>${escape(t.title)} · ${escape(t.artist)}</option>`).join('');
-  const controls=reviewable?`<label class="request-recording">Recording<select data-recording ${busy?'disabled':''}>${options}</select></label><button data-action="resolve" ${busy?'disabled':''}>Confirm & check fit</button>${r.transition&&['energy','key'].includes(r.reviewKind)?`<button data-action="approve" ${busy?'disabled':''}>Accept musical fit</button>`:''}<button data-action="load" ${busy?'disabled':''}>Load B to audition</button><button data-action="retry" ${busy?'disabled':''}>Retry link</button>`:'';
-  return `<article class="request-row" data-request="${escape(r.id)}"><div><strong>${escape(r.title||'Identifying requested track')}</strong>${r.artist?' · '+escape(r.artist):''}</div><span class="request-status">${escape((r.name?.startsWith('DJ test')?'DJ test · ':'')+(busy?'Updating…':status||'Waiting'))}</span>${requestNote(r).summary?`<p>${escape(requestNote(r).summary)}</p>`:''}${requestNote(r).details?`<details class="request-details"><summary>Decision details</summary><p>${escape(requestNote(r).details)}</p></details>`:''}${!staged?`<div class="request-actions">${controls}${r.status!=='dismissed'?`<button data-action="dismiss" ${busy?'disabled':''}>Dismiss</button>`:''}</div>`:''}</article>`;
+  const options='<option value="">Choose an audio file…</option>'+candidates.map(t=>`<option value="${escape(t.id)}" ${t.id===chosen?'selected':''}>${escape(t.title)} · ${escape(t.artist)}</option>`).join('');
+  const controls=[
+   actions.inspect?`<button data-action="inspect" ${busy?'disabled':''}>${r.reviewKind==='grid'?'Review grid':'Inspect track'}</button>`:'',
+   actions.recheck?`<button data-action="resolve" ${busy?'disabled':''}>Recheck fit</button>`:'',
+   !staged&&r.status==='review'&&known&&r.transition&&['energy','key'].includes(r.reviewKind)?`<button data-action="approve" ${busy?'disabled':''}>Accept musical fit</button>`:'',
+   actions.retry?`<button data-action="retry" ${busy?'disabled':''}>Retry source</button>`:'',
+   !staged&&r.status!=='dismissed'?`<button class="quiet-action" data-action="dismiss" ${busy?'disabled':''}>Dismiss</button>`:''
+  ].join('');
+  const match=actions.match?`<details class="request-match"><summary>Match an audio file</summary><p>This request needs a confirmed recording from your library.</p><div><label class="request-recording">Audio file<select data-recording ${busy?'disabled':''}>${options}</select></label><button data-action="resolve" ${busy?'disabled':''}>Use this recording</button></div></details>`:'';
+  return `<article class="request-row" data-request="${escape(r.id)}"><div class="request-summary"><div><strong>${escape(r.title||'Identifying requested track')}</strong>${r.artist?`<span class="request-artist">${escape(r.artist)}</span>`:''}</div><span class="request-status">${escape((r.name?.startsWith('DJ test')?'DJ test · ':'')+(busy?'Checking…':status||'Waiting'))}</span></div>${note.summary?`<p class="request-note">${escape(note.summary)}</p>`:''}${note.details?`<details class="request-details"><summary>Decision details</summary><p>${escape(note.details)}</p></details>`:''}${match}${controls?`<div class="request-actions">${controls}</div>`:''}</article>`;
  }).join(''):'<p class="help">No requests yet. Listeners can send a Spotify track or YouTube video from the listener view.</p>';
 }
 $('#requestQueue').onchange=e=>{const row=e.target.closest('[data-request]');if(row&&e.target.matches('[data-recording]'))requestSelections.set(row.dataset.request,e.target.value);};
 $('#requestQueue').onclick=e=>safe(async()=>{
  const button=e.target.closest('[data-action]'),row=button?.closest('[data-request]');if(!row)return;
- const id=row.dataset.request,action=button.dataset.action,trackId=row.querySelector('[data-recording]')?.value;
+ const id=row.dataset.request,action=button.dataset.action,record=requestData.requests.find(r=>r.id===id),trackId=track(record?.trackId)?.id||row.querySelector('[data-recording]')?.value;
  if(requestBusy.has(id))return;
- if(['resolve','approve','load'].includes(action)&&!trackId)throw Error('Choose the recording in your crate first.');
- if(action==='load'){requestAuditionContext??={crateIds:[...sessionState().crateIds]};takeover(false);await unlock();await decks[1].load(track(trackId),masterTempo);toast('Loaded B. Use Preview transition to hear the handoff.');return;}
+ if(['resolve','approve','inspect'].includes(action)&&!trackId)throw Error('Choose the recording in your crate first.');
+ if(action==='inspect'){requestAuditionContext??={crateIds:[...sessionState().crateIds]};await edit(trackId);return;}
  requestBusy.add(id);renderRequests();
  try{await api('session/state',sessionState());await api('requests/'+encodeURIComponent(id)+'/'+(action==='approve'?'resolve':action),['resolve','approve'].includes(action)?{trackId,approve:action==='approve'}:{});requestData=await api('requests');}
  finally{requestBusy.delete(id);renderRequests();}

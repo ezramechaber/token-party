@@ -13,3 +13,8 @@ class EditScopeTests(unittest.TestCase):
     def test_supported_variations(self):
         for prompt in ['Please make the face slightly brighter, but keep the background dark.','Lower highlights. Reduce grain by half.','Crop the photo to 4:5.','Cool the white balance a little.', 'just for proof of concept make this extremely washed out and crop to his hands only']:
             with self.subTest(prompt=prompt):self.assertTrue(supported_edit(prompt))
+
+    def test_uncorrected_context_and_white_balance_request(self):
+        self.assertTrue(supported_edit('This photo is not color corrected at all. Correct the white balance. Crop the photo to 4:5. Make the background a little darker. Keep the skin tones natural.'))
+        self.assertFalse(supported_edit('This photo is not color corrected at all.'))
+        self.assertFalse(supported_edit('This photo is not color corrected at all. Correct the white balance. Replace her face.'))

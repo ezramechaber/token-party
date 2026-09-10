@@ -9,5 +9,5 @@ def supported_edit(feedback):
     edits=0
     for clause in clauses:
         if any(re.fullmatch(p,clause) for p in POLICY['actions']):edits+=1
-        elif not any(re.fullmatch(p,clause) for p in POLICY['preservation']):return False
+        elif not any(re.fullmatch(p,clause) for p in POLICY['preservation']+POLICY.get('context',[])):return False
     return 0<edits<=3

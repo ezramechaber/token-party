@@ -18,11 +18,15 @@
     "(?:straighten|level) (?:the )?(?:photo|horizon)",
     "crop (?:the )?(?:photo|image) (?:tighter|to (?:a square|4:5|3:4|1:1))",
     "make (?:this|it|the photo|the image) (?:extremely |very |slightly )?washed out",
-    "crop (?:to |the photo to )?(?:his |her |their |the )?hands only"
+    "crop (?:to |the photo to )?(?:his |her |their |the )?hands only",
+    "(?:correct|neutralize) (?:the )?white balance"
   ],
   "preservation": [
     "keep (?:the )?(?:skin texture and color|natural skin texture|skin texture|skin tones|color|colors|film-like color|crop|composition|background|dark background|face|subject|highlights|shadows)(?: (?:natural|unchanged|dark|the same))?",
     "(?:do not|don't) change (?:the )?(?:crop|color|colors|skin texture|skin tones|background|face|composition)"
   ],
-  "message": "This demo accepts short Lightroom requests about lighting, color, grain, texture, vignette, or crop. Try an example below. Changing identity, gender presentation, facial features, bodies, clothing, objects, or the scene is not supported."
+  "message": "This demo accepts short Lightroom requests about lighting, color, grain, texture, vignette, or crop. Try an example below. Changing identity, gender presentation, facial features, bodies, clothing, objects, or the scene is not supported.",
+  "context": [
+    "(?:this|the) (?:photo|image) (?:is not|has not been) colou?r corrected(?: at all)?"
+  ]
 }

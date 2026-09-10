@@ -9,7 +9,7 @@ export function supportedEdit(feedback: string): boolean {
   let edits=0;
   for(const clause of clauses){
     if(policy.actions.some(p=>new RegExp('^(?:'+p+')$').test(clause))){edits++;continue;}
-    if(!policy.preservation.some(p=>new RegExp('^(?:'+p+')$').test(clause)))return false;
+    if(![...policy.preservation,...policy.context].some(p=>new RegExp('^(?:'+p+')$').test(clause)))return false;
   }
   return edits>0&&edits<=3;
 }

@@ -1,3 +1,5 @@
+import {setCandidates,heldRequestIds,moveTrack} from './playlist.js';
+import {requestNote} from './request-notes.js';
 import {createVisualizer} from './visualizer.js';
 import {blendCurves} from './mix-curves.js';
 import {createChannel,crossfadeGains,waveformOverview} from './channel.js';
@@ -7,6 +9,7 @@ const $=s=>document.querySelector(s);
 const escape=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const time=s=>`${String(Math.floor(Math.max(0,s)/60)).padStart(2,'0')}:${String(Math.floor(Math.max(0,s)%60)).padStart(2,'0')}`;
 let tracks=[],order=[],plan=null,ctx,master,analyser,active=false,transition=null,generation=0,editId=null,loading=false;
+let libraryView=false,draftSet=null,draggedTrack=null,playlistBusy=false,crateSignature="";
 let masterTempo=124, manualOrder=false,visualIdentity='',requestAuditionContext=null;
 const visualizer=createVisualizer($('#visualizer'));
 let capture=null,recordDestination=null;
@@ -75,32 +78,90 @@ function hold(param){if(!param)return;if(param.cancelAndHoldAtTime)param.cancelA
 function takeover(notify=true){if(capture)capture.metadata.manualIntervention=true;generation++;active=false;
  if(transition){clearTimeout(transition.timer);for(const d of decks){if(d.start>ctx.currentTime)d.stop();hold(d.fade?.gain);hold(d.low?.gain)}transition=null}
  $('#autoTitle').textContent='Manual control';$('#autoDetail').textContent='No transition scheduled. Preview or mix the loaded pair.';$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;
- if(notify)toast('You have the decks. Current levels are held.');}
+ if(notify)toast('You have the decks. Current levels are held.');setButtons();}
 function stopAll(){if(capture)finishRecording(true);takeover(false);decks.forEach(d=>{d.stop();if(d.track)d.status(d.buffer?'READY · KEY LOCK':'RELOAD AUDIO')});if(ctx){decks.forEach(d=>{d.fade?.gain.setValueAtTime(d.letter==='A'?1:0,ctx.currentTime);d.low?.gain.setValueAtTime(0,ctx.currentTime)})}$('#crossfader').value=0}
 function setFade(v){if(!ctx)return;const gains=crossfadeGains(v,$('#mixCurve').value==='balanced');decks.forEach((d,i)=>d.fade?.gain.setValueAtTime(gains[i],ctx.currentTime));}
 $('#crossfader').oninput=e=>{takeover(false);setFade(+e.target.value)};
 $('#master').oninput=e=>{if(master)master.gain.setTargetAtTime(+e.target.value,ctx.currentTime,.015)};
 $('#addTracks').onclick=()=>$('#upload').click();
 $('#stop').onclick=stopAll;$('#takeover').onclick=()=>takeover();
-$('#tempo').onchange=()=>{if(decks.some(d=>d.running)){toast('Stop playback before changing the set tempo.');$('#tempo').value=masterTempo;return}const value=+$('#tempo').value;if(!Number.isFinite(value)||value<108||value>142){$('#tempo').value=masterTempo;toast('Choose a tempo from 108 to 142 BPM.');return;}masterTempo=value;plan=null;decks.forEach(d=>{d.buffer=null;d.status('RELOAD AT NEW TEMPO')});toast('Tempo changed. Load the decks again or start Auto.');};
+$('#tempo').onchange=()=>{if(decks.some(d=>d.running)){toast('Stop playback before changing the set tempo.');$('#tempo').value=masterTempo;return}const value=+$('#tempo').value;if(!Number.isFinite(value)||value<108||value>142){$('#tempo').value=masterTempo;toast('Choose a tempo from 108 to 142 BPM.');return;}masterTempo=value;plan=null;draftSet=null;manualOrder=false;decks.forEach(d=>{d.buffer=null;d.status('RELOAD AT NEW TEMPO')});toast('Tempo changed. Load the decks again or start Auto.');};
 $('#bars').onchange=()=>{if(active)takeover();plan=null};
 async function refresh(){const data=await api('crate');tracks=data.tracks;for(const t of tracks)if(!order.includes(t.id))order.push(t.id);
- $('#connection').textContent='● LOCAL AUDIO';$('#count').textContent=tracks.length;$('#astra').disabled=!data.astra;$('#direction').disabled=!data.astra;$('#direction').placeholder=data.astra?'Set direction, e.g. start mellow and build':'Astra set direction · not connected';$('#astraHint').textContent=data.astra?' · connected':' · add API key later';
+ $('#connection').textContent='● LOCAL AUDIO';$('#astra').disabled=!data.astra;$('#direction').disabled=!data.astra;$('#direction').placeholder=data.astra?'Set direction, e.g. start mellow and build':'Astra set direction · not connected';$('#astraHint').textContent=data.astra?' · connected':' · add API key later';
  $('#jobs').innerHTML=Object.values(data.jobs).slice(-5).reverse().map(j=>`<div>${j.status==='error'?'⚠':j.status==='done'?'✓':'◌'} ${escape(j.title)}${j.error?' — '+escape(j.error):' · '+escape(j.status==='done'?'ready in crate':j.status)+(Number.isFinite(j.progress)?' '+Math.round(j.progress)+'%':'')}</div>`).join('');renderCrate();}
-function renderCrate(){const list=order.map(track).filter(Boolean);$('#empty').hidden=list.length>0;
- $('#tracks').innerHTML=list.map((t,i)=>`<tr data-id="${t.id}"><td>${String(i+1).padStart(2,'0')}</td><td><a href="/api/art-info/${encodeURIComponent(t.id)}" target="_blank" title="Artwork source and release match"><img class="crate-cover" src="/api/art/${encodeURIComponent(t.id)}" alt="Artwork source for ${escape(t.title)}" loading="lazy"></a><div class="song-title">${escape(t.title)}</div><div class="artist">${escape(t.artist)} · ${time(t.duration)}</div></td><td>${t.bpm.toFixed(1)}</td><td><span class="key-pill" title="${escape(t.key.confidence)}">${escape(t.key.name)} ${t.key.confidence==='uncertain'?'?':''}</span></td><td>${t.introBars} bars</td><td>${t.outroBars} bars</td><td class="${t.ready?'ready':'review-needed'}">${t.reviewed?'Confirmed':t.ready?'Estimated':'<button data-edit>Review grid</button>'}</td><td><div class="load-buttons"><button data-load="0">A</button><button data-load="1">B</button><button data-edit aria-label="Edit cues for ${escape(t.title)}">⋯</button><button data-up aria-label="Move ${escape(t.title)} earlier">↑</button></div></td></tr>`).join('');
+function setListIds(){return draftSet||plan?.order||setCandidates(order,tracks,requestData.requests,masterTempo,consumedRequests);}
+function lockedSetPrefix(){return active?(transition?transition.index+2:plan?.order.length||0):0;}
+function setButtons(){
+ $('#auto').hidden=false;$('#auto').disabled=active||loading||playlistBusy||$('#astra').disabled;
+ $('#auto').textContent=loading?'Preparing the set…':active?(manualOrder?'Playing your order':'Astra is DJing'):'Let Astra DJ';
+ $('#playOrder').hidden=!manualOrder;$('#playOrder').disabled=active||loading||playlistBusy;
+ $('#suggest').disabled=active||loading||playlistBusy||$('#astra').disabled;
 }
-$('#tracks').onclick=e=>{const row=e.target.closest('tr');if(!row)return;const t=track(row.dataset.id);if(e.target.hasAttribute('data-load'))safe(async()=>{takeover(false);plan=null;requestAuditionContext=null;await unlock();await decks[+e.target.dataset.load].load(t,masterTempo)});if(e.target.hasAttribute('data-edit'))safe(()=>edit(t.id));if(e.target.hasAttribute('data-up')){if(active)takeover();const i=order.indexOf(t.id);if(i>0)[order[i-1],order[i]]=[order[i],order[i-1]];plan=null;manualOrder=true;renderCrate();$('#planNote').textContent='Manual order · Auto will check phrase compatibility.'}};
-async function suggest(fixed=false){requestAuditionContext=null;const reserved=new Set((requestData.requests||[]).filter(r=>r.status!=='added').map(r=>r.trackId).filter(Boolean));const ids=order.filter(id=>!reserved.has(id)||consumedRequests.has(id));$('#planNote').textContent=$('#astra').checked&&!fixed?'Astra is choosing the set order and handoffs…':'Checking the set order…';const p=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,direction:$('#direction').value,astra:$('#astra').checked,fixed});plan=p;manualOrder=fixed;if(!fixed)order=[...p.order,...order.filter(id=>!p.order.includes(id))];renderCrate();$('#planNote').textContent=`${p.mode}: ${p.reason}`;$('#cratePlayHelp').textContent=`${p.order.length} tracks, starting with ${track(p.order[0])?.title||'the first track'}.`+(p.excluded.length?` ${p.excluded.length} tracks are outside this set.`:'');return p}
-$('#suggest').onclick=()=>safe(async()=>{if(active)throw Error('Take over before changing the armed order.');$('#suggest').disabled=true;try{await suggest()}finally{$('#suggest').disabled=false}});
-async function startAuto(preview=false){await unlock();if(loading)throw Error('Audio is preparing.');loading=true;$('#auto').disabled=true;$('#preview').disabled=true;
- try{stopAll();try{requestData=await api('requests');}catch{}await suggest(manualOrder);await extendRequestedPlan(true);if(plan.order.length<2)throw Error('Auto needs two compatible tracks. Confirm their cue markers or adjust the set tempo.');const my=++generation;active=true;$('#tempo').disabled=true;$('#auto').hidden=true;$('#takeover').hidden=false;
+function renderCrate(){
+ if(draggedTrack)return;
+ const ids=libraryView?order:setListIds(),list=ids.map(track).filter(Boolean),held=heldRequestIds(requestData.requests),locked=lockedSetPrefix();
+ $('#empty').hidden=list.length>0;$('#empty').textContent=libraryView?'Drop MP3s here or add tracks.':'No tracks ready for this set. Check the Library or review a request below.';
+ $('#count').textContent=setListIds().length;$('#setView').setAttribute('aria-pressed',String(!libraryView));$('#libraryView').setAttribute('aria-pressed',String(libraryView));$('#libraryView').textContent=`Library (${tracks.length})`;
+ $('#playlistHint').textContent=libraryView?'All imported audio. Library tracks are not automatically in the set.':active?'Drag upcoming tracks to reorder. The playing track and prepared handoff stay in place.':'Drag tracks to reorder, or let Astra choose the order and mix.';
+ const signature=JSON.stringify([ids,libraryView,locked,playlistBusy,loading,list.map(t=>[t.id,t.title,t.artist,t.bpm,t.ready,t.reviewed,t.introBars,t.outroBars]),(requestData.requests||[]).map(r=>[r.id,r.status,r.updatedAt])]);
+ if(signature===crateSignature){setButtons();return;}crateSignature=signature;
+ $('#tracks').innerHTML=list.map((t,i)=>{
+ const request=(requestData.requests||[]).filter(r=>r.trackId===t.id).sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))[0];
+ const state=setListIds().includes(t.id)?'In the set':request?.status==='rejected'?'Request rejected':request?.status==='accepted'?'Request queued':held.has(t.id)?'Request on hold':!t.ready?'Grid review':Math.abs(masterTempo/t.bpm-1)>.04?'Outside set tempo':'Library only';
+ const movable=!libraryView&&i>=locked&&!playlistBusy&&!loading;
+ return `<tr data-id="${t.id}" class="${!libraryView&&i<locked?'set-locked':''}"><td>${!libraryView?`<button class="drag-track" draggable="${movable}" ${movable?'':'disabled'} aria-label="Move ${escape(t.title)}" title="Drag to reorder. Arrow keys move one place.">⠿</button>`:''}${String(i+1).padStart(2,'0')}</td><td><a href="/api/art-info/${encodeURIComponent(t.id)}" target="_blank" title="Artwork source and release match"><img class="crate-cover" src="/api/art/${encodeURIComponent(t.id)}" alt="Artwork source for ${escape(t.title)}" loading="lazy" draggable="false"></a><div class="song-title">${escape(t.title)}</div><div class="artist">${escape(t.artist)} · ${time(t.duration)}</div>${libraryView?`<small class="library-state">${state}</small>`:''}</td><td>${t.bpm.toFixed(1)}</td><td><span class="key-pill" title="${escape(t.key.confidence)}">${escape(t.key.name)} ${t.key.confidence==='uncertain'?'?':''}</span></td><td>${t.introBars} bars</td><td>${t.outroBars} bars</td><td class="${t.ready?'ready':'review-needed'}">${t.reviewed?'Confirmed':t.ready?'Estimated':'<button data-edit>Review grid</button>'}</td><td><div class="load-buttons"><button data-load="0">A</button><button data-load="1">B</button><button data-edit aria-label="Edit cues for ${escape(t.title)}">⋯</button></div></td></tr>`;
+ }).join('');setButtons();
+}
+async function reorderSet(source,target){
+ if(loading||playlistBusy)throw Error('Wait for the set to finish preparing.');
+ const ids=moveTrack(setListIds(),source,target,lockedSetPrefix());
+ if(source===target)return;
+ if(active){
+  const working=plan,my=generation,armed=transition;
+  playlistBusy=true;setButtons();
+  try{
+   const next=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,fixed:true,previous:working.transitions.slice(0,lockedSetPrefix()-1)});
+   if(plan!==working||my!==generation||transition!==armed)throw Error('The set advanced while checking this order. Try the move again.');
+   if(JSON.stringify(next.order)!==JSON.stringify(ids))throw Error('Every moved track must have a playable handoff. The order is unchanged.');
+   plan=next;draftSet=[...ids];manualOrder=true;
+   $('#planNote').textContent='Upcoming order updated. The current handoff stays on schedule.';
+  }finally{playlistBusy=false;renderCrate();}
+ }else{draftSet=ids;plan=null;manualOrder=true;$('#planNote').textContent='Your order. Play my order checks every handoff before starting.';renderCrate();}
+ order=[...ids,...order.filter(id=>!ids.includes(id))];
+}
+$('#setView').onclick=()=>{libraryView=false;renderCrate();};
+$('#libraryView').onclick=()=>{libraryView=true;renderCrate();};
+$('#tracks').onclick=e=>{const row=e.target.closest('tr');if(!row)return;const t=track(row.dataset.id);if(e.target.hasAttribute('data-load'))safe(async()=>{takeover(false);requestAuditionContext=null;await unlock();await decks[+e.target.dataset.load].load(t,masterTempo)});if(e.target.hasAttribute('data-edit'))safe(()=>edit(t.id));};
+$('#tracks').ondragstart=e=>{const handle=e.target.closest('.drag-track'),row=e.target.closest('tr');if(!handle||handle.disabled){e.preventDefault();return;}draggedTrack=row.dataset.id;e.dataTransfer.effectAllowed='move';e.dataTransfer.setData('text/plain',draggedTrack);row.classList.add('dragging');};
+$('#tracks').ondragover=e=>{const row=e.target.closest('tr');if(!draggedTrack||!row||row.classList.contains('set-locked'))return;e.preventDefault();e.stopPropagation();e.dataTransfer.dropEffect='move';for(const r of $('#tracks').rows)r.classList.toggle('drop-target',r===row);};
+$('#tracks').ondrop=e=>{if(!draggedTrack)return;e.preventDefault();e.stopPropagation();const target=e.target.closest('tr')?.dataset.id,source=draggedTrack;draggedTrack=null;for(const r of $('#tracks').rows)r.classList.remove('drop-target','dragging');if(target)safe(()=>reorderSet(source,target));};
+$('#tracks').ondragend=()=>{draggedTrack=null;for(const r of $('#tracks').rows)r.classList.remove('drop-target','dragging');};
+$('#tracks').onkeydown=e=>{if(!e.target.matches('.drag-track')||!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const source=e.target.closest('tr').dataset.id,ids=setListIds(),target=ids[ids.indexOf(source)+(e.key==='ArrowUp'?-1:1)];if(target)safe(async()=>{await reorderSet(source,target);$('#tracks').querySelector(`[data-id="${source}"] .drag-track`)?.focus();});};
+async function suggest(fixed=false){
+ requestAuditionContext=null;
+ const ids=fixed?setListIds():setCandidates(order,tracks,requestData.requests,masterTempo,consumedRequests);
+ if(!ids.length)throw Error('No tracks are ready for this set. Review the Library first.');
+ playlistBusy=true;setButtons();
+ $('#planNote').textContent=!fixed?'Astra is choosing the set order and handoffs…':'Checking your order…';
+ try{
+  const p=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,direction:$('#direction').value,astra:!fixed,fixed});
+  if(fixed&&JSON.stringify(p.order)!==JSON.stringify(ids))throw Error('Some tracks are not playable at this tempo. Your order is unchanged; review the Library.');
+  plan=p;draftSet=[...p.order];manualOrder=fixed;order=[...p.order,...order.filter(id=>!p.order.includes(id))];
+  $('#planNote').textContent=`${p.mode}: ${p.reason}`;
+  $('#cratePlayHelp').textContent=`${p.order.length} tracks, starting with ${track(p.order[0])?.title||'the first track'}.`+(p.excluded.length?` ${p.excluded.length} tracks are outside this set.`:'');
+  return p;
+ }finally{playlistBusy=false;renderCrate();}
+}
+$('#suggest').onclick=()=>safe(async()=>{if(active)throw Error('Take over before changing the armed order.');$('#suggest').disabled=true;try{$('#astra').checked=true;await suggest()}finally{$('#suggest').disabled=false}});
+async function startAuto(preview=false,fixed=false){await unlock();if(loading)throw Error('Audio is preparing.');loading=true;$('#auto').disabled=true;$('#preview').disabled=true;
+ try{stopAll();try{requestData=await api('requests');}catch{}await suggest(fixed);await extendRequestedPlan(true);if(plan.order.length<2)throw Error('Auto needs two compatible tracks. Confirm their cue markers or adjust the set tempo.');const my=++generation;active=true;$('#tempo').disabled=true;$('#auto').disabled=true;$('#takeover').hidden=false;
  await decks[0].load(track(plan.order[0]),masterTempo);if(my!==generation)return;await decks[1].load(track(plan.order[1]),masterTempo);if(my!==generation)return;
  decks[0].fade.gain.value=1;decks[1].fade.gain.value=0;decks[0].low.gain.value=0;decks[1].low.gain.value=-24;
  const first=plan.transitions[0];const position=preview?Math.max(track(first.from).entry,first.exit-8*60/track(first.from).bpm)/decks[0].ratio:track(first.from).entry/decks[0].ratio;
  decks[0].play(ctx.currentTime+.1,position);await arm(0,0,my,preview);
- }catch(e){takeover(false);throw e}finally{loading=false;$('#auto').disabled=false;$('#preview').disabled=false}}
-async function arm(index,currentIndex,my,preview){if(!active||my!==generation)return;const a=decks[currentIndex],b=decks[1-currentIndex],e=plan.transitions[index];if(!e){$('#autoTitle').textContent='Last record';$('#autoDetail').textContent='Enjoy the rest of the track.';active=false;$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;return}
+ }catch(e){takeover(false);throw e}finally{loading=false;$('#auto').disabled=false;$('#preview').disabled=false;renderCrate();}}
+async function arm(index,currentIndex,my,preview){if(!active||my!==generation)return;const a=decks[currentIndex],b=decks[1-currentIndex],e=plan.transitions[index];if(!e){$('#autoTitle').textContent='Last record';$('#autoDetail').textContent='Enjoy the rest of the track.';active=false;$('#takeover').hidden=true;$('#auto').hidden=false;$('#tempo').disabled=false;renderCrate();return}
  if(index>0){await b.load(track(e.to),masterTempo);if(my!==generation)return}
  const [alignA,alignB]=await Promise.all([api(`alignment/${a.track.id}?tempo=${masterTempo}&cue=${e.exit}&bars=${e.bars}`),api(`alignment/${b.track.id}?tempo=${masterTempo}&cue=${e.entry}&bars=${e.bars}`)]);
  if(!active||my!==generation)return;
@@ -117,7 +178,7 @@ async function arm(index,currentIndex,my,preview){if(!active||my!==generation)re
  }
  if(capture){capture.metadata.blendStart=at-capture.started;capture.metadata.blendEnd=end-capture.started;capture.metadata.transition=e;capture.stopAt=end+8*60/masterTempo;}
  // Both sources and all ramps are armed on the audio clock. The UI timer only manages the next preload.
- const tr={at,end,a,b,e,index,currentIndex,my,preview,completed:false};transition=tr;
+ const tr={at,end,a,b,e,index,currentIndex,my,preview,completed:false};transition=tr;renderCrate();
  $('#autoTitle').textContent=preview?'Previewing the transition':'Transition scheduled';$('#autoDetail').textContent=`${e.bars} bars → ${b.track.title} · ${e.astraReason||e.reason}`;
  a.source.onended=null;
 }
@@ -125,14 +186,14 @@ async function finishTransition(tr){if(tr!==transition||tr.completed)return;tr.c
  if(tr.preview){active=false;$('#tempo').disabled=false;$('#autoTitle').textContent='Transition complete';$('#autoDetail').textContent='Incoming track continues. Take over or stop.';$('#auto').hidden=false;$('#takeover').hidden=false;return}
  try{await arm(tr.index+1,1-tr.currentIndex,tr.my,false);}catch(error){if(tr.my===generation){takeover(false);$('#autoDetail').textContent='Next handoff could not be prepared. The current track continues; choose another track or take over.';}throw error;}
 }
-$('#auto').onclick=()=>safe(()=>startAuto(false));$('#preview').onclick=()=>safe(auditionLoaded);
+$('#auto').onclick=()=>safe(async()=>{if($('#astra').disabled)throw Error('Connect Astra in API setup first.');$('#astra').checked=true;await startAuto(false,false)});$('#playOrder').onclick=()=>safe(()=>startAuto(false,true));$('#preview').onclick=()=>safe(auditionLoaded);
 async function auditionLoaded(options={}){
  if(loading)throw Error('Wait for audio preparation to finish.');
  if(!decks.every(d=>d.buffer))throw Error('Load your outgoing track into A and your incoming track into B first.');
  const next=await api('plan',{ids:decks.map(d=>d.track.id),tempo:masterTempo,bars:+$('#bars').value,fixed:true});
  if(next.order.length!==2||next.transitions.length!==1)throw Error('This pair needs grid / cue review or a closer set tempo before a matched transition.');
- await unlock();stopAll();if(options.record)startRecording();plan=next;const my=++generation;active=true;
- $('#tempo').disabled=true;$('#auto').hidden=true;$('#takeover').hidden=false;
+ draftSet??=[...setListIds()];await unlock();stopAll();if(options.record)startRecording();plan=next;const my=++generation;active=true;
+ $('#tempo').disabled=true;$('#auto').disabled=true;$('#takeover').hidden=false;
  const a=decks[0],b=decks[1],e=next.transitions[0];a.fade.gain.value=1;b.fade.gain.value=0;a.low.gain.value=0;b.low.gain.value=-24;
  a.play(ctx.currentTime+.1,Math.max(a.track.entry,e.exit-8*60/a.track.bpm)/a.ratio);
  $('#inspectBars').value=e.bars;inspectAt(0,e.exit);
@@ -162,7 +223,7 @@ $('#mixNow').onclick=()=>safe(async()=>{
  const next=await api('plan',{ids,tempo:masterTempo,bars:+$('#bars').value,fixed:true});
  if(generation!==requestedGeneration||a.track?.id!==ids[0]||b.track?.id!==ids[1])return;
  if(next.order.length!==2)throw Error('Both tracks need compatible grids, phrases and tempos.');
- await unlock();plan=next;const my=++generation;active=true;$('#tempo').disabled=true;$('#auto').hidden=true;$('#takeover').hidden=false;
+ draftSet??=[...setListIds()];await unlock();plan=next;const my=++generation;active=true;$('#tempo').disabled=true;$('#auto').disabled=true;$('#takeover').hidden=false;
  try{await arm(0,index,my,false)}catch(e){takeover(false);throw e}
 });
 async function edit(id){
@@ -186,7 +247,7 @@ $('#editForm').onsubmit=e=>{e.preventDefault();safe(async()=>{
 async function upload(files){for(const file of files){const form=new FormData();form.append('file',file);const res=await fetch('/api/upload',{method:'POST',body:form});if(!res.ok)throw Error((await res.json()).detail)}toast('Tracks added. Analysis is running locally.');await refresh()}
 $('#youtubeForm').onsubmit=e=>{e.preventDefault();safe(async()=>{const button=$('#youtubeSubmit');button.disabled=true;button.textContent='Adding…';try{await api('youtube',{url:$('#youtubeUrl').value.trim()});$('#youtubeUrl').value='';toast('YouTube import queued. Download and analysis progress appear below the crate.');await refresh()}finally{button.disabled=false;button.textContent='Import'}})};
 $('#upload').onchange=e=>safe(()=>upload(e.target.files));$('#scan').onclick=()=>safe(async()=>{const r=await api('scan',{});toast(r.jobs.length?`Analyzing ${r.jobs.length} tracks.`:'Your local imports are already in the crate.');await refresh()});
-document.addEventListener('dragover',e=>{e.preventDefault();document.body.classList.add('dragging')});document.addEventListener('dragleave',()=>document.body.classList.remove('dragging'));document.addEventListener('drop',e=>{e.preventDefault();document.body.classList.remove('dragging');safe(()=>upload(e.dataTransfer.files))});
+document.addEventListener('dragover',e=>{if(!e.dataTransfer.types.includes('Files'))return;e.preventDefault();document.body.classList.add('dragging')});document.addEventListener('dragleave',()=>document.body.classList.remove('dragging'));document.addEventListener('drop',e=>{if(!e.dataTransfer.files.length)return;e.preventDefault();document.body.classList.remove('dragging');safe(()=>upload(e.dataTransfer.files))});
 document.addEventListener('keydown',e=>{if(e.code==='Escape'&&$('#editor').hidden)takeover();if(e.code==='Space'&&!document.activeElement.closest('input,select,textarea,button,summary,a,[contenteditable="true"]')){e.preventDefault();safe(async()=>{await unlock();takeover(false);const d=decks.find(d=>d.running)||decks[0];d.running?d.pause():d.play()})}});
 let inspectStart=0,inspectCache=null;
 function inspection(){const d=decks[+$('#inspectDeck').value];if(!d.track)return null;let t=d.track;if(!$('#editor').hidden&&editId===t.id){const form=$('#editForm');t={...t};for(const key of ['bpm','gridOffset','entry','introBars','exitEnd','outroBars','phraseAnchor']){const value=form.elements[key].value;if(value!==''&&Number.isFinite(+value)&&(key!=='bpm'||+value>0))t[key]=+value;}t.introEnd=t.entry+t.introBars*240/t.bpm;t.outroStart=t.exitEnd-t.outroBars*240/t.bpm;}const span=+$('#inspectBars').value*240/t.bpm;inspectStart=Math.max(0,Math.min(inspectStart,Math.max(0,t.duration-span)));return {d,t,span};}
@@ -229,8 +290,8 @@ safe(async()=>{await refresh();await api('scan',{});await refresh()});setInterva
 
 function sessionState(){
  const deckStates=decks.map(d=>({id:d.track?.id??'',title:d.track?.title??'',artist:d.track?.artist??'',artworkUrl:d.track?'/api/art/'+d.track.id:null,playing:!!(d.running&&ctx&&ctx.currentTime>=d.start),position:d.track?d.position()*(d.ratio||1):0,duration:d.track?.duration??0,level:d.level?.gain.value??1,low:d.low?.gain.value??0,fade:d.fade?.gain.value??(d.letter==='A'?1:0)}));
- const ids=requestAuditionContext?.crateIds||(plan?.order?.length?plan.order:decks.map(d=>d.track?.id).filter(Boolean));
- return {decks:deckStates,crate:order.map(track).filter(Boolean).map(t=>({id:t.id,title:t.title,artist:t.artist,artworkUrl:'/api/art/'+t.id})),transition:transition?{progress:Math.max(0,Math.min(1,(ctx.currentTime-transition.at)/(transition.end-transition.at))),from:transition.e.from,to:transition.e.to,bars:transition.e.bars}:null,tempo:masterTempo,bars:+$('#bars').value,tailId:ids.at(-1)??'',crateIds:ids,direction:$('#direction').value,broadcasting:!!broadcast};
+ const ids=requestAuditionContext?.crateIds||(draftSet?.length?draftSet:plan?.order?.length?plan.order:decks.map(d=>d.track?.id).filter(Boolean));
+ return {decks:deckStates,crate:ids.map(track).filter(Boolean).map(t=>({id:t.id,title:t.title,artist:t.artist,artworkUrl:'/api/art/'+t.id})),transition:transition?{progress:Math.max(0,Math.min(1,(ctx.currentTime-transition.at)/(transition.end-transition.at))),from:transition.e.from,to:transition.e.to,bars:transition.e.bars}:null,tempo:masterTempo,bars:+$('#bars').value,tailId:ids.at(-1)??'',crateIds:ids,direction:$('#direction').value,broadcasting:!!broadcast};
 }
 $('#toggleScene').onclick=()=>safe(async()=>{
  const section=$('#sceneSection'),show=section.hidden;section.hidden=!show;$('#toggleScene').setAttribute('aria-pressed',String(show));$('#toggleScene').textContent=show?'Hide the set':'Watch the set';
@@ -270,15 +331,15 @@ let requestSignature='';
 function renderRequests(){
  const rows=requestData.requests||[],signature=JSON.stringify([rows,[...consumedRequests],active,!!transition?.preview,[...requestBusy],tracks.map(t=>t.id)]);
  if(signature===requestSignature)return;requestSignature=signature;
- const labels={added:'Added to the set',dismissed:'Dismissed',needs_audio:'Choose a recording',review:'Needs your review',rejected:'Does not fit yet',error:'Could not check',pending:'Waiting to check',identifying:'Identifying recording',downloading:'Downloading',analyzing:'Analyzing'};
+ const labels={added:'Added to the set',dismissed:'Dismissed',needs_audio:'Choose a recording',review:'Needs your review',rejected:'Not this set',error:'Could not check',pending:'Waiting to check',identifying:'Identifying recording',downloading:'Downloading',analyzing:'Analyzing'};
  $('#requestQueue').innerHTML=rows.length?rows.slice().reverse().map(r=>{
   const staged=consumedRequests.has(r.trackId)||r.status==='added',busy=requestBusy.has(r.id),reviewable=['review','needs_audio','rejected','error','dismissed'].includes(r.status);
-  const status=staged?'Added to the set':r.status==='accepted'&&r.queued?(active&&!transition?.preview?'Queued after this set':'Accepted · joins next Auto set'):labels[r.status]||r.status;
+  const status=staged?'Added to the set':r.status==='accepted'&&r.queued?(active&&!transition?.preview?'Queued after this set':'Accepted · joins the next set'):labels[r.status]||r.status;
   const chosen=requestSelections.get(r.id)||r.trackId||r.candidateIds?.[0]||'';
   const candidates=[...tracks].sort((a,b)=>(r.candidateIds||[]).includes(b.id)-(r.candidateIds||[]).includes(a.id));
   const options='<option value="">Choose a crate recording…</option>'+candidates.map(t=>`<option value="${escape(t.id)}" ${t.id===chosen?'selected':''}>${escape(t.title)} · ${escape(t.artist)}</option>`).join('');
   const controls=reviewable?`<label class="request-recording">Recording<select data-recording ${busy?'disabled':''}>${options}</select></label><button data-action="resolve" ${busy?'disabled':''}>Confirm & check fit</button>${r.transition&&['energy','key'].includes(r.reviewKind)?`<button data-action="approve" ${busy?'disabled':''}>Accept musical fit</button>`:''}<button data-action="load" ${busy?'disabled':''}>Load B to audition</button><button data-action="retry" ${busy?'disabled':''}>Retry link</button>`:'';
-  return `<article class="request-row" data-request="${escape(r.id)}"><div><strong>${escape(r.title||'Identifying requested track')}</strong>${r.artist?' · '+escape(r.artist):''}</div><span class="request-status">${escape((r.name?.startsWith('DJ test')?'DJ test · ':'')+(busy?'Updating…':status||'Waiting'))}</span><p>${escape((r.decisionMode==='Rules'?'Rules: ':'')+(r.reason||'Checking the recording and its fit with this set.'))}</p>${r.technicalReason&&r.decisionMode==='Astra'?`<p class="muted">Handoff check: ${escape(r.technicalReason)}</p>`:''}${!staged?`<div class="request-actions">${controls}${r.status!=='dismissed'?`<button data-action="dismiss" ${busy?'disabled':''}>Dismiss</button>`:''}</div>`:''}</article>`;
+  return `<article class="request-row" data-request="${escape(r.id)}"><div><strong>${escape(r.title||'Identifying requested track')}</strong>${r.artist?' · '+escape(r.artist):''}</div><span class="request-status">${escape((r.name?.startsWith('DJ test')?'DJ test · ':'')+(busy?'Updating…':status||'Waiting'))}</span>${requestNote(r).summary?`<p>${escape(requestNote(r).summary)}</p>`:''}${requestNote(r).details?`<details class="request-details"><summary>Decision details</summary><p>${escape(requestNote(r).details)}</p></details>`:''}${!staged?`<div class="request-actions">${controls}${r.status!=='dismissed'?`<button data-action="dismiss" ${busy?'disabled':''}>Dismiss</button>`:''}</div>`:''}</article>`;
  }).join(''):'<p class="help">No requests yet. Listeners can send a Spotify track or YouTube video from the listener view.</p>';
 }
 $('#requestQueue').onchange=e=>{const row=e.target.closest('[data-request]');if(row&&e.target.matches('[data-recording]'))requestSelections.set(row.dataset.request,e.target.value);};
@@ -293,7 +354,7 @@ $('#requestQueue').onclick=e=>safe(async()=>{
  finally{requestBusy.delete(id);renderRequests();}
 });
 async function extendRequestedPlan(starting=false){
- if(!plan?.order?.length||(!starting&&(!active||transition?.preview)))return;
+ if(playlistBusy||!plan?.order?.length||(!starting&&(!active||transition?.preview)))return;
  const workingPlan=plan,my=generation;
  for(const id of requestData.queue||[]){
   if(consumedRequests.has(id))continue;
@@ -305,12 +366,12 @@ async function extendRequestedPlan(starting=false){
   if(plan!==workingPlan||generation!==my||(!starting&&!active))return;
   // Preserve the already armed cues. Validate the entire chain, including preparation time.
   if(JSON.stringify(addition.order)!==JSON.stringify([...workingPlan.order,id])||JSON.stringify(addition.transitions.slice(0,-1))!==JSON.stringify(workingPlan.transitions)){$('#planNote').textContent='Requested track is still queued. The set changed; review its order before adding it.';break;}
-  workingPlan.order.push(id);workingPlan.transitions.push(addition.transitions.at(-1));
+  workingPlan.order.push(id);workingPlan.transitions.push(addition.transitions.at(-1));draftSet=[...workingPlan.order];
   await api('requests/consume',{trackId:id});consumedRequests.add(id);
  }
  renderRequests();
 }
-async function refreshRequests(){if(requestPollBusy)return;requestPollBusy=true;try{requestData=await api('requests');await extendRequestedPlan();renderRequests();}catch(error){requestSignature='';$('#requestQueue').textContent='Requests could not synchronize. Retrying shortly. '+error.message;}finally{requestPollBusy=false;}}
+async function refreshRequests(){if(requestPollBusy)return;requestPollBusy=true;try{requestData=await api('requests');await extendRequestedPlan();renderRequests();if(!draggedTrack)renderCrate();}catch(error){requestSignature='';$('#requestQueue').textContent='Requests could not synchronize. Retrying shortly. '+error.message;}finally{requestPollBusy=false;}}
 setInterval(()=>{void publishState();},500);
 setInterval(()=>{void refreshRequests();},4000);
 void loadListenerLink().catch(()=>{$('#listenerLink').textContent='Listener view is preparing.';});void refreshRequests();

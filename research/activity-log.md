@@ -339,3 +339,8 @@ b2b: committed requested checkpoint 0a80fb3, then verified deck artwork, manual 
 ## 2026-09-10 13:55 EDT — Roundtrip unified navigation
 
 Story homepage and gallery now share localhost:8766, a common logo/header, active navigation, and remembered photo selection. Existing photo URLs still work. Preserved story comparison and media; no private images committed.39 tests passed; browser checked navigation, media, and mobile overflow. No new Lightroom jobs.
+
+
+## 2026-09-10 14:31 EDT
+
+b2b effects cleanup: removed redundant Off button and inactive summary label. One selector controls Off/Delay/Flanger; amount/repeat/help only appear when relevant, and active summary hides while expanded. Verified initialized browser drawer and JS syntax. No DSP changes. Exact session tokens/tool totals unavailable.

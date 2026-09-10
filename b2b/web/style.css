@@ -41,3 +41,5 @@ button:disabled,input:disabled{cursor:not-allowed}button:disabled:hover{backgrou
 .marker-editor{margin-top:20px;border-top:1px solid var(--line);padding-top:20px}.marker-editor h2{display:block;font-size:20px}.marker-actions{display:flex;gap:8px;flex-wrap:wrap}.marker-actions button{font-size:12px;min-height:36px}#markerCursor{font-size:12px;color:var(--cream);font-variant-numeric:tabular-nums}.marker-editor .fields{grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:18px 0}.marker-editor .fields input{font-variant-numeric:tabular-nums}.marker-editor .help{margin-bottom:14px}
 @media(max-width:899px){.auto-actions .mix-action{flex:1;min-width:0}.auto-actions{flex-wrap:wrap}.mix-action button{font-size:13px}.marker-editor .fields{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.crate-set-controls{padding:0 3px 12px}.crate-set-controls p{flex-basis:100%}.mix-action p{font-size:11px}.marker-actions button{min-height:40px}.marker-editor .fields{gap:12px}.inspect-nav button{min-height:36px;font-size:11px}}
+
+.deck-effects[open] .fx-status{visibility:hidden}

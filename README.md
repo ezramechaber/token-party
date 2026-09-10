@@ -2,6 +2,8 @@
 
 Bring a photo. Stay for the set.
 
+![Token Party poster featuring a record player, guest portraits, and Rent crossed out above Token Party](research/design/token-party-poster-v1.png)
+
 Token Party brings together experiments in DJ mixing and native photo editing, built during the September 10, 2026 hackathon with GPT-6 Astra. Each project keeps its own code, setup instructions, and build history.
 
 | Project | What it does | Status |
